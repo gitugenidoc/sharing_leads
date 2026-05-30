@@ -55,7 +55,7 @@
             class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
           >
             <span class="material-symbols-outlined">people</span>
-            <span>Tous les Leads</span>
+            <span>Tous les Clients</span>
           </button>
           <button
             onclick="switchTab('users')"
@@ -106,7 +106,7 @@
               Admin
             </h2>
             <p class="text-sm text-gray-500">
-              Gérez tous vos leads et utilisateurs
+              Gérez tous vos clients mutuelle et utilisateurs
             </p>
           </div>
           <div class="flex items-center gap-6">
@@ -156,7 +156,7 @@
                     <div class="flex justify-between items-start">
                       <div>
                         <p class="text-sm font-medium text-gray-600 mb-1">
-                          Total Leads
+                          Total Clients
                         </p>
                         <p
                           class="text-3xl font-bold text-gray-900"
@@ -249,7 +249,7 @@
                 >
                   <div class="p-6">
                     <p class="text-gray-500 text-center py-8">
-                      Activer la tab "Tous les Leads" pour voir l'activité
+                      Activer la tab "Tous les Clients" pour voir l'activité
                     </p>
                   </div>
                 </div>
@@ -261,16 +261,16 @@
               <div class="mb-6 flex justify-between items-center">
                 <div>
                   <h3 class="text-lg font-semibold text-gray-900">
-                    Tous les Leads
+                    Tous les Clients
                   </h3>
-                  <p class="text-sm text-gray-500" id="leads-count">0 leads</p>
+                  <p class="text-sm text-gray-500" id="leads-count">0 clients</p>
                 </div>
                 <button
                   onclick="showLeadModal()"
                   class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 font-medium"
                 >
                   <span class="material-symbols-outlined">add</span>
-                  Nouveau Lead
+                  Nouveau Client
                 </button>
               </div>
 
@@ -289,12 +289,12 @@
                         <th
                           class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
                         >
-                          Email
+                          Prenom
                         </th>
                         <th
                           class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
                         >
-                          Téléphone
+                          Ville
                         </th>
                         <th
                           class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
@@ -309,7 +309,12 @@
                         <th
                           class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
                         >
-                          Montant
+                          Mutuelle
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Prix
                         </th>
                         <th
                           class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
@@ -321,7 +326,7 @@
                     <tbody id="leads-tbody" class="divide-y divide-gray-200">
                       <tr>
                         <td
-                          colspan="7"
+                          colspan="8"
                           class="px-6 py-8 text-center text-gray-500"
                         >
                           Chargement...
@@ -373,7 +378,7 @@
                         <th
                           class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
                         >
-                          Leads
+                          Clients
                         </th>
                         <th
                           class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
@@ -401,7 +406,7 @@
             <div id="import-tab" class="tab-content" style="display: none">
               <div class="max-w-2xl">
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                  Importer des Leads
+                  Importer des Clients
                 </h3>
                 <p class="text-gray-600 text-sm mb-6">
                   Déposez un fichier Excel ou cliquez pour sélectionner
@@ -435,8 +440,8 @@
                     onchange="handleFileSelect(event)"
                   />
                   <p class="text-xs text-gray-500">
-                    Colonnes attendues: name, email, phone, status, source,
-                    amount, notes
+                    Colonnes attendues: nom, prenom, adresse, ville,
+                    code_postal, nom_mutuelle, prix_mutuelle, status, notes
                   </p>
                 </div>
                 <div
@@ -451,77 +456,26 @@
       </main>
     </div>
 
-    <!-- LEAD MODAL -->
+    <!-- CLIENT MODAL -->
     <div
       id="lead-modal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
       style="display: none"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Nouveau Lead</h3>
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Nouveau Client</h3>
         <form onsubmit="saveLead(event)" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Nom *</label
-            >
-            <input
-              type="text"
-              id="lead-name"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Email *</label
-            >
-            <input
-              type="email"
-              id="lead-email"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Téléphone</label
-            >
-            <input
-              type="tel"
-              id="lead-phone"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Montant</label
-            >
-            <input
-              type="number"
-              id="lead-amount"
-              step="0.01"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div class="flex gap-2 pt-4">
-            <button
-              type="button"
-              onclick="closeLeadModal()"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
-            >
-              Créer
-            </button>
-          </div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label><input type="text" id="lead-nom" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Prenom *</label><input type="text" id="lead-prenom" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Adresse *</label><input type="text" id="lead-adresse" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Ville *</label><input type="text" id="lead-ville" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Code postal *</label><input type="text" id="lead-code-postal" maxlength="5" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Nom mutuelle *</label><input type="text" id="lead-mutuelle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Prix mutuelle *</label><input type="number" id="lead-prix" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+          <div class="flex gap-2 pt-4"><button type="button" onclick="closeLeadModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">Annuler</button><button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Creer</button></div>
         </form>
       </div>
     </div>
-
     <!-- USER MODAL -->
     <div
       id="user-modal"
@@ -628,10 +582,10 @@
       async function loadLeads() {
         try {
           const data = await getAllLeads(0, 999999);
-          allLeads = data.leads;
+          allLeads = data.clients;
           renderLeads(allLeads);
           document.getElementById("leads-count").textContent =
-            `${allLeads.length} leads`;
+            `${allLeads.length} clients`;
         } catch (err) {
           console.error(err);
         }
@@ -641,16 +595,16 @@
         const tbody = document.getElementById("leads-tbody");
         if (leads.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Aucun lead</td></tr>';
+            '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Aucun client</td></tr>';
           return;
         }
         tbody.innerHTML = leads
           .map(
             (lead) => `
         <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4 font-medium text-gray-900">${lead.name}</td>
-          <td class="px-6 py-4 text-gray-600">${lead.email}</td>
-          <td class="px-6 py-4 text-gray-600">${lead.phone}</td>
+          <td class="px-6 py-4 font-medium text-gray-900">${lead.nom}</td>
+          <td class="px-6 py-4 text-gray-600">${lead.prenom}</td>
+          <td class="px-6 py-4 text-gray-600">${lead.ville} ${lead.code_postal}</td>
           <td class="px-6 py-4">
             <select onchange="updateLeadStatus(${lead.id}, this.value)" class="px-2 py-1 border border-gray-300 rounded text-sm">
               <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
@@ -672,7 +626,8 @@
                 .join("")}
             </select>
           </td>
-          <td class="px-6 py-4">$${lead.amount?.toFixed(2) || "0.00"}</td>
+          <td class="px-6 py-4 text-gray-600">${lead.nom_mutuelle}</td>
+          <td class="px-6 py-4">${Number(lead.prix_mutuelle || 0).toFixed(2)} EUR</td>
           <td class="px-6 py-4 text-right">
             <button onclick="deleteLeadHandler(${lead.id})" class="text-red-600 hover:text-red-700 font-medium text-sm">Supprimer</button>
           </td>
@@ -688,8 +643,11 @@
           .value.toLowerCase();
         const filtered = allLeads.filter(
           (l) =>
-            l.name.toLowerCase().includes(query) ||
-            l.email.toLowerCase().includes(query),
+            l.nom.toLowerCase().includes(query) ||
+            l.prenom.toLowerCase().includes(query) ||
+            l.ville.toLowerCase().includes(query) ||
+            l.code_postal.includes(query) ||
+            l.nom_mutuelle.toLowerCase().includes(query),
         );
         renderLeads(filtered);
       }
@@ -716,7 +674,7 @@
       async function deleteLeadHandler(leadId) {
         if (confirm("Êtes-vous sûr?")) {
           try {
-            const response = await fetch(`/api/leads/${leadId}`, {
+            const response = await fetch(`/api/clients/${leadId}`, {
               method: "DELETE",
               headers: { Authorization: `Bearer ${getToken()}` },
             });
@@ -729,10 +687,13 @@
       }
 
       function showLeadModal() {
-        document.getElementById("lead-name").value = "";
-        document.getElementById("lead-email").value = "";
-        document.getElementById("lead-phone").value = "";
-        document.getElementById("lead-amount").value = "";
+        document.getElementById("lead-nom").value = "";
+        document.getElementById("lead-prenom").value = "";
+        document.getElementById("lead-adresse").value = "";
+        document.getElementById("lead-ville").value = "";
+        document.getElementById("lead-code-postal").value = "";
+        document.getElementById("lead-mutuelle").value = "";
+        document.getElementById("lead-prix").value = "";
         document.getElementById("lead-modal").style.display = "flex";
       }
 
@@ -743,12 +704,14 @@
       async function saveLead(event) {
         event.preventDefault();
         const data = {
-          name: document.getElementById("lead-name").value,
-          email: document.getElementById("lead-email").value,
-          phone: document.getElementById("lead-phone").value,
-          amount: parseFloat(document.getElementById("lead-amount").value) || 0,
+          nom: document.getElementById("lead-nom").value,
+          prenom: document.getElementById("lead-prenom").value,
+          adresse: document.getElementById("lead-adresse").value,
+          ville: document.getElementById("lead-ville").value,
+          code_postal: document.getElementById("lead-code-postal").value,
+          nom_mutuelle: document.getElementById("lead-mutuelle").value,
+          prix_mutuelle: parseFloat(document.getElementById("lead-prix").value) || 0,
           status: "NEW",
-          source: "Manual",
         };
         try {
           await createLead(data);
@@ -846,14 +809,14 @@
       function handleFileSelect(event) {
         const file = event.target.files[0];
         if (!file) return;
-        uploadExcel(file);
+        handleUploadExcel(file);
       }
 
       function handleDrop(event) {
         event.preventDefault();
         const files = event.dataTransfer.files;
         if (files.length > 0) {
-          uploadExcel(files[0]);
+          handleUploadExcel(files[0]);
         }
       }
 
@@ -866,7 +829,7 @@
 
           const formData = new FormData();
           formData.append("file", file);
-          const response = await fetch("/api/leads/import", {
+          const response = await fetch("/api/clients/import", {
             method: "POST",
             headers: { Authorization: `Bearer ${getToken()}` },
             body: formData,

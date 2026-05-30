@@ -5,6 +5,17 @@ const fs = require("fs");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const multer = require("multer");
+const XLSX = require("xlsx");
+const rateLimit = require("express-rate-limit");
+const {
+  validateLead,
+  validateUser,
+  validateEmail,
+  validatePhone,
+  validateStatus,
+  validStatuses,
+} = require("./middleware/validation");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,14 +25,61 @@ const JWT_SECRET = process.env.JWT_SECRET || "test-secret";
 const DATA_DIR = path.join(__dirname, "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 const LEADS_FILE = path.join(DATA_DIR, "leads.json");
+const UPLOAD_DIR = path.join(__dirname, "uploads");
+
+// Create uploads directory
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: UPLOAD_DIR,
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel" ||
+      file.originalname.endsWith(".xlsx") ||
+      file.originalname.endsWith(".xls")
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only Excel files are allowed"));
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+});
+
+// Rate limiters
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts
+  message: "Too many login attempts, please try again later",
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: "Too many requests, please try again later",
+});
 
 // Middleware
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, "../frontend/public")));
+
+// Apply rate limiting
+app.use("/api/", apiLimiter);
+app.use("/api/auth/login", loginLimiter);
 
 // Initialize data files
 function initializeDataFiles() {
@@ -133,58 +191,107 @@ function isAdmin(req, res, next) {
 
 // Routes: Auth
 app.post("/api/auth/register", (req, res) => {
-  const { email, password, name, role } = req.body;
-  const users = readUsers();
+  try {
+    const { email, password, name, role } = req.body;
 
-  if (users.find((u) => u.email === email)) {
-    return res.status(400).json({ error: "User already exists" });
+    // Validate input
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: [
+          !email && "Email is required",
+          !password && "Password is required",
+          !name && "Name is required",
+        ].filter(Boolean),
+      });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: ["Invalid email format"],
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: ["Password must be at least 6 characters"],
+      });
+    }
+
+    const users = readUsers();
+
+    if (users.find((u) => u.email === email)) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const newUser = {
+      id: Math.max(...users.map((u) => u.id), 0) + 1,
+      email,
+      password: bcrypt.hashSync(password, 10),
+      name,
+      role: role || "AGENT",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    users.push(newUser);
+    writeUsers(users);
+
+    res.json({
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      role: newUser.role,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Registration failed",
+      details: error.message,
+    });
   }
-
-  const newUser = {
-    id: Math.max(...users.map((u) => u.id), 0) + 1,
-    email,
-    password: bcrypt.hashSync(password, 10),
-    name,
-    role: role || "AGENT",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  users.push(newUser);
-  writeUsers(users);
-
-  res.json({
-    id: newUser.id,
-    email: newUser.email,
-    name: newUser.name,
-    role: newUser.role,
-  });
 });
 
 app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body;
-  const users = readUsers();
-  const user = users.find((u) => u.email === email);
+  try {
+    const { email, password } = req.body;
 
-  if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: ["Email and password are required"],
+      });
+    }
+
+    const users = readUsers();
+    const user = users.find((u) => u.email === email);
+
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, name: user.name },
+      JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Login failed",
+      details: error.message,
+    });
   }
-
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name },
-    JWT_SECRET,
-    { expiresIn: "7d" },
-  );
-
-  res.json({
-    token,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    },
-  });
 });
 
 // Routes: Users
@@ -289,47 +396,77 @@ app.get("/api/leads/:id", verifyToken, (req, res) => {
 });
 
 app.post("/api/leads", verifyToken, isAdmin, (req, res) => {
-  const leads = readLeads();
-  const { name, email, phone, status, source, amount, notes } = req.body;
+  try {
+    const validation = validateLead(req.body);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: validation.errors,
+      });
+    }
 
-  const newLead = {
-    id: Math.max(...leads.map((l) => l.id), 0) + 1,
-    name,
-    email,
-    phone,
-    status: status || "NEW",
-    source: source || "MANUAL",
-    amount: amount || 0,
-    notes,
-    assigned_to: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+    const leads = readLeads();
+    const { name, email, phone, status, source, amount, notes } = req.body;
 
-  leads.push(newLead);
-  writeLeads(leads);
+    const newLead = {
+      id: Math.max(...leads.map((l) => l.id), 0) + 1,
+      name,
+      email,
+      phone,
+      status: status || "NEW",
+      source: source || "MANUAL",
+      amount: amount || 0,
+      notes,
+      assigned_to: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-  res.json(newLead);
+    leads.push(newLead);
+    writeLeads(leads);
+
+    res.json(newLead);
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to create lead",
+      details: error.message,
+    });
+  }
 });
 
 app.put("/api/leads/:id", verifyToken, (req, res) => {
-  const leads = readLeads();
-  const lead = leads.find((l) => l.id === parseInt(req.params.id));
+  try {
+    const leads = readLeads();
+    const lead = leads.find((l) => l.id === parseInt(req.params.id));
 
-  if (!lead) {
-    return res.status(404).json({ error: "Lead not found" });
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+
+    if (req.user.role !== "ADMIN" && lead.assigned_to !== req.user.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Validate if status is being updated
+    if (req.body.status && !validateStatus(req.body.status)) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: [`Status must be one of: ${validStatuses.join(", ")}`],
+      });
+    }
+
+    Object.assign(lead, req.body, {
+      updated_at: new Date().toISOString(),
+    });
+
+    writeLeads(leads);
+    res.json(lead);
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to update lead",
+      details: error.message,
+    });
   }
-
-  if (req.user.role !== "ADMIN" && lead.assigned_to !== req.user.id) {
-    return res.status(403).json({ error: "Access denied" });
-  }
-
-  Object.assign(lead, req.body, {
-    updated_at: new Date().toISOString(),
-  });
-
-  writeLeads(leads);
-  res.json(lead);
 });
 
 app.delete("/api/leads/:id", verifyToken, isAdmin, (req, res) => {
@@ -354,10 +491,130 @@ app.put("/api/leads/:id/assign", verifyToken, isAdmin, (req, res) => {
   res.json(lead);
 });
 
-// Routes: Import (stub for now)
-app.post("/api/leads/import", verifyToken, isAdmin, (req, res) => {
-  res.json({
-    message: "Import functionality requires xlsx parser. Please implement.",
+// Routes: Import Excel
+app.post(
+  "/api/leads/import",
+  verifyToken,
+  isAdmin,
+  upload.single("file"),
+  (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Read Excel file
+      const workbook = XLSX.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+
+      if (!data || data.length === 0) {
+        fs.unlinkSync(req.file.path); // Delete file
+        return res.status(400).json({ error: "Excel file is empty" });
+      }
+
+      const leads = readLeads();
+      const importedLeads = [];
+      const errors = [];
+      let successCount = 0;
+
+      // Process each row
+      data.forEach((row, index) => {
+        try {
+          const leadData = {
+            name: row.name || row.Name || row.nom || "",
+            email: row.email || row.Email || row.email_address || "",
+            phone: row.phone || row.Phone || row.telephone || "",
+            status: row.status || row.Status || "NEW",
+            source: "IMPORT",
+            amount:
+              parseFloat(row.amount || row.Amount || row.montant || 0) || 0,
+            notes: row.notes || row.Notes || "",
+          };
+
+          // Validate
+          const validation = validateLead(leadData);
+          if (!validation.isValid) {
+            errors.push({
+              row: index + 2,
+              message: validation.errors.join("; "),
+            });
+            return;
+          }
+
+          // Create lead
+          const newLead = {
+            id: Math.max(...leads.map((l) => l.id), 0) + 1,
+            ...leadData,
+            assigned_to: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          leads.push(newLead);
+          importedLeads.push(newLead);
+          successCount++;
+        } catch (error) {
+          errors.push({
+            row: index + 2,
+            message: error.message,
+          });
+        }
+      });
+
+      // Save updated leads
+      if (importedLeads.length > 0) {
+        writeLeads(leads);
+      }
+
+      // Delete uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        message: `Import completed: ${successCount} leads imported`,
+        imported: successCount,
+        total: data.length,
+        errors: errors,
+        leads: importedLeads,
+      });
+    } catch (error) {
+      // Clean up file
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+
+      res.status(500).json({
+        error: "Failed to import leads",
+        details: error.message,
+      });
+    }
+  },
+);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+
+  if (err instanceof multer.MulterError) {
+    if (err.code === "FILE_TOO_LARGE") {
+      return res.status(413).json({
+        error: "File too large",
+        details: ["Maximum file size is 5MB"],
+      });
+    }
+  }
+
+  if (err.message === "Only Excel files are allowed") {
+    return res.status(400).json({
+      error: "Invalid file type",
+      details: ["Only Excel files (.xlsx, .xls) are allowed"],
+    });
+  }
+
+  res.status(err.status || 500).json({
+    error: err.message || "Internal server error",
+    details: process.env.NODE_ENV === "development" ? [err.stack] : [],
   });
 });
 
@@ -367,10 +624,17 @@ initializeDataFiles();
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
   console.log(`📊 Data stored in: ${DATA_DIR}`);
+  console.log(`📁 Uploads stored in: ${UPLOAD_DIR}`);
   console.log("\n🔑 Test Credentials:");
   console.log("  Admin: admin@test.com / admin123");
   console.log("  Agent1: agent1@test.com / agent123");
   console.log("  Agent2: agent2@test.com / agent123");
+  console.log("\n🔒 Security:");
+  console.log(
+    "  - Rate limiting: 5 login attempts per 15 min, 100 API calls per min",
+  );
+  console.log("  - File upload: 5MB max, Excel only");
+  console.log("  - Validation: Client-side + server-side");
 });
 
 module.exports = app;
