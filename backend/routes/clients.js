@@ -108,6 +108,29 @@ router.post("/import", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+router.post("/assign-random", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.body.userId, 10);
+    const count = parseInt(req.body.count, 10);
+
+    if (!userId || !count || count < 1) {
+      return res.status(400).json({
+        error: "User ID and a positive count are required",
+      });
+    }
+
+    const clients = await Client.assignRandomClients(userId, count);
+    res.json({
+      assigned: clients.length,
+      requested: count,
+      clients,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.get("/", verifyToken, isAdmin, async (req, res) => {
   try {
     const offset = parseInt(req.query.offset) || 0;

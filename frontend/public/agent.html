@@ -437,7 +437,7 @@
                   <th
                     class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
                   >
-                    Dernière note
+                    Commentaire
                   </th>
                   <th
                     class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right"
@@ -533,7 +533,13 @@
               <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Fermé</option>
             </select>
           </td>
-          <td class="p-4 text-on-surface-variant text-sm max-w-xs truncate">${lead.notes}</td>
+          <td class="p-4">
+            <textarea
+              class="w-full min-w-64 rounded-lg border border-outline-variant bg-surface-container-lowest p-2 text-sm text-on-surface focus:border-primary focus:ring-primary"
+              rows="2"
+              onblur="saveLeadComment(${lead.id}, this.value)"
+            >${escapeHtml(lead.notes || "")}</textarea>
+          </td>
           <td class="p-4 text-right">
             <button onclick="editLead(${lead.id})" class="text-secondary hover:bg-secondary/10 px-2 py-1 rounded text-label-sm font-label-sm font-medium transition-colors">
               Détails
@@ -569,6 +575,19 @@
         }
       }
 
+      async function saveLeadComment(leadId, notes) {
+        try {
+          await updateLead(leadId, { notes });
+          const lead = allLeads.find((item) => item.id === leadId);
+          if (lead) {
+            lead.notes = notes;
+          }
+        } catch (err) {
+          alert(err.message);
+          loadLeads();
+        }
+      }
+
       async function editLead(leadId) {
         try {
           const lead = await getLeadById(leadId);
@@ -580,6 +599,15 @@
         } catch (err) {
           alert(err.message);
         }
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
 
       function updateDashboard() {

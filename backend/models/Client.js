@@ -127,6 +127,23 @@ const assignClient = async (clientId, userId) => {
   return result.rows[0];
 };
 
+const assignRandomClients = async (userId, count) => {
+  const result = await pool.query(
+    `UPDATE clients
+     SET assigned_to = $1, updated_at = NOW()
+     WHERE id IN (
+       SELECT id
+       FROM clients
+       WHERE assigned_to IS NULL
+       ORDER BY RANDOM()
+       LIMIT $2
+     )
+     RETURNING *`,
+    [userId, count],
+  );
+  return result.rows;
+};
+
 const searchClients = async (query, offset = 0, limit = 100) => {
   const result = await pool.query(
     `SELECT * FROM clients
@@ -183,6 +200,7 @@ module.exports = {
   updateClient,
   deleteClient,
   assignClient,
+  assignRandomClients,
   searchClients,
   bulkInsertClients,
 };

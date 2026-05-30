@@ -227,6 +227,14 @@ const assignLead = async (id, userId) => {
   return data;
 };
 
+const assignRandomLeads = async (userId, count) => {
+  const data = await apiCall("POST", "/clients/assign-random", {
+    userId,
+    count,
+  });
+  return data;
+};
+
 const searchLeads = async (query, offset = 0, limit = 100) => {
   const data = await apiCall(
     "GET",
