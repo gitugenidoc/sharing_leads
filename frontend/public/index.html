@@ -1,0 +1,388 @@
+<!doctype html>
+<html class="light" lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SecurAssure - Connexion</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              outline: "#76767f",
+              "on-background": "#191c1e",
+              "on-secondary": "#ffffff",
+              "outline-variant": "#c6c6cf",
+              "primary-container": "#0b1a3f",
+              "on-surface-variant": "#45464e",
+              "on-primary-container": "#7683ae",
+              "error-container": "#ffdad6",
+              secondary: "#1b3fe7",
+              "on-secondary-fixed": "#000f5c",
+              "surface-tint": "#505d86",
+              "surface-container-low": "#f2f4f6",
+              primary: "#000107",
+              "on-primary": "#ffffff",
+              error: "#ba1a1a",
+              background: "#f7f9fb",
+              "surface-bright": "#f7f9fb",
+              "on-error": "#ffffff",
+              "surface-container": "#eceef0",
+              "on-primary-fixed": "#0a193e",
+              surface: "#f7f9fb",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#e6e8ea",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e0e3e5",
+              "on-surface": "#191c1e",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "stack-md": "1rem",
+              "stack-sm": "0.5rem",
+              "sidebar-width": "260px",
+              gutter: "1.5rem",
+              "container-padding": "2rem",
+            },
+            fontFamily: {
+              "body-md": ["Inter"],
+              "headline-lg": ["Inter"],
+              "body-lg": ["Inter"],
+              "label-sm": ["Inter"],
+              "label-caps": ["Inter"],
+              "headline-md": ["Inter"],
+            },
+            fontSize: {
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-lg": [
+                "28px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+              "label-caps": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.05em",
+                  fontWeight: "700",
+                },
+              ],
+              "headline-md": [
+                "20px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .ambient-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 120%;
+        height: 120%;
+        background: radial-gradient(
+          circle,
+          rgba(11, 26, 63, 0.03) 0%,
+          rgba(247, 249, 251, 0) 70%
+        );
+        z-index: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md antialiased min-h-screen flex items-center justify-center relative overflow-hidden"
+  >
+    <div class="ambient-glow"></div>
+    <main class="w-full max-w-[420px] px-gutter relative z-10">
+      <div
+        class="bg-surface-container-lowest rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-surface-container-high p-8 sm:p-10 flex flex-col gap-stack-md"
+      >
+        <div class="text-center mb-4 flex flex-col items-center">
+          <img src="/logo.png" alt="SecurAssure" class="h-24 mb-stack-md" />
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            Veuillez vous connecter pour accéder à votre espace de gestion.
+          </p>
+        </div>
+
+        <div id="login-form">
+          <form
+            onsubmit="handleLogin(event)"
+            class="flex flex-col gap-stack-md w-full"
+          >
+            <div
+              id="login-error"
+              style="display: none"
+              class="p-3 rounded-lg bg-error-container text-on-background text-label-sm mb-2"
+            ></div>
+            <div>
+              <label
+                class="block font-label-sm text-label-sm text-on-surface-variant mb-1 ml-1"
+                for="email"
+                >Adresse e-mail</label
+              >
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline"
+                >
+                  <span class="material-symbols-outlined text-[20px]"
+                    >mail</span
+                  >
+                </div>
+                <input
+                  autocomplete="email"
+                  class="block w-full pl-10 pr-3 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none"
+                  id="email"
+                  name="email"
+                  placeholder="nom@entreprise.com"
+                  required=""
+                  type="email"
+                />
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-1 ml-1 pr-1">
+                <label
+                  class="block font-label-sm text-label-sm text-on-surface-variant"
+                  for="password"
+                  >Mot de passe</label
+                >
+              </div>
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline"
+                >
+                  <span class="material-symbols-outlined text-[20px]"
+                    >lock</span
+                  >
+                </div>
+                <input
+                  autocomplete="current-password"
+                  class="block w-full pl-10 pr-3 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required=""
+                  type="password"
+                />
+              </div>
+            </div>
+            <button
+              class="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm font-label-caps text-label-caps text-on-secondary bg-primary-container hover:bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              type="submit"
+            >
+              SE CONNECTER
+              <span class="material-symbols-outlined text-[18px]"
+                >arrow_forward</span
+              >
+            </button>
+          </form>
+        </div>
+
+        <div id="register-form" style="display: none">
+          <form
+            onsubmit="handleRegister(event)"
+            class="flex flex-col gap-stack-md w-full"
+          >
+            <div
+              id="register-error"
+              style="display: none"
+              class="p-3 rounded-lg bg-error-container text-on-background text-label-sm mb-2"
+            ></div>
+            <div>
+              <label
+                class="block font-label-sm text-label-sm text-on-surface-variant mb-1 ml-1"
+                for="name"
+                >Nom complet</label
+              >
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline"
+                >
+                  <span class="material-symbols-outlined text-[20px]"
+                    >person</span
+                  >
+                </div>
+                <input
+                  class="block w-full pl-10 pr-3 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none"
+                  id="name"
+                  name="name"
+                  placeholder="Badreddine Lahlou"
+                  required=""
+                  type="text"
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                class="block font-label-sm text-label-sm text-on-surface-variant mb-1 ml-1"
+                for="reg-email"
+                >Adresse e-mail</label
+              >
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline"
+                >
+                  <span class="material-symbols-outlined text-[20px]"
+                    >mail</span
+                  >
+                </div>
+                <input
+                  class="block w-full pl-10 pr-3 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none"
+                  id="reg-email"
+                  name="reg-email"
+                  placeholder="nom@entreprise.com"
+                  required=""
+                  type="email"
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                class="block font-label-sm text-label-sm text-on-surface-variant mb-1 ml-1"
+                for="reg-password"
+                >Mot de passe</label
+              >
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline"
+                >
+                  <span class="material-symbols-outlined text-[20px]"
+                    >lock</span
+                  >
+                </div>
+                <input
+                  class="block w-full pl-10 pr-3 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all outline-none"
+                  id="reg-password"
+                  name="reg-password"
+                  placeholder="••••••••"
+                  required=""
+                  type="password"
+                />
+              </div>
+            </div>
+            <button
+              class="w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm font-label-caps text-label-caps text-on-secondary bg-primary-container hover:bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              type="submit"
+            >
+              S'INSCRIRE
+              <span class="material-symbols-outlined text-[18px]"
+                >app_registration</span
+              >
+            </button>
+          </form>
+        </div>
+
+        <div class="mt-4 text-center">
+          <p id="toggle-text" class="font-label-sm text-label-sm text-outline">
+            Vous n'avez pas de compte?
+            <a
+              class="text-secondary hover:underline cursor-pointer font-medium"
+              onclick="toggleForm()"
+              >S'inscrire</a
+            >
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+      if (getToken()) {
+        const user = getUser();
+        window.location.href =
+          user.role === "ADMIN" ? "/admin.html" : "/agent.html";
+      }
+
+      function toggleForm() {
+        const loginForm = document.getElementById("login-form");
+        const registerForm = document.getElementById("register-form");
+        const toggleText = document.getElementById("toggle-text");
+
+        if (loginForm.style.display === "none") {
+          loginForm.style.display = "block";
+          registerForm.style.display = "none";
+          toggleText.innerHTML =
+            'Vous n\'avez pas de compte? <a class="text-secondary hover:underline cursor-pointer font-medium" onclick="toggleForm()">S\'inscrire</a>';
+        } else {
+          loginForm.style.display = "none";
+          registerForm.style.display = "block";
+          toggleText.innerHTML =
+            'Vous avez déjà un compte? <a class="text-secondary hover:underline cursor-pointer font-medium" onclick="toggleForm()">Se connecter</a>';
+        }
+      }
+
+      async function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const errorDiv = document.getElementById("login-error");
+
+        try {
+          const data = await login(email, password);
+          window.location.href =
+            data.user.role === "ADMIN" ? "/admin.html" : "/agent.html";
+        } catch (err) {
+          errorDiv.textContent = err.message;
+          errorDiv.style.display = "block";
+        }
+      }
+
+      async function handleRegister(event) {
+        event.preventDefault();
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("reg-email").value;
+        const password = document.getElementById("reg-password").value;
+        const errorDiv = document.getElementById("register-error");
+
+        try {
+          await register(email, password, name);
+          alert("Inscription réussie! Veuillez vous connecter.");
+          toggleForm();
+          document.getElementById("email").value = "";
+          document.getElementById("password").value = "";
+        } catch (err) {
+          errorDiv.textContent = err.message;
+          errorDiv.style.display = "block";
+        }
+      }
+    </script>
+  </body>
+</html>

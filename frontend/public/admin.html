@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecurAssure - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400;
+      }
+      .sidebar-link.active {
+        @apply bg-indigo-600 text-white;
+      }
+      .stat-card {
+        transition: all 0.3s ease;
+      }
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div class="flex h-screen">
+      <!-- SIDEBAR -->
+      <aside class="w-64 bg-gray-900 text-white p-6 overflow-y-auto">
+        <div class="flex items-center gap-3 mb-8">
+          <img src="/logo.png" alt="SecurAssure" class="h-16" />
+        </div>
+
+        <nav class="space-y-2 mb-8">
+          <button
+            onclick="switchTab('dashboard')"
+            class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
+          >
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>Dashboard</span>
+          </button>
+          <button
+            onclick="switchTab('leads')"
+            class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
+          >
+            <span class="material-symbols-outlined">people</span>
+            <span>Tous les Leads</span>
+          </button>
+          <button
+            onclick="switchTab('users')"
+            class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
+          >
+            <span class="material-symbols-outlined">group</span>
+            <span>Utilisateurs</span>
+          </button>
+          <button
+            onclick="switchTab('import')"
+            class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
+          >
+            <span class="material-symbols-outlined">upload_file</span>
+            <span>Importer</span>
+          </button>
+        </nav>
+
+        <hr class="border-gray-700 mb-6" />
+
+        <div class="space-y-2">
+          <button
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300"
+          >
+            <span class="material-symbols-outlined">settings</span>
+            <span>Paramètres</span>
+          </button>
+          <button
+            onclick="handleLogout()"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-900 transition text-red-300"
+          >
+            <span class="material-symbols-outlined">logout</span>
+            <span>Déconnexion</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- TOP BAR -->
+        <header
+          class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between"
+        >
+          <div>
+            <h2
+              class="text-2xl font-bold text-gray-900 flex items-center gap-3"
+            >
+              <img src="/logo.png" alt="SecurAssure" class="h-10" />
+              Admin
+            </h2>
+            <p class="text-sm text-gray-500">
+              Gérez tous vos leads et utilisateurs
+            </p>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="relative hidden md:block">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-5xl"
+                style="font-size: 20px"
+                >search</span
+              >
+              <input
+                type="text"
+                id="search-input"
+                onkeyup="performSearch()"
+                placeholder="Rechercher..."
+                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64"
+              />
+            </div>
+            <button
+              class="relative p-2 hover:bg-gray-100 rounded-lg transition"
+            >
+              <span class="material-symbols-outlined">notifications</span>
+              <span
+                class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"
+              ></span>
+            </button>
+            <div
+              class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold cursor-pointer"
+            >
+              <span id="user-avatar">A</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 overflow-y-auto">
+          <div class="p-8">
+            <!-- DASHBOARD TAB -->
+            <div id="dashboard-tab" class="tab-content space-y-8">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                  Vue d'ensemble
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div
+                    class="stat-card bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">
+                          Total Leads
+                        </p>
+                        <p
+                          class="text-3xl font-bold text-gray-900"
+                          id="dash-total"
+                        >
+                          0
+                        </p>
+                      </div>
+                      <span
+                        class="material-symbols-outlined text-3xl text-blue-500"
+                        >trending_up</span
+                      >
+                    </div>
+                  </div>
+
+                  <div
+                    class="stat-card bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">
+                          Assignés
+                        </p>
+                        <p
+                          class="text-3xl font-bold text-gray-900"
+                          id="dash-assigned"
+                        >
+                          0
+                        </p>
+                      </div>
+                      <span
+                        class="material-symbols-outlined text-3xl text-green-500"
+                        >check_circle</span
+                      >
+                    </div>
+                  </div>
+
+                  <div
+                    class="stat-card bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">
+                          Utilisateurs
+                        </p>
+                        <p
+                          class="text-3xl font-bold text-gray-900"
+                          id="dash-users"
+                        >
+                          0
+                        </p>
+                      </div>
+                      <span
+                        class="material-symbols-outlined text-3xl text-purple-500"
+                        >group</span
+                      >
+                    </div>
+                  </div>
+
+                  <div
+                    class="stat-card bg-white rounded-lg p-6 shadow-sm border border-gray-200"
+                  >
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <p class="text-sm font-medium text-gray-600 mb-1">
+                          Conversion
+                        </p>
+                        <p
+                          class="text-3xl font-bold text-gray-900"
+                          id="dash-conversion"
+                        >
+                          0%
+                        </p>
+                      </div>
+                      <span
+                        class="material-symbols-outlined text-3xl text-orange-500"
+                        >local_fire_department</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                  Activité récente
+                </h3>
+                <div
+                  class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+                >
+                  <div class="p-6">
+                    <p class="text-gray-500 text-center py-8">
+                      Activer la tab "Tous les Leads" pour voir l'activité
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LEADS TAB -->
+            <div id="leads-tab" class="tab-content" style="display: none">
+              <div class="mb-6 flex justify-between items-center">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">
+                    Tous les Leads
+                  </h3>
+                  <p class="text-sm text-gray-500" id="leads-count">0 leads</p>
+                </div>
+                <button
+                  onclick="showLeadModal()"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 font-medium"
+                >
+                  <span class="material-symbols-outlined">add</span>
+                  Nouveau Lead
+                </button>
+              </div>
+
+              <div
+                class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+              >
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Nom
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Email
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Téléphone
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Statut
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Agent
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Montant
+                        </th>
+                        <th
+                          class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="leads-tbody" class="divide-y divide-gray-200">
+                      <tr>
+                        <td
+                          colspan="7"
+                          class="px-6 py-8 text-center text-gray-500"
+                        >
+                          Chargement...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- USERS TAB -->
+            <div id="users-tab" class="tab-content" style="display: none">
+              <div class="mb-6 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">
+                  Utilisateurs
+                </h3>
+                <button
+                  onclick="showUserModal()"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 font-medium"
+                >
+                  <span class="material-symbols-outlined">add</span>
+                  Nouvel Utilisateur
+                </button>
+              </div>
+
+              <div
+                class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+              >
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Nom
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Email
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Rôle
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Leads
+                        </th>
+                        <th
+                          class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="users-tbody" class="divide-y divide-gray-200">
+                      <tr>
+                        <td
+                          colspan="5"
+                          class="px-6 py-8 text-center text-gray-500"
+                        >
+                          Chargement...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- IMPORT TAB -->
+            <div id="import-tab" class="tab-content" style="display: none">
+              <div class="max-w-2xl">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                  Importer des Leads
+                </h3>
+                <p class="text-gray-600 text-sm mb-6">
+                  Déposez un fichier Excel ou cliquez pour sélectionner
+                </p>
+
+                <div
+                  class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-indigo-500 hover:bg-indigo-50 transition cursor-pointer"
+                  ondrop="handleDrop(event)"
+                  ondragover="event.preventDefault()"
+                >
+                  <span
+                    class="material-symbols-outlined text-5xl text-gray-400 block mb-4"
+                    >cloud_upload</span
+                  >
+                  <p class="font-semibold text-gray-900 mb-2">
+                    Déposer le fichier ici
+                  </p>
+                  <p class="text-gray-600 text-sm mb-4">
+                    ou
+                    <span
+                      class="text-indigo-600 font-semibold cursor-pointer"
+                      onclick="document.getElementById('file-input').click()"
+                      >parcourir</span
+                    >
+                  </p>
+                  <input
+                    type="file"
+                    id="file-input"
+                    accept=".xlsx,.xls"
+                    style="display: none"
+                    onchange="handleFileSelect(event)"
+                  />
+                  <p class="text-xs text-gray-500">
+                    Colonnes attendues: name, email, phone, status, source,
+                    amount, notes
+                  </p>
+                </div>
+                <div
+                  id="import-message"
+                  class="mt-6"
+                  style="display: none"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- LEAD MODAL -->
+    <div
+      id="lead-modal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      style="display: none"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Nouveau Lead</h3>
+        <form onsubmit="saveLead(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nom *</label
+            >
+            <input
+              type="text"
+              id="lead-name"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Email *</label
+            >
+            <input
+              type="email"
+              id="lead-email"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Téléphone</label
+            >
+            <input
+              type="tel"
+              id="lead-phone"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Montant</label
+            >
+            <input
+              type="number"
+              id="lead-amount"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div class="flex gap-2 pt-4">
+            <button
+              type="button"
+              onclick="closeLeadModal()"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
+            >
+              Créer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- USER MODAL -->
+    <div
+      id="user-modal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      style="display: none"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Nouvel Utilisateur</h3>
+        <form onsubmit="saveUser(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nom *</label
+            >
+            <input
+              type="text"
+              id="user-name"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Email *</label
+            >
+            <input
+              type="email"
+              id="user-email"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Mot de passe *</label
+            >
+            <input
+              type="password"
+              id="user-password"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Rôle</label
+            >
+            <select
+              id="user-role"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="AGENT">Agent</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+          <div class="flex gap-2 pt-4">
+            <button
+              type="button"
+              onclick="closeUserModal()"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
+            >
+              Créer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+      let allLeads = [];
+      let allUsers = [];
+
+      window.addEventListener("load", async () => {
+        const user = getUser();
+        if (!user || user.role !== "ADMIN") {
+          window.location.href = "/index.html";
+          return;
+        }
+        document.getElementById("user-avatar").textContent = user.name
+          .charAt(0)
+          .toUpperCase();
+        await loadLeads();
+        await loadUsers();
+        updateDashboard();
+      });
+
+      function switchTab(tab) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((el) => (el.style.display = "none"));
+        document
+          .querySelectorAll(".sidebar-link")
+          .forEach((el) => el.classList.remove("active"));
+        document.getElementById(tab + "-tab").style.display = "block";
+        event.target.closest("button").classList.add("active");
+      }
+
+      async function loadLeads() {
+        try {
+          const data = await getAllLeads(0, 999999);
+          allLeads = data.leads;
+          renderLeads(allLeads);
+          document.getElementById("leads-count").textContent =
+            `${allLeads.length} leads`;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderLeads(leads) {
+        const tbody = document.getElementById("leads-tbody");
+        if (leads.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Aucun lead</td></tr>';
+          return;
+        }
+        tbody.innerHTML = leads
+          .map(
+            (lead) => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 font-medium text-gray-900">${lead.name}</td>
+          <td class="px-6 py-4 text-gray-600">${lead.email}</td>
+          <td class="px-6 py-4 text-gray-600">${lead.phone}</td>
+          <td class="px-6 py-4">
+            <select onchange="updateLeadStatus(${lead.id}, this.value)" class="px-2 py-1 border border-gray-300 rounded text-sm">
+              <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
+              <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacté</option>
+              <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Intéressé</option>
+              <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifié</option>
+              <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Fermé</option>
+            </select>
+          </td>
+          <td class="px-6 py-4">
+            <select onchange="assignLeadToAgent(${lead.id}, this.value)" class="px-2 py-1 border border-gray-300 rounded text-sm">
+              <option value="">Assigner...</option>
+              ${allUsers
+                .filter((u) => u.role === "AGENT")
+                .map(
+                  (u) =>
+                    `<option value="${u.id}" ${lead.assigned_to === u.id ? "selected" : ""}>${u.name}</option>`,
+                )
+                .join("")}
+            </select>
+          </td>
+          <td class="px-6 py-4">$${lead.amount?.toFixed(2) || "0.00"}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="deleteLeadHandler(${lead.id})" class="text-red-600 hover:text-red-700 font-medium text-sm">Supprimer</button>
+          </td>
+        </tr>
+      `,
+          )
+          .join("");
+      }
+
+      function performSearch() {
+        const query = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        const filtered = allLeads.filter(
+          (l) =>
+            l.name.toLowerCase().includes(query) ||
+            l.email.toLowerCase().includes(query),
+        );
+        renderLeads(filtered);
+      }
+
+      async function updateLeadStatus(leadId, status) {
+        try {
+          await updateLead(leadId, { status });
+          loadLeads();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function assignLeadToAgent(leadId, userId) {
+        if (!userId) return;
+        try {
+          await assignLead(leadId, userId);
+          loadLeads();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteLeadHandler(leadId) {
+        if (confirm("Êtes-vous sûr?")) {
+          try {
+            const response = await fetch(`/api/leads/${leadId}`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            if (!response.ok) throw new Error(await response.text());
+            loadLeads();
+          } catch (err) {
+            alert(err.message);
+          }
+        }
+      }
+
+      function showLeadModal() {
+        document.getElementById("lead-name").value = "";
+        document.getElementById("lead-email").value = "";
+        document.getElementById("lead-phone").value = "";
+        document.getElementById("lead-amount").value = "";
+        document.getElementById("lead-modal").style.display = "flex";
+      }
+
+      function closeLeadModal() {
+        document.getElementById("lead-modal").style.display = "none";
+      }
+
+      async function saveLead(event) {
+        event.preventDefault();
+        const data = {
+          name: document.getElementById("lead-name").value,
+          email: document.getElementById("lead-email").value,
+          phone: document.getElementById("lead-phone").value,
+          amount: parseFloat(document.getElementById("lead-amount").value) || 0,
+          status: "NEW",
+          source: "Manual",
+        };
+        try {
+          await createLead(data);
+          closeLeadModal();
+          loadLeads();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function loadUsers() {
+        try {
+          const data = await getAllUsers();
+          allUsers = data;
+          renderUsers(data);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderUsers(users) {
+        const tbody = document.getElementById("users-tbody");
+        if (users.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Aucun utilisateur</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users
+          .map((user) => {
+            const userLeads = allLeads.filter(
+              (l) => l.assigned_to === user.id,
+            ).length;
+            return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 font-medium text-gray-900">${user.name}</td>
+          <td class="px-6 py-4 text-gray-600">${user.email}</td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${user.role === "ADMIN" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}">${user.role}</span>
+          </td>
+          <td class="px-6 py-4 text-gray-900 font-medium">${userLeads}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="deleteUserHandler(${user.id})" class="text-red-600 hover:text-red-700 font-medium text-sm">Supprimer</button>
+          </td>
+        </tr>
+      `;
+          })
+          .join("");
+      }
+
+      function showUserModal() {
+        document.getElementById("user-name").value = "";
+        document.getElementById("user-email").value = "";
+        document.getElementById("user-password").value = "";
+        document.getElementById("user-role").value = "AGENT";
+        document.getElementById("user-modal").style.display = "flex";
+      }
+
+      function closeUserModal() {
+        document.getElementById("user-modal").style.display = "none";
+      }
+
+      async function saveUser(event) {
+        event.preventDefault();
+        const data = {
+          email: document.getElementById("user-email").value,
+          password: document.getElementById("user-password").value,
+          name: document.getElementById("user-name").value,
+          role: document.getElementById("user-role").value,
+        };
+        try {
+          await register(data.email, data.password, data.name, data.role);
+          closeUserModal();
+          loadUsers();
+          loadLeads();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function deleteUserHandler(userId) {
+        if (confirm("Êtes-vous sûr?")) {
+          try {
+            const response = await fetch(`/api/users/${userId}`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            if (!response.ok) throw new Error(await response.text());
+            loadUsers();
+          } catch (err) {
+            alert(err.message);
+          }
+        }
+      }
+
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        uploadExcel(file);
+      }
+
+      function handleDrop(event) {
+        event.preventDefault();
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+          uploadExcel(files[0]);
+        }
+      }
+
+      async function handleUploadExcel(file) {
+        try {
+          const msg = document.getElementById("import-message");
+          msg.textContent = "Chargement en cours...";
+          msg.className = "p-4 rounded-lg bg-blue-100 text-blue-800";
+          msg.style.display = "block";
+
+          const formData = new FormData();
+          formData.append("file", file);
+          const response = await fetch("/api/leads/import", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${getToken()}` },
+            body: formData,
+          });
+          if (!response.ok) throw new Error(await response.text());
+
+          msg.textContent = "Import réussi!";
+          msg.className = "p-4 rounded-lg bg-green-100 text-green-800";
+          await loadLeads();
+          document.getElementById("file-input").value = "";
+        } catch (err) {
+          msg.textContent = "Erreur: " + err.message;
+          msg.className = "p-4 rounded-lg bg-red-100 text-red-800";
+        }
+      }
+
+      function updateDashboard() {
+        const total = allLeads.length;
+        const assigned = allLeads.filter((l) => l.assigned_to).length;
+        const closed = allLeads.filter((l) => l.status === "CLOSED").length;
+        const conversionRate = total ? Math.round((closed / total) * 100) : 0;
+
+        document.getElementById("dash-total").textContent = total;
+        document.getElementById("dash-assigned").textContent = assigned;
+        document.getElementById("dash-users").textContent = allUsers.length;
+        document.getElementById("dash-conversion").textContent =
+          conversionRate + "%";
+      }
+
+      function handleLogout() {
+        logout();
+        window.location.href = "/index.html";
+      }
+    </script>
+  </body>
+</html>

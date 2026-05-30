@@ -1,0 +1,604 @@
+<!doctype html>
+<html class="light" lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SecurAssure - Dashboard Agent</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              outline: "#76767f",
+              "on-background": "#191c1e",
+              "on-secondary": "#ffffff",
+              "outline-variant": "#c6c6cf",
+              "primary-container": "#0b1a3f",
+              "on-surface-variant": "#45464e",
+              "on-primary-container": "#7683ae",
+              "error-container": "#ffdad6",
+              secondary: "#1b3fe7",
+              "on-secondary-fixed": "#000f5c",
+              "surface-tint": "#505d86",
+              "surface-container-low": "#f2f4f6",
+              primary: "#000107",
+              tertiary: "#000200",
+              "inverse-on-surface": "#eff1f3",
+              "secondary-fixed": "#dee0ff",
+              "secondary-container": "#3f5dff",
+              "surface-dim": "#d8dadc",
+              "surface-container-highest": "#e0e3e5",
+              "on-primary": "#ffffff",
+              "primary-fixed-dim": "#b8c5f4",
+              error: "#ba1a1a",
+              "inverse-surface": "#2d3133",
+              "tertiary-fixed": "#6bff8f",
+              background: "#f7f9fb",
+              "surface-bright": "#f7f9fb",
+              "on-error": "#ffffff",
+              "surface-container": "#eceef0",
+              "tertiary-fixed-dim": "#4ae176",
+              "on-primary-fixed": "#0a193e",
+              "on-error-container": "#93000a",
+              surface: "#f7f9fb",
+              "on-primary-fixed-variant": "#38456c",
+              "tertiary-container": "#00220a",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed-dim": "#bbc3ff",
+              "on-tertiary-fixed": "#002109",
+              "surface-container-high": "#e6e8ea",
+              "primary-fixed": "#dbe1ff",
+              "on-tertiary-container": "#009944",
+              "inverse-primary": "#b8c5f4",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e0e3e5",
+              "on-surface": "#191c1e",
+              "on-secondary-container": "#f5f3ff",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "stack-md": "1rem",
+              "stack-sm": "0.5rem",
+              "sidebar-width": "260px",
+              gutter: "1.5rem",
+              "container-padding": "2rem",
+            },
+            fontFamily: {
+              "body-md": ["Inter"],
+              "headline-lg": ["Inter"],
+              "body-lg": ["Inter"],
+              "label-sm": ["Inter"],
+              "label-caps": ["Inter"],
+              "headline-md": ["Inter"],
+            },
+            fontSize: {
+              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-lg": [
+                "28px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+              "label-caps": [
+                "12px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.05em",
+                  fontWeight: "700",
+                },
+              ],
+              "headline-md": [
+                "20px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-background font-body-md min-h-screen flex">
+    <!-- SideNavBar -->
+    <nav
+      class="hidden md:flex flex-col border-r border-outline-variant dark:border-outline p-stack-md bg-surface-container-lowest dark:bg-surface-container-low text-primary dark:text-primary-fixed font-body-md text-body-md text-headline-md font-headline-md font-black fixed left-0 top-0 h-full w-sidebar-width overflow-y-auto"
+    >
+      <div class="flex items-center gap-2 mb-8 px-4">
+        <img src="/logo.png" alt="SecurAssure" class="h-12" />
+      </div>
+      <button
+        class="w-full bg-primary text-on-primary font-label-sm text-label-sm font-medium py-3 rounded-lg mb-8 hover:opacity-90 transition-opacity flex justify-center items-center gap-2 shadow-sm"
+      >
+        <span class="material-symbols-outlined" style="font-size: 18px"
+          >add</span
+        >
+        Nouveau Lead
+      </button>
+      <ul class="flex-1 space-y-2">
+        <li>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
+            href="#"
+            ><span class="material-symbols-outlined">dashboard</span
+            ><span>Tableau de bord</span></a
+          >
+        </li>
+        <li>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-container text-primary font-bold transition-all duration-200 ease-in-out"
+            href="#"
+            ><span
+              class="material-symbols-outlined"
+              style="font-variation-settings: &quot;FILL&quot; 1"
+              >filter_list</span
+            ><span>Leads</span></a
+          >
+        </li>
+        <li>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
+            href="#"
+            ><span class="material-symbols-outlined">group</span
+            ><span>Utilisateurs</span></a
+          >
+        </li>
+        <li>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
+            href="#"
+            ><span class="material-symbols-outlined">settings</span
+            ><span>Paramètres</span></a
+          >
+        </li>
+      </ul>
+      <div class="mt-auto border-t border-outline-variant pt-4 space-y-2">
+        <a
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
+          href="#"
+          ><span class="material-symbols-outlined">help</span
+          ><span>Aide</span></a
+        >
+        <a
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-error font-medium hover:bg-error-container transition-all duration-200 ease-in-out cursor-pointer"
+          onclick="handleLogout()"
+          ><span class="material-symbols-outlined">logout</span
+          ><span>Déconnexion</span></a
+        >
+      </div>
+    </nav>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 md:ml-sidebar-width flex flex-col min-h-screen">
+      <!-- TopNavBar -->
+      <header
+        class="flex justify-between items-center w-full px-gutter h-16 bg-surface-container-lowest dark:bg-surface-container-low text-primary dark:text-primary-fixed font-body-md text-body-md text-headline-md font-headline-md font-black shadow-sm dark:shadow-none sticky top-0 z-10"
+      >
+        <div class="flex-1 flex items-center gap-4">
+          <button
+            class="md:hidden text-on-surface hover:bg-surface-container-high p-2 rounded-full transition-colors"
+          >
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div class="relative w-64 hidden sm:block">
+            <span
+              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline"
+              >search</span
+            >
+            <input
+              class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              id="search-input"
+              onkeyup="searchLeads()"
+              placeholder="Rechercher un lead..."
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <button
+            class="text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer p-2 rounded-full relative"
+          >
+            <span class="material-symbols-outlined">notifications</span>
+            <span
+              class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"
+            ></span>
+          </button>
+          <button
+            class="text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer p-2 rounded-full"
+          >
+            <span class="material-symbols-outlined">help</span>
+          </button>
+          <div
+            class="w-8 h-8 rounded-full overflow-hidden bg-surface-variant border border-outline-variant cursor-pointer"
+          >
+            <div
+              class="w-full h-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs"
+              id="user-avatar"
+            >
+              U
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Canvas -->
+      <main class="flex-1 p-container-padding bg-background overflow-auto">
+        <div class="mb-8 flex justify-between items-end">
+          <div>
+            <h2 class="text-headline-lg font-headline-lg text-on-surface mb-1">
+              Mes Leads
+            </h2>
+            <p class="text-body-md font-body-md text-on-surface-variant">
+              Suivi et gestion de votre portefeuille actif.
+            </p>
+          </div>
+          <div class="text-right">
+            <span
+              class="text-body-lg font-body-lg text-on-surface-variant block"
+              >Total actif</span
+            >
+            <span
+              class="text-headline-md font-headline-md text-primary"
+              id="leads-count"
+              >0 Leads</span
+            >
+          </div>
+        </div>
+
+        <!-- Dashboard Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+          <!-- Conversion Widget -->
+          <div
+            class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-primary-fixed rounded-full opacity-20 blur-2xl group-hover:bg-primary transition-all duration-500"
+            ></div>
+            <div class="flex justify-between items-start mb-4 relative z-10">
+              <div>
+                <p
+                  class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1"
+                >
+                  Mes Conversions
+                </p>
+                <h3
+                  class="text-headline-lg font-headline-lg text-on-surface"
+                  id="conversion-rate"
+                >
+                  0%
+                </h3>
+              </div>
+              <div
+                class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center"
+              >
+                <span
+                  class="material-symbols-outlined text-on-primary-container"
+                  style="font-variation-settings: &quot;FILL&quot; 1"
+                  >trending_up</span
+                >
+              </div>
+            </div>
+            <div class="flex items-center gap-2 relative z-10">
+              <span
+                class="text-tertiary-container font-label-sm text-label-sm bg-tertiary-fixed px-2 py-0.5 rounded-full flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[14px]"
+                  >arrow_upward</span
+                >
+                0%
+              </span>
+              <span class="text-label-sm font-label-sm text-on-surface-variant"
+                >vs mois dernier</span
+              >
+            </div>
+          </div>
+
+          <!-- Goal Widget -->
+          <div
+            class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant relative overflow-hidden group"
+          >
+            <div
+              class="absolute -left-4 -bottom-4 w-32 h-32 bg-secondary-fixed rounded-full opacity-20 blur-2xl group-hover:bg-secondary transition-all duration-500"
+            ></div>
+            <div class="flex justify-between items-start mb-4 relative z-10">
+              <div>
+                <p
+                  class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1"
+                >
+                  Objectif Mensuel
+                </p>
+                <h3
+                  class="text-headline-lg font-headline-lg text-on-surface"
+                  id="goal-progress"
+                >
+                  0 / 15
+                </h3>
+              </div>
+              <div
+                class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center"
+              >
+                <span
+                  class="material-symbols-outlined text-on-secondary-container"
+                  style="font-variation-settings: &quot;FILL&quot; 1"
+                  >flag</span
+                >
+              </div>
+            </div>
+            <div
+              class="w-full bg-surface-variant rounded-full h-2 mt-4 relative z-10"
+            >
+              <div
+                class="bg-secondary h-2 rounded-full"
+                id="goal-bar"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Quick Action Widget -->
+          <div
+            class="bg-primary rounded-xl p-6 shadow-sm flex flex-col justify-between text-on-primary relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none"
+            ></div>
+            <div>
+              <h3 class="text-headline-md font-headline-md mb-2">
+                Besoin d'un rappel ?
+              </h3>
+              <p
+                class="text-body-md font-body-md text-on-primary/80 mb-4"
+                id="urgent-count"
+              >
+                0 leads nécessitent une attention immédiate.
+              </p>
+            </div>
+            <button
+              class="bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold py-2 px-4 rounded-lg hover:bg-surface-container-low transition-colors self-start"
+            >
+              Voir les urgences
+            </button>
+          </div>
+        </div>
+
+        <!-- Leads Data Table -->
+        <div
+          class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant overflow-hidden"
+        >
+          <div
+            class="p-6 border-b border-surface-variant flex justify-between items-center"
+          >
+            <h3 class="text-headline-md font-headline-md text-on-surface">
+              Liste des Leads
+            </h3>
+            <div class="flex gap-2">
+              <button
+                class="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors"
+              >
+                <span class="material-symbols-outlined">filter_alt</span>
+              </button>
+              <button
+                class="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors"
+              >
+                <span class="material-symbols-outlined">sort</span>
+              </button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="bg-surface-container-lowest border-b border-surface-variant"
+                >
+                  <th
+                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
+                  >
+                    Nom de l'entreprise
+                  </th>
+                  <th
+                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
+                  >
+                    Contact
+                  </th>
+                  <th
+                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
+                  >
+                    Statut
+                  </th>
+                  <th
+                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
+                  >
+                    Dernière note
+                  </th>
+                  <th
+                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="text-body-md font-body-md text-on-surface"
+                id="leads-tbody"
+              >
+                <tr>
+                  <td
+                    colspan="5"
+                    class="p-8 text-center text-on-surface-variant"
+                  >
+                    Chargement des leads...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+      let allLeads = [];
+      let currentPage = 0;
+      let leadsPerPage = 50;
+
+      window.addEventListener("load", async () => {
+        const user = getUser();
+        if (!user) {
+          window.location.href = "/index.html";
+          return;
+        }
+        if (user.role === "ADMIN") {
+          window.location.href = "/admin.html";
+          return;
+        }
+        document.getElementById("user-avatar").textContent = user.name
+          .charAt(0)
+          .toUpperCase();
+        loadLeads();
+      });
+
+      async function loadLeads() {
+        try {
+          const data = await getUserLeads(0, 999999);
+          allLeads = data.leads;
+          document.getElementById("leads-count").textContent =
+            `${data.total} Leads`;
+          renderLeads(allLeads);
+          updateDashboard();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderLeads(leads) {
+        const tbody = document.getElementById("leads-tbody");
+        if (leads.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="p-8 text-center text-on-surface-variant">Aucun lead assigné</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = leads
+          .map(
+            (lead) => `
+        <tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors group">
+          <td class="p-4 font-medium">${lead.name}</td>
+          <td class="p-4">
+            <div class="flex flex-col">
+              <span>${lead.email}</span>
+              <span class="text-label-sm font-label-sm text-on-surface-variant">${lead.phone}</span>
+            </div>
+          </td>
+          <td class="p-4">
+            <select onchange="updateLeadStatus(${lead.id}, this.value)" class="bg-surface-container-lowest border border-outline-variant text-on-surface text-label-sm font-label-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2">
+              <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
+              <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacté</option>
+              <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Intéressé</option>
+              <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifié</option>
+              <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Fermé</option>
+            </select>
+          </td>
+          <td class="p-4 text-on-surface-variant text-sm max-w-xs truncate">${lead.notes}</td>
+          <td class="p-4 text-right">
+            <button onclick="editLead(${lead.id})" class="text-secondary hover:bg-secondary/10 px-2 py-1 rounded text-label-sm font-label-sm font-medium transition-colors">
+              Détails
+            </button>
+          </td>
+        </tr>
+      `,
+          )
+          .join("");
+      }
+
+      function searchLeads() {
+        const query = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        const filtered = allLeads.filter(
+          (lead) =>
+            lead.name.toLowerCase().includes(query) ||
+            lead.email.toLowerCase().includes(query) ||
+            lead.phone.includes(query),
+        );
+        renderLeads(filtered);
+      }
+
+      async function updateLeadStatus(leadId, status) {
+        try {
+          await updateLead(leadId, { status });
+          loadLeads();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      async function editLead(leadId) {
+        try {
+          const lead = await getLeadById(leadId);
+          const newNotes = prompt("Ajouter une note:", lead.notes);
+          if (newNotes !== null) {
+            await updateLead(leadId, { notes: newNotes });
+            loadLeads();
+          }
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function updateDashboard() {
+        const qualified = allLeads.filter(
+          (l) => l.status === "QUALIFIED",
+        ).length;
+        const closed = allLeads.filter((l) => l.status === "CLOSED").length;
+        const conversionRate = allLeads.length
+          ? Math.round((closed / allLeads.length) * 100)
+          : 0;
+
+        document.getElementById("conversion-rate").textContent =
+          conversionRate + "%";
+        document.getElementById("goal-progress").textContent =
+          `${qualified} / 15`;
+        document.getElementById("goal-bar").style.width =
+          Math.min((qualified / 15) * 100, 100) + "%";
+        document.getElementById("urgent-count").textContent =
+          allLeads.filter((l) => l.status === "NEW").length +
+          " leads nécessitent une attention immédiate.";
+      }
+
+      function handleLogout() {
+        logout();
+        window.location.href = "/index.html";
+      }
+    </script>
+  </body>
+</html>

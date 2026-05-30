@@ -1,0 +1,141 @@
+const pool = require("../config/db");
+
+// Get all leads (admin only)
+const getAllLeads = async (offset = 0, limit = 100) => {
+  const result = await pool.query(
+    "SELECT * FROM leads ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+    [limit, offset],
+  );
+  return result.rows;
+};
+
+// Get total leads count
+const getLeadsCount = async () => {
+  const result = await pool.query("SELECT COUNT(*) FROM leads");
+  return parseInt(result.rows[0].count);
+};
+
+// Get user's assigned leads
+const getUserLeads = async (userId, offset = 0, limit = 100) => {
+  const result = await pool.query(
+    "SELECT * FROM leads WHERE assigned_to = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+    [userId, limit, offset],
+  );
+  return result.rows;
+};
+
+// Get user's assigned leads count
+const getUserLeadsCount = async (userId) => {
+  const result = await pool.query(
+    "SELECT COUNT(*) FROM leads WHERE assigned_to = $1",
+    [userId],
+  );
+  return parseInt(result.rows[0].count);
+};
+
+// Get lead by ID
+const getLeadById = async (id) => {
+  const result = await pool.query("SELECT * FROM leads WHERE id = $1", [id]);
+  return result.rows[0];
+};
+
+// Create lead
+const createLead = async (leadData) => {
+  const { name, email, phone, status, source, amount, notes, assigned_to } =
+    leadData;
+  const result = await pool.query(
+    "INSERT INTO leads (name, email, phone, status, source, amount, notes, assigned_to, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *",
+    [
+      name,
+      email,
+      phone,
+      status || "NEW",
+      source || "UNKNOWN",
+      amount || 0,
+      notes || "",
+      assigned_to || null,
+    ],
+  );
+  return result.rows[0];
+};
+
+// Update lead
+const updateLead = async (id, leadData) => {
+  const { name, email, phone, status, source, amount, notes, assigned_to } =
+    leadData;
+  const result = await pool.query(
+    "UPDATE leads SET name = COALESCE($1, name), email = COALESCE($2, email), phone = COALESCE($3, phone), status = COALESCE($4, status), source = COALESCE($5, source), amount = COALESCE($6, amount), notes = COALESCE($7, notes), assigned_to = COALESCE($8, assigned_to), updated_at = NOW() WHERE id = $9 RETURNING *",
+    [name, email, phone, status, source, amount, notes, assigned_to, id],
+  );
+  return result.rows[0];
+};
+
+// Delete lead
+const deleteLead = async (id) => {
+  await pool.query("DELETE FROM leads WHERE id = $1", [id]);
+};
+
+// Bulk insert leads (for Excel import)
+const bulkInsertLeads = async (leads) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(
+      "INSERT INTO leads (name, email, phone, status, source, amount, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id",
+      [],
+    );
+
+    for (const lead of leads) {
+      await client.query(
+        "INSERT INTO leads (name, email, phone, status, source, amount, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())",
+        [
+          lead.name || "",
+          lead.email || "",
+          lead.phone || "",
+          lead.status || "NEW",
+          lead.source || "IMPORT",
+          lead.amount || 0,
+          lead.notes || "",
+        ],
+      );
+    }
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+// Assign lead to user
+const assignLead = async (leadId, userId) => {
+  const result = await pool.query(
+    "UPDATE leads SET assigned_to = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
+    [userId, leadId],
+  );
+  return result.rows[0];
+};
+
+// Search leads
+const searchLeads = async (query, offset = 0, limit = 100) => {
+  const result = await pool.query(
+    "SELECT * FROM leads WHERE name ILIKE $1 OR email ILIKE $1 OR phone ILIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+    [`%${query}%`, limit, offset],
+  );
+  return result.rows;
+};
+
+module.exports = {
+  getAllLeads,
+  getLeadsCount,
+  getUserLeads,
+  getUserLeadsCount,
+  getLeadById,
+  createLead,
+  updateLead,
+  deleteLead,
+  bulkInsertLeads,
+  assignLead,
+  searchLeads,
+};
