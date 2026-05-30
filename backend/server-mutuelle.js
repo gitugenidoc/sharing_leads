@@ -330,6 +330,10 @@ app.post("/api/auth/login", (req, res) => {
   }
 });
 
+app.get("/api/auth/me", verifyToken, (req, res) => {
+  res.json({ user: req.user });
+});
+
 // Routes: Users
 app.get("/api/users", verifyToken, isAdmin, (req, res) => {
   try {
@@ -590,7 +594,7 @@ app.put("/api/clients/:id/assign", verifyToken, isAdmin, (req, res) => {
       return res.status(404).json({ error: "Client not found" });
     }
 
-    client.assigned_to = req.body.user_id || null;
+    client.assigned_to = parseInt(req.body.userId || req.body.user_id, 10) || null;
     client.updated_at = new Date().toISOString();
 
     writeClients(clients);
@@ -598,6 +602,42 @@ app.put("/api/clients/:id/assign", verifyToken, isAdmin, (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: "Failed to assign client",
+      details: error.message,
+    });
+  }
+});
+
+app.post("/api/clients/assign-random", verifyToken, isAdmin, (req, res) => {
+  try {
+    const userId = parseInt(req.body.userId, 10);
+    const count = parseInt(req.body.count, 10);
+
+    if (!userId || !count || count < 1) {
+      return res.status(400).json({
+        error: "User ID and a positive count are required",
+      });
+    }
+
+    const clients = readClients();
+    const selectedClients = clients
+      .filter((client) => !client.assigned_to)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count);
+
+    selectedClients.forEach((client) => {
+      client.assigned_to = userId;
+      client.updated_at = new Date().toISOString();
+    });
+
+    writeClients(clients);
+    res.json({
+      assigned: selectedClients.length,
+      requested: count,
+      clients: selectedClients,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to assign random clients",
       details: error.message,
     });
   }
@@ -726,6 +766,10 @@ app.use((err, req, res, next) => {
 
 // Start server
 initializeDataFiles();
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date() });
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);

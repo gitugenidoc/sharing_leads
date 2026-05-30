@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { verifyToken } = require("../middleware/auth");
 require("dotenv").config();
 
 const router = express.Router();
@@ -71,7 +72,7 @@ router.post("/login", async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, email: user.email, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
@@ -92,8 +93,7 @@ router.post("/login", async (req, res) => {
 });
 
 // Get current user
-router.get("/me", (req, res) => {
-  // This route should be protected by verifyToken middleware
+router.get("/me", verifyToken, (req, res) => {
   res.json({ user: req.user });
 });
 

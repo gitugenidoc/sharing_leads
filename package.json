@@ -6,10 +6,10 @@
   "scripts": {
     "start": "node backend/server.js",
     "start:mutuelle": "node backend/server-mutuelle.js",
-    "start:mock": "node backend/server-mock.js",
+    "start:mock": "node backend/server-mutuelle.js",
     "dev": "nodemon backend/server.js",
     "dev:mutuelle": "nodemon backend/server-mutuelle.js",
-    "dev:mock": "nodemon backend/server-mock.js",
+    "dev:mock": "nodemon backend/server-mutuelle.js",
     "db:migrate": "node backend/db/migrate.js"
   },
   "keywords": [

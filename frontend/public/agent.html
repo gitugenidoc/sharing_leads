@@ -1,477 +1,211 @@
 <!doctype html>
-<html class="light" lang="fr">
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>SecurAssure - Dashboard Agent</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecurAssure - Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap"
       rel="stylesheet"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              outline: "#76767f",
-              "on-background": "#191c1e",
-              "on-secondary": "#ffffff",
-              "outline-variant": "#c6c6cf",
-              "primary-container": "#0b1a3f",
-              "on-surface-variant": "#45464e",
-              "on-primary-container": "#7683ae",
-              "error-container": "#ffdad6",
-              secondary: "#1b3fe7",
-              "on-secondary-fixed": "#000f5c",
-              "surface-tint": "#505d86",
-              "surface-container-low": "#f2f4f6",
-              primary: "#000107",
-              tertiary: "#000200",
-              "inverse-on-surface": "#eff1f3",
-              "secondary-fixed": "#dee0ff",
-              "secondary-container": "#3f5dff",
-              "surface-dim": "#d8dadc",
-              "surface-container-highest": "#e0e3e5",
-              "on-primary": "#ffffff",
-              "primary-fixed-dim": "#b8c5f4",
-              error: "#ba1a1a",
-              "inverse-surface": "#2d3133",
-              "tertiary-fixed": "#6bff8f",
-              background: "#f7f9fb",
-              "surface-bright": "#f7f9fb",
-              "on-error": "#ffffff",
-              "surface-container": "#eceef0",
-              "tertiary-fixed-dim": "#4ae176",
-              "on-primary-fixed": "#0a193e",
-              "on-error-container": "#93000a",
-              surface: "#f7f9fb",
-              "on-primary-fixed-variant": "#38456c",
-              "tertiary-container": "#00220a",
-              "surface-container-lowest": "#ffffff",
-              "secondary-fixed-dim": "#bbc3ff",
-              "on-tertiary-fixed": "#002109",
-              "surface-container-high": "#e6e8ea",
-              "primary-fixed": "#dbe1ff",
-              "on-tertiary-container": "#009944",
-              "inverse-primary": "#b8c5f4",
-              "on-tertiary": "#ffffff",
-              "surface-variant": "#e0e3e5",
-              "on-surface": "#191c1e",
-              "on-secondary-container": "#f5f3ff",
-            },
-            borderRadius: {
-              DEFAULT: "0.25rem",
-              lg: "0.5rem",
-              xl: "0.75rem",
-              full: "9999px",
-            },
-            spacing: {
-              "stack-md": "1rem",
-              "stack-sm": "0.5rem",
-              "sidebar-width": "260px",
-              gutter: "1.5rem",
-              "container-padding": "2rem",
-            },
-            fontFamily: {
-              "body-md": ["Inter"],
-              "headline-lg": ["Inter"],
-              "body-lg": ["Inter"],
-              "label-sm": ["Inter"],
-              "label-caps": ["Inter"],
-              "headline-md": ["Inter"],
-            },
-            fontSize: {
-              "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
-              "headline-lg": [
-                "28px",
-                {
-                  lineHeight: "36px",
-                  letterSpacing: "-0.02em",
-                  fontWeight: "700",
-                },
-              ],
-              "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
-              "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
-              "label-caps": [
-                "12px",
-                {
-                  lineHeight: "16px",
-                  letterSpacing: "0.05em",
-                  fontWeight: "700",
-                },
-              ],
-              "headline-md": [
-                "20px",
-                {
-                  lineHeight: "28px",
-                  letterSpacing: "-0.01em",
-                  fontWeight: "600",
-                },
-              ],
-            },
-          },
-        },
-      };
-    </script>
     <style>
+      * {
+        font-family: "Poppins", sans-serif;
+      }
       .material-symbols-outlined {
         font-variation-settings:
           "FILL" 0,
-          "wght" 400,
-          "GRAD" 0,
-          "opsz" 24;
+          "wght" 400;
       }
     </style>
   </head>
-  <body class="bg-background text-on-background font-body-md min-h-screen flex">
-    <!-- SideNavBar -->
-    <nav
-      class="hidden md:flex flex-col border-r border-outline-variant dark:border-outline p-stack-md bg-surface-container-lowest dark:bg-surface-container-low text-primary dark:text-primary-fixed font-body-md text-body-md text-headline-md font-headline-md font-black fixed left-0 top-0 h-full w-sidebar-width overflow-y-auto"
-    >
-      <div class="flex items-center gap-2 mb-8 px-4">
-        <img src="/logo.png" alt="SecurAssure" class="h-12" />
-      </div>
-      <button
-        class="w-full bg-primary text-on-primary font-label-sm text-label-sm font-medium py-3 rounded-lg mb-8 hover:opacity-90 transition-opacity flex justify-center items-center gap-2 shadow-sm"
+  <body class="bg-gray-50 text-gray-900">
+    <div class="flex min-h-screen">
+      <aside
+        id="agent-sidebar"
+        class="hidden md:flex w-64 shrink-0 flex-col bg-gray-900 p-6 text-white"
       >
-        <span class="material-symbols-outlined" style="font-size: 18px"
-          >add</span
-        >
-        Nouveau Client
-      </button>
-      <ul class="flex-1 space-y-2">
-        <li>
-          <a
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
-            href="#"
-            ><span class="material-symbols-outlined">dashboard</span
-            ><span>Tableau de bord</span></a
+        <div class="mb-8 flex items-center gap-3">
+          <img src="/logo.png" alt="SecurAssure" class="h-16" />
+        </div>
+
+        <nav class="flex-1 space-y-2">
+          <button
+            onclick="refreshClients()"
+            class="w-full flex items-center gap-3 rounded-lg bg-indigo-600 px-4 py-3 font-medium text-white transition hover:bg-indigo-700"
           >
-        </li>
-        <li>
-          <a
-            class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-container text-primary font-bold transition-all duration-200 ease-in-out"
-            href="#"
-            ><span
-              class="material-symbols-outlined"
-              style="font-variation-settings: &quot;FILL&quot; 1"
-              >filter_list</span
-            ><span>Clients</span></a
+            <span class="material-symbols-outlined">refresh</span>
+            <span>Actualiser</span>
+          </button>
+          <button
+            onclick="scrollToClients()"
+            class="w-full flex items-center gap-3 rounded-lg px-4 py-3 font-medium text-gray-200 transition hover:bg-gray-800"
           >
-        </li>
-        <li>
-          <a
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
-            href="#"
-            ><span class="material-symbols-outlined">group</span
-            ><span>Utilisateurs</span></a
-          >
-        </li>
-        <li>
-          <a
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
-            href="#"
-            ><span class="material-symbols-outlined">settings</span
-            ><span>Paramètres</span></a
-          >
-        </li>
-      </ul>
-      <div class="mt-auto border-t border-outline-variant pt-4 space-y-2">
-        <a
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low hover:text-primary transition-all duration-200 ease-in-out"
-          href="#"
-          ><span class="material-symbols-outlined">help</span
-          ><span>Aide</span></a
-        >
-        <a
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-error font-medium hover:bg-error-container transition-all duration-200 ease-in-out cursor-pointer"
+            <span class="material-symbols-outlined">people</span>
+            <span>Mes clients</span>
+          </button>
+        </nav>
+
+        <button
           onclick="handleLogout()"
-          ><span class="material-symbols-outlined">logout</span
-          ><span>Déconnexion</span></a
+          class="mt-6 w-full flex items-center gap-3 rounded-lg px-4 py-3 font-medium text-red-300 transition hover:bg-red-900"
         >
-      </div>
-    </nav>
+          <span class="material-symbols-outlined">logout</span>
+          <span>Deconnexion</span>
+        </button>
+      </aside>
 
-    <!-- Main Content Wrapper -->
-    <div class="flex-1 md:ml-sidebar-width flex flex-col min-h-screen">
-      <!-- TopNavBar -->
-      <header
-        class="flex justify-between items-center w-full px-gutter h-16 bg-surface-container-lowest dark:bg-surface-container-low text-primary dark:text-primary-fixed font-body-md text-body-md text-headline-md font-headline-md font-black shadow-sm dark:shadow-none sticky top-0 z-10"
-      >
-        <div class="flex-1 flex items-center gap-4">
-          <button
-            class="md:hidden text-on-surface hover:bg-surface-container-high p-2 rounded-full transition-colors"
-          >
-            <span class="material-symbols-outlined">menu</span>
-          </button>
-          <div class="relative w-64 hidden sm:block">
-            <span
-              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline"
-              >search</span
+      <main class="flex-1 overflow-hidden">
+        <header
+          class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 md:px-8"
+        >
+          <div class="flex items-center gap-3">
+            <button
+              onclick="toggleMobileMenu()"
+              class="rounded-lg p-2 transition hover:bg-gray-100 md:hidden"
+              aria-label="Menu"
             >
-            <input
-              class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              id="search-input"
-              onkeyup="searchLeads()"
-              placeholder="Rechercher un client..."
-            />
-          </div>
-        </div>
-        <div class="flex items-center gap-4">
-          <button
-            class="text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer p-2 rounded-full relative"
-          >
-            <span class="material-symbols-outlined">notifications</span>
-            <span
-              class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"
-            ></span>
-          </button>
-          <button
-            class="text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer p-2 rounded-full"
-          >
-            <span class="material-symbols-outlined">help</span>
-          </button>
-          <div
-            class="w-8 h-8 rounded-full overflow-hidden bg-surface-variant border border-outline-variant cursor-pointer"
-          >
-            <div
-              class="w-full h-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs"
-              id="user-avatar"
-            >
-              U
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Main Content Canvas -->
-      <main class="flex-1 p-container-padding bg-background overflow-auto">
-        <div class="mb-8 flex justify-between items-end">
-          <div>
-            <h2 class="text-headline-lg font-headline-lg text-on-surface mb-1">
-              Mes Clients
-            </h2>
-            <p class="text-body-md font-body-md text-on-surface-variant">
-              Suivi et gestion de votre portefeuille clients.
-            </p>
-          </div>
-          <div class="text-right">
-            <span
-              class="text-body-lg font-body-lg text-on-surface-variant block"
-              >Total actif</span
-            >
-            <span
-              class="text-headline-md font-headline-md text-primary"
-              id="leads-count"
-              >0 Clients</span
-            >
-          </div>
-        </div>
-
-        <!-- Dashboard Widgets -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
-          <!-- Conversion Widget -->
-          <div
-            class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant relative overflow-hidden group"
-          >
-            <div
-              class="absolute -right-4 -top-4 w-24 h-24 bg-primary-fixed rounded-full opacity-20 blur-2xl group-hover:bg-primary transition-all duration-500"
-            ></div>
-            <div class="flex justify-between items-start mb-4 relative z-10">
-              <div>
-                <p
-                  class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1"
-                >
-                  Mes Conversions
-                </p>
-                <h3
-                  class="text-headline-lg font-headline-lg text-on-surface"
-                  id="conversion-rate"
-                >
-                  0%
-                </h3>
-              </div>
-              <div
-                class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center"
-              >
-                <span
-                  class="material-symbols-outlined text-on-primary-container"
-                  style="font-variation-settings: &quot;FILL&quot; 1"
-                  >trending_up</span
-                >
-              </div>
-            </div>
-            <div class="flex items-center gap-2 relative z-10">
-              <span
-                class="text-tertiary-container font-label-sm text-label-sm bg-tertiary-fixed px-2 py-0.5 rounded-full flex items-center gap-1"
-              >
-                <span class="material-symbols-outlined text-[14px]"
-                  >arrow_upward</span
-                >
-                0%
-              </span>
-              <span class="text-label-sm font-label-sm text-on-surface-variant"
-                >vs mois dernier</span
-              >
-            </div>
-          </div>
-
-          <!-- Goal Widget -->
-          <div
-            class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant relative overflow-hidden group"
-          >
-            <div
-              class="absolute -left-4 -bottom-4 w-32 h-32 bg-secondary-fixed rounded-full opacity-20 blur-2xl group-hover:bg-secondary transition-all duration-500"
-            ></div>
-            <div class="flex justify-between items-start mb-4 relative z-10">
-              <div>
-                <p
-                  class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1"
-                >
-                  Objectif Mensuel
-                </p>
-                <h3
-                  class="text-headline-lg font-headline-lg text-on-surface"
-                  id="goal-progress"
-                >
-                  0 / 15
-                </h3>
-              </div>
-              <div
-                class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center"
-              >
-                <span
-                  class="material-symbols-outlined text-on-secondary-container"
-                  style="font-variation-settings: &quot;FILL&quot; 1"
-                  >flag</span
-                >
-              </div>
-            </div>
-            <div
-              class="w-full bg-surface-variant rounded-full h-2 mt-4 relative z-10"
-            >
-              <div
-                class="bg-secondary h-2 rounded-full"
-                id="goal-bar"
-                style="width: 0%"
-              ></div>
-            </div>
-          </div>
-
-          <!-- Quick Action Widget -->
-          <div
-            class="bg-primary rounded-xl p-6 shadow-sm flex flex-col justify-between text-on-primary relative overflow-hidden"
-          >
-            <div
-              class="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none"
-            ></div>
+              <span class="material-symbols-outlined">menu</span>
+            </button>
             <div>
-              <h3 class="text-headline-md font-headline-md mb-2">
-                Besoin d'un rappel ?
-              </h3>
-              <p
-                class="text-body-md font-body-md text-on-primary/80 mb-4"
-                id="urgent-count"
-              >
-                0 Clients nécessitent une attention immédiate.
+              <h1 class="text-2xl font-bold">Mes clients</h1>
+              <p class="text-sm text-gray-500">
+                Portefeuille assigne depuis l'espace admin
               </p>
             </div>
-            <button
-              class="bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold py-2 px-4 rounded-lg hover:bg-surface-container-low transition-colors self-start"
-            >
-              Voir les urgences
-            </button>
           </div>
-        </div>
-
-        <!-- Leads Data Table -->
-        <div
-          class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant overflow-hidden"
-        >
-          <div
-            class="p-6 border-b border-surface-variant flex justify-between items-center"
-          >
-            <h3 class="text-headline-md font-headline-md text-on-surface">
-              Liste des Clients
-            </h3>
-            <div class="flex gap-2">
-              <button
-                class="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors"
-              >
-                <span class="material-symbols-outlined">filter_alt</span>
-              </button>
-              <button
-                class="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors"
-              >
-                <span class="material-symbols-outlined">sort</span>
-              </button>
+          <div class="flex items-center gap-4">
+            <span id="leads-count" class="text-sm font-semibold text-gray-600"
+              >0 clients</span
+            >
+            <div
+              id="user-avatar"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 font-bold text-white"
+            >
+              A
             </div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr
-                  class="bg-surface-container-lowest border-b border-surface-variant"
+        </header>
+
+        <section class="h-[calc(100vh-73px)] overflow-y-auto p-4 md:p-8">
+          <div
+            id="clients-panel"
+            class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+          >
+            <div
+              class="flex flex-col gap-4 border-b border-gray-200 p-4 md:flex-row md:items-center md:justify-between"
+            >
+              <div>
+                <h2 class="text-lg font-semibold">Liste des clients</h2>
+                <p id="status-message" class="text-sm text-gray-500">
+                  Chargement...
+                </p>
+              </div>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <div class="relative">
+                  <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    style="font-size: 20px"
+                    >search</span
+                  >
+                  <input
+                    id="agent-search-input"
+                    type="text"
+                    oninput="applyClientFilters()"
+                    placeholder="Rechercher..."
+                    class="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:w-64"
+                  />
+                </div>
+                <select
+                  id="status-filter"
+                  onchange="applyClientFilters()"
+                  class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <th
-                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
+                  <option value="">Tous les statuts</option>
+                  <option value="NEW">Nouveau</option>
+                  <option value="CONTACTED">Contacte</option>
+                  <option value="INTERESTED">Interesse</option>
+                  <option value="QUALIFIED">Qualifie</option>
+                  <option value="CLOSED">Ferme</option>
+                </select>
+                <button
+                  onclick="toggleSortClients()"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium transition hover:bg-gray-50"
+                >
+                  <span class="material-symbols-outlined" style="font-size: 18px"
+                    >sort</span
                   >
-                    Client
-                  </th>
-                  <th
-                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
-                  >
-                    Mutuelle
-                  </th>
-                  <th
-                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
-                  >
-                    Statut
-                  </th>
-                  <th
-                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase"
-                  >
-                    Commentaire
-                  </th>
-                  <th
-                    class="p-4 font-label-caps text-label-caps text-on-surface-variant uppercase text-right"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="text-body-md font-body-md text-on-surface"
-                id="leads-tbody"
-              >
-                <tr>
-                  <td
-                    colspan="5"
-                    class="p-8 text-center text-on-surface-variant"
-                  >
-                    Chargement des clients...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  Trier
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[980px] text-left">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Nom
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Prenom
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Ville
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Statut
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Mutuelle
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Prix
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Commentaire
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="leads-tbody" class="divide-y divide-gray-200">
+                  <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                      Chargement des clients...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </section>
       </main>
     </div>
 
     <script src="js/api.js"></script>
     <script>
       let allLeads = [];
-      let currentPage = 0;
-      let leadsPerPage = 50;
+      let sortAscending = true;
 
-      window.addEventListener("load", async () => {
+      window.addEventListener("load", () => {
         const user = getUser();
         if (!user) {
           window.location.href = "/index.html";
@@ -481,97 +215,121 @@
           window.location.href = "/admin.html";
           return;
         }
-        document.getElementById("user-avatar").textContent = user.name
+
+        document.getElementById("user-avatar").textContent = (user.name || "A")
           .charAt(0)
           .toUpperCase();
         loadLeads();
       });
 
       async function loadLeads() {
+        const tbody = document.getElementById("leads-tbody");
+        const statusMessage = document.getElementById("status-message");
         try {
+          statusMessage.textContent = "Chargement...";
           const data = await getUserLeads(0, 999999);
-          allLeads = data.clients;
-          document.getElementById("leads-count").textContent =
-            `${data.total} Clients`;
-          renderLeads(allLeads);
-          updateDashboard();
+          allLeads = data.clients || [];
+          updateCount(allLeads.length);
+          applyClientFilters();
+          statusMessage.textContent = `${allLeads.length} client(s) affiche(s)`;
         } catch (err) {
           console.error(err);
+          statusMessage.textContent = err.formattedMessage || err.message;
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="px-6 py-8 text-center text-red-600">Erreur serveur</td></tr>';
         }
       }
 
       function renderLeads(leads) {
         const tbody = document.getElementById("leads-tbody");
-        if (leads.length === 0) {
+        if (!leads.length) {
           tbody.innerHTML =
-            '<tr><td colspan="5" class="p-8 text-center text-on-surface-variant">Aucun client assigné</td></tr>';
+            '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Aucun client assigne</td></tr>';
+          updateCount(0);
           return;
         }
 
         tbody.innerHTML = leads
           .map(
             (lead) => `
-        <tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors group">
-          <td class="p-4 font-medium">
-            <div class="flex flex-col">
-              <span>${lead.nom} ${lead.prenom}</span>
-              <span class="text-label-sm font-label-sm text-on-surface-variant">${lead.ville} ${lead.code_postal}</span>
-            </div>
-          </td>
-          <td class="p-4">
-            <div class="flex flex-col">
-              <span>${lead.nom_mutuelle}</span>
-              <span class="text-label-sm font-label-sm text-on-surface-variant">${Number(lead.prix_mutuelle || 0).toFixed(2)} EUR</span>
-            </div>
-          </td>
-          <td class="p-4">
-            <select onchange="updateLeadStatus(${lead.id}, this.value)" class="bg-surface-container-lowest border border-outline-variant text-on-surface text-label-sm font-label-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2">
-              <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
-              <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacté</option>
-              <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Intéressé</option>
-              <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifié</option>
-              <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Fermé</option>
-            </select>
-          </td>
-          <td class="p-4">
-            <textarea
-              class="w-full min-w-64 rounded-lg border border-outline-variant bg-surface-container-lowest p-2 text-sm text-on-surface focus:border-primary focus:ring-primary"
-              rows="2"
-              onblur="saveLeadComment(${lead.id}, this.value)"
-            >${escapeHtml(lead.notes || "")}</textarea>
-          </td>
-          <td class="p-4 text-right">
-            <button onclick="editLead(${lead.id})" class="text-secondary hover:bg-secondary/10 px-2 py-1 rounded text-label-sm font-label-sm font-medium transition-colors">
-              Détails
-            </button>
-          </td>
-        </tr>
-      `,
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 font-medium text-gray-900">${escapeHtml(lead.nom || "")}</td>
+                <td class="px-6 py-4 text-gray-600">${escapeHtml(lead.prenom || "")}</td>
+                <td class="px-6 py-4 text-gray-600">${escapeHtml(lead.ville || "")} ${escapeHtml(lead.code_postal || "")}</td>
+                <td class="px-6 py-4">
+                  <select onchange="updateLeadStatus(${lead.id}, this.value)" class="rounded border border-gray-300 px-2 py-1 text-sm">
+                    <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
+                    <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacte</option>
+                    <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Interesse</option>
+                    <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifie</option>
+                    <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Ferme</option>
+                  </select>
+                </td>
+                <td class="px-6 py-4 text-gray-600">${escapeHtml(lead.nom_mutuelle || "")}</td>
+                <td class="px-6 py-4 text-gray-600">${Number(lead.prix_mutuelle || 0).toFixed(2)} EUR</td>
+                <td class="px-6 py-4">
+                  <textarea
+                    rows="2"
+                    onblur="saveLeadComment(${lead.id}, this.value)"
+                    class="w-full min-w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >${escapeHtml(lead.notes || "")}</textarea>
+                </td>
+              </tr>
+            `,
           )
           .join("");
+        updateCount(leads.length);
       }
 
-      function searchLeads() {
+      function applyClientFilters() {
         const query = document
-          .getElementById("search-input")
-          .value.toLowerCase();
-        const filtered = allLeads.filter(
-          (lead) =>
-            lead.nom.toLowerCase().includes(query) ||
-            lead.prenom.toLowerCase().includes(query) ||
-            lead.ville.toLowerCase().includes(query) ||
-            lead.code_postal.includes(query) ||
-            lead.nom_mutuelle.toLowerCase().includes(query),
-        );
+          .getElementById("agent-search-input")
+          .value.trim()
+          .toLowerCase();
+        const status = document.getElementById("status-filter").value;
+        const filtered = allLeads.filter((lead) => {
+          const values = [
+            lead.nom,
+            lead.prenom,
+            lead.ville,
+            lead.code_postal,
+            lead.nom_mutuelle,
+            lead.status,
+            lead.notes,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return (!status || lead.status === status) && (!query || values.includes(query));
+        });
         renderLeads(filtered);
+        document.getElementById("status-message").textContent =
+          `${filtered.length} client(s) affiche(s)`;
+      }
+
+      function toggleSortClients() {
+        sortAscending = !sortAscending;
+        allLeads.sort((a, b) => {
+          const left = `${a.nom || ""} ${a.prenom || ""}`.toLowerCase();
+          const right = `${b.nom || ""} ${b.prenom || ""}`.toLowerCase();
+          return sortAscending
+            ? left.localeCompare(right)
+            : right.localeCompare(left);
+        });
+        applyClientFilters();
       }
 
       async function updateLeadStatus(leadId, status) {
         try {
           await updateLead(leadId, { status });
-          loadLeads();
+          const lead = allLeads.find((item) => item.id === leadId);
+          if (lead) {
+            lead.status = status;
+          }
+          applyClientFilters();
         } catch (err) {
-          alert(err.message);
+          alert(err.formattedMessage || err.message);
+          loadLeads();
         }
       }
 
@@ -583,22 +341,35 @@
             lead.notes = notes;
           }
         } catch (err) {
-          alert(err.message);
+          alert(err.formattedMessage || err.message);
           loadLeads();
         }
       }
 
-      async function editLead(leadId) {
-        try {
-          const lead = await getLeadById(leadId);
-          const newNotes = prompt("Ajouter une note:", lead.notes);
-          if (newNotes !== null) {
-            await updateLead(leadId, { notes: newNotes });
-            loadLeads();
-          }
-        } catch (err) {
-          alert(err.message);
-        }
+      function updateCount(count) {
+        document.getElementById("leads-count").textContent =
+          `${count} client${count > 1 ? "s" : ""}`;
+      }
+
+      function scrollToClients() {
+        document
+          .getElementById("clients-panel")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function refreshClients() {
+        loadLeads();
+      }
+
+      function toggleMobileMenu() {
+        const sidebar = document.getElementById("agent-sidebar");
+        sidebar.classList.toggle("hidden");
+        sidebar.classList.toggle("flex");
+      }
+
+      function handleLogout() {
+        logout();
+        window.location.href = "/index.html";
       }
 
       function escapeHtml(value) {
@@ -608,31 +379,6 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
-      }
-
-      function updateDashboard() {
-        const qualified = allLeads.filter(
-          (l) => l.status === "QUALIFIED",
-        ).length;
-        const closed = allLeads.filter((l) => l.status === "CLOSED").length;
-        const conversionRate = allLeads.length
-          ? Math.round((closed / allLeads.length) * 100)
-          : 0;
-
-        document.getElementById("conversion-rate").textContent =
-          conversionRate + "%";
-        document.getElementById("goal-progress").textContent =
-          `${qualified} / 15`;
-        document.getElementById("goal-bar").style.width =
-          Math.min((qualified / 15) * 100, 100) + "%";
-        document.getElementById("urgent-count").textContent =
-          allLeads.filter((l) => l.status === "NEW").length +
-          " clients necessitent une attention immediate.";
-      }
-
-      function handleLogout() {
-        logout();
-        window.location.href = "/index.html";
       }
     </script>
   </body>
