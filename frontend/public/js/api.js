@@ -1,5 +1,5 @@
 // API helper functions
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "/api";
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem("token");
