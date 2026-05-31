@@ -45,16 +45,6 @@ app.use(
   }),
 );
 app.use(
-  "/api/auth/login",
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: "Too many login attempts, try again later" },
-  }),
-);
-app.use(
   fileUpload({
     limits: { fileSize: 5 * 1024 * 1024 },
     abortOnLimit: true,
