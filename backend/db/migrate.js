@@ -182,77 +182,44 @@ const createTables = async () => {
   `);
 };
 
-const seedData = async () => {
+const ensureSuperAdminOnly = async () => {
   const adminPassword = await bcrypt.hash("admin123", 10);
-  const agentPassword = await bcrypt.hash("agent123", 10);
-
-  const centerResult = await pool.query(
-    `INSERT INTO centers (name)
-     VALUES ('Centre Demo')
-     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-     RETURNING id`,
-  );
-  const demoCenterId = centerResult.rows[0].id;
 
   await pool.query(
     `INSERT INTO users (email, name, password, role, center_id)
-     VALUES
-      ('admin@test.com', 'Super Admin', $1, 'SUPER_ADMIN', NULL),
-      ('centre@test.com', 'Admin Centre Demo', $2, 'ADMIN', $4),
-      ('agent1@test.com', 'Agent One', $3, 'AGENT', $4),
-      ('agent2@test.com', 'Agent Two', $3, 'AGENT', $4)
+     VALUES ('admin@test.com', 'Super Admin', $1, 'SUPER_ADMIN', NULL)
      ON CONFLICT (email) DO UPDATE SET
-      role = EXCLUDED.role,
+      role = 'SUPER_ADMIN',
       center_id = EXCLUDED.center_id`,
-    [adminPassword, adminPassword, agentPassword, demoCenterId],
+    [adminPassword],
   );
+};
 
-  await pool.query(
-    "UPDATE users SET center_id = $1 WHERE role = 'AGENT' AND center_id IS NULL",
-    [demoCenterId],
-  );
-  await pool.query(
-    "UPDATE users SET role = 'SUPER_ADMIN', center_id = NULL WHERE email = 'admin@test.com'",
-  );
+const removeDemoData = async () => {
+  const demoCenter = await pool.query("SELECT id FROM centers WHERE name = $1", [
+    "Centre Demo",
+  ]);
+  const demoCenterId = demoCenter.rows[0]?.id;
 
-  const count = await pool.query("SELECT COUNT(*) FROM clients");
-  if (parseInt(count.rows[0].count, 10) > 0) {
-    await pool.query("UPDATE clients SET center_id = $1 WHERE center_id IS NULL", [
-      demoCenterId,
-    ]);
-    return;
+  if (demoCenterId) {
+    await pool.query("DELETE FROM clients WHERE center_id = $1", [demoCenterId]);
   }
 
-  const agentIds = await pool.query(
-    "SELECT email, id FROM users WHERE email IN ('agent1@test.com', 'agent2@test.com')",
+  await pool.query(
+    "DELETE FROM users WHERE email IN ('centre@test.com', 'agent1@test.com', 'agent2@test.com')",
   );
-  const agentIdByEmail = Object.fromEntries(
-    agentIds.rows.map((row) => [row.email, row.id]),
-  );
-  const agent1Id = agentIdByEmail["agent1@test.com"];
-  const agent2Id = agentIdByEmail["agent2@test.com"];
 
-  await pool.query(`
-    INSERT INTO clients (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, assigned_to, center_id, notes)
-    VALUES
-      ('Martin', 'Jean', '123 Rue de la Paix', 'Paris', '75001', 'Mutuelle France', 45.50, 'NEW', $2, $1, 'Client prospection'),
-      ('Dupont', 'Marie', '456 Avenue du Chateau', 'Lyon', '69000', 'Santeplus', 52.00, 'CONTACTED', $2, $1, 'Interesse par formule premium'),
-      ('Bernard', 'Pierre', '789 Boulevard de la Mer', 'Marseille', '13000', 'Mutuelle Mediterranee', 38.75, 'INTERESTED', $3, $1, 'Appel planifie'),
-      ('Thomas', 'Sophie', '321 Rue de la Gare', 'Toulouse', '31000', 'MGEN', 42.00, 'QUALIFIED', $3, $1, 'Visite client confirmee'),
-      ('Robert', 'Luc', '654 Chemin du Moulin', 'Bordeaux', '33000', 'Mutuelle Aquitaine', 48.25, 'CLOSED', $2, $1, 'Contrat signe'),
-      ('Richard', 'Anne', '987 Place de la Liberte', 'Nice', '06000', 'Allianz Mutuelle', 55.00, 'NEW', NULL, $1, 'En attente d assignation'),
-      ('Leclerc', 'Francois', '111 Avenue des Champs', 'Lille', '59000', 'Mutuelle du Nord', 43.50, 'CONTACTED', $2, $1, 'Deuxieme relance'),
-      ('Moreau', 'Isabelle', '222 Rue des Fleurs', 'Strasbourg', '67000', 'Santecarpe', 50.00, 'INTERESTED', $3, $1, 'Documentation envoyee'),
-      ('Simon', 'Claude', '333 Boulevard Central', 'Montpellier', '34000', 'Mutuelle Occitanie', 41.00, 'QUALIFIED', $2, $1, 'Rendez-vous programme'),
-      ('Laurent', 'Nathalie', '444 Chemin des Roses', 'Rennes', '35000', 'Mutuelle Bretagne', 44.75, 'NEW', $3, $1, 'Lead chaud')
-  `, [demoCenterId, agent1Id, agent2Id]);
+  if (demoCenterId) {
+    await pool.query("DELETE FROM centers WHERE id = $1", [demoCenterId]);
+  }
 };
 
 const migrate = async () => {
   try {
     await createTables();
-    await seedData();
-    console.log("Database migration and seed completed");
+    await removeDemoData();
+    await ensureSuperAdminOnly();
+    console.log("Database migration completed");
   } catch (err) {
     console.error("Migration failed:", err);
     process.exitCode = 1;

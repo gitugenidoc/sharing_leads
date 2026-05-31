@@ -57,12 +57,9 @@ FRONTEND_URL=http://localhost:5000
 En production, `DATABASE_URL` peut remplacer les variables `DB_*`.
 `JWT_SECRET` est obligatoire en production.
 
-## Comptes crees par la migration
+## Compte cree par la migration
 
 - Super admin: `admin@test.com` / `admin123`
-- Admin centre demo: `centre@test.com` / `admin123`
-- Agent 1: `agent1@test.com` / `agent123`
-- Agent 2: `agent2@test.com` / `agent123`
 
 Change ces identifiants avant toute mise en production.
 
