@@ -183,20 +183,29 @@ const seedData = async () => {
     return;
   }
 
+  const agentIds = await pool.query(
+    "SELECT email, id FROM users WHERE email IN ('agent1@test.com', 'agent2@test.com')",
+  );
+  const agentIdByEmail = Object.fromEntries(
+    agentIds.rows.map((row) => [row.email, row.id]),
+  );
+  const agent1Id = agentIdByEmail["agent1@test.com"];
+  const agent2Id = agentIdByEmail["agent2@test.com"];
+
   await pool.query(`
     INSERT INTO clients (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, assigned_to, center_id, notes)
     VALUES
-      ('Martin', 'Jean', '123 Rue de la Paix', 'Paris', '75001', 'Mutuelle France', 45.50, 'NEW', 3, $1, 'Client prospection'),
-      ('Dupont', 'Marie', '456 Avenue du Chateau', 'Lyon', '69000', 'Santeplus', 52.00, 'CONTACTED', 3, $1, 'Interesse par formule premium'),
-      ('Bernard', 'Pierre', '789 Boulevard de la Mer', 'Marseille', '13000', 'Mutuelle Mediterranee', 38.75, 'INTERESTED', 4, $1, 'Appel planifie'),
-      ('Thomas', 'Sophie', '321 Rue de la Gare', 'Toulouse', '31000', 'MGEN', 42.00, 'QUALIFIED', 4, $1, 'Visite client confirmee'),
-      ('Robert', 'Luc', '654 Chemin du Moulin', 'Bordeaux', '33000', 'Mutuelle Aquitaine', 48.25, 'CLOSED', 3, $1, 'Contrat signe'),
+      ('Martin', 'Jean', '123 Rue de la Paix', 'Paris', '75001', 'Mutuelle France', 45.50, 'NEW', $2, $1, 'Client prospection'),
+      ('Dupont', 'Marie', '456 Avenue du Chateau', 'Lyon', '69000', 'Santeplus', 52.00, 'CONTACTED', $2, $1, 'Interesse par formule premium'),
+      ('Bernard', 'Pierre', '789 Boulevard de la Mer', 'Marseille', '13000', 'Mutuelle Mediterranee', 38.75, 'INTERESTED', $3, $1, 'Appel planifie'),
+      ('Thomas', 'Sophie', '321 Rue de la Gare', 'Toulouse', '31000', 'MGEN', 42.00, 'QUALIFIED', $3, $1, 'Visite client confirmee'),
+      ('Robert', 'Luc', '654 Chemin du Moulin', 'Bordeaux', '33000', 'Mutuelle Aquitaine', 48.25, 'CLOSED', $2, $1, 'Contrat signe'),
       ('Richard', 'Anne', '987 Place de la Liberte', 'Nice', '06000', 'Allianz Mutuelle', 55.00, 'NEW', NULL, $1, 'En attente d assignation'),
-      ('Leclerc', 'Francois', '111 Avenue des Champs', 'Lille', '59000', 'Mutuelle du Nord', 43.50, 'CONTACTED', 3, $1, 'Deuxieme relance'),
-      ('Moreau', 'Isabelle', '222 Rue des Fleurs', 'Strasbourg', '67000', 'Santecarpe', 50.00, 'INTERESTED', 4, $1, 'Documentation envoyee'),
-      ('Simon', 'Claude', '333 Boulevard Central', 'Montpellier', '34000', 'Mutuelle Occitanie', 41.00, 'QUALIFIED', 3, $1, 'Rendez-vous programme'),
-      ('Laurent', 'Nathalie', '444 Chemin des Roses', 'Rennes', '35000', 'Mutuelle Bretagne', 44.75, 'NEW', 4, $1, 'Lead chaud')
-  `, [demoCenterId]);
+      ('Leclerc', 'Francois', '111 Avenue des Champs', 'Lille', '59000', 'Mutuelle du Nord', 43.50, 'CONTACTED', $2, $1, 'Deuxieme relance'),
+      ('Moreau', 'Isabelle', '222 Rue des Fleurs', 'Strasbourg', '67000', 'Santecarpe', 50.00, 'INTERESTED', $3, $1, 'Documentation envoyee'),
+      ('Simon', 'Claude', '333 Boulevard Central', 'Montpellier', '34000', 'Mutuelle Occitanie', 41.00, 'QUALIFIED', $2, $1, 'Rendez-vous programme'),
+      ('Laurent', 'Nathalie', '444 Chemin des Roses', 'Rennes', '35000', 'Mutuelle Bretagne', 44.75, 'NEW', $3, $1, 'Lead chaud')
+  `, [demoCenterId, agent1Id, agent2Id]);
 };
 
 const migrate = async () => {
