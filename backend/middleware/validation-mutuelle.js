@@ -29,7 +29,7 @@ const validateMutualName = (name) => {
 // Validate price
 const validatePrice = (price) => {
   const amount = parseFloat(price);
-  return !isNaN(amount) && amount > 0;
+  return !isNaN(amount) && amount >= 0;
 };
 
 // Validate status
@@ -60,11 +60,16 @@ const validateClient = (data) => {
     errors.push("Postal code must be 5 digits (French format)");
   }
 
-  if (!validateMutualName(data.nom_mutuelle)) {
+  if (data.nom_mutuelle && !validateMutualName(data.nom_mutuelle)) {
     errors.push("Mutual name must be at least 2 characters");
   }
 
-  if (!validatePrice(data.prix_mutuelle)) {
+  if (
+    data.prix_mutuelle !== undefined &&
+    data.prix_mutuelle !== null &&
+    data.prix_mutuelle !== "" &&
+    !validatePrice(data.prix_mutuelle)
+  ) {
     errors.push("Price must be a positive number");
   }
 

@@ -1,5 +1,73 @@
 const pool = require("../config/db");
 
+const CLIENT_FIELDS = [
+  "nom",
+  "prenom",
+  "adresse",
+  "adresse2",
+  "ville",
+  "code_postal",
+  "civilite",
+  "profession",
+  "tel_fixe",
+  "tel_gsm",
+  "email",
+  "tel_professionnel",
+  "date_naissance",
+  "date_naissance_conjoint",
+  "naissance_enfant_1",
+  "naissance_enfant_2",
+  "naissance_enfant_3",
+  "regime_tns",
+  "regime",
+  "regime_conjoint",
+  "remboursement_frais",
+  "besoins_specifiques",
+  "assurance_date",
+  "deja_mutuelle",
+  "nom_mutuelle",
+  "prix_mutuelle",
+  "status",
+  "notes",
+  "assigned_to",
+  "center_id",
+  "extra_data",
+];
+
+const normalizeClientData = (clientData) => ({
+  ...clientData,
+  nom_mutuelle: clientData.nom_mutuelle || "Non renseignee",
+  prix_mutuelle:
+    clientData.prix_mutuelle === undefined ||
+    clientData.prix_mutuelle === null ||
+    clientData.prix_mutuelle === ""
+      ? 0
+      : clientData.prix_mutuelle,
+  status: clientData.status || "NEW",
+  notes: clientData.notes || "",
+  extra_data: clientData.extra_data || {},
+});
+
+const serializeFieldValue = (field, value) => {
+  if (field === "extra_data") {
+    return JSON.stringify(value || {});
+  }
+  return value === undefined ? null : value;
+};
+
+const buildInsertQuery = (clientData) => {
+  const data = normalizeClientData(clientData);
+  const values = CLIENT_FIELDS.map((field) => serializeFieldValue(field, data[field]));
+  const placeholders = CLIENT_FIELDS.map((_, index) => `$${index + 1}`).join(", ");
+  return {
+    text: `INSERT INTO clients
+      (${CLIENT_FIELDS.join(", ")}, created_at, updated_at)
+     VALUES (${placeholders}, NOW(), NOW())
+     RETURNING *`,
+    values,
+  };
+};
+
 const withCenterFilter = (baseQuery, centerId, nextParamIndex) => {
   if (!centerId) {
     return { text: baseQuery, params: [] };
@@ -47,87 +115,27 @@ const getClientById = async (id) => {
 };
 
 const createClient = async (clientData) => {
-  const {
-    nom,
-    prenom,
-    adresse,
-    ville,
-    code_postal,
-    nom_mutuelle,
-    prix_mutuelle,
-    status,
-    notes,
-    assigned_to,
-    center_id,
-  } = clientData;
-
-  const result = await pool.query(
-    `INSERT INTO clients
-      (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, notes, assigned_to, center_id, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-     RETURNING *`,
-    [
-      nom,
-      prenom,
-      adresse,
-      ville,
-      code_postal,
-      nom_mutuelle,
-      prix_mutuelle,
-      status || "NEW",
-      notes || "",
-      assigned_to || null,
-      center_id || null,
-    ],
-  );
+  const insert = buildInsertQuery(clientData);
+  const result = await pool.query(insert.text, insert.values);
   return result.rows[0];
 };
 
 const updateClient = async (id, clientData) => {
-  const {
-    nom,
-    prenom,
-    adresse,
-    ville,
-    code_postal,
-    nom_mutuelle,
-    prix_mutuelle,
-    status,
-    notes,
-    assigned_to,
-    center_id,
-  } = clientData;
-
+  const fields = CLIENT_FIELDS.filter((field) =>
+    Object.prototype.hasOwnProperty.call(clientData, field),
+  );
+  if (fields.length === 0) {
+    return getClientById(id);
+  }
+  const values = fields.map((field) => serializeFieldValue(field, clientData[field]));
+  values.push(id);
   const result = await pool.query(
     `UPDATE clients SET
-      nom = COALESCE($1, nom),
-      prenom = COALESCE($2, prenom),
-      adresse = COALESCE($3, adresse),
-      ville = COALESCE($4, ville),
-      code_postal = COALESCE($5, code_postal),
-      nom_mutuelle = COALESCE($6, nom_mutuelle),
-      prix_mutuelle = COALESCE($7, prix_mutuelle),
-      status = COALESCE($8, status),
-      notes = COALESCE($9, notes),
-      assigned_to = COALESCE($10, assigned_to),
-      center_id = COALESCE($11, center_id),
+      ${fields.map((field, index) => `${field} = $${index + 1}`).join(", ")},
       updated_at = NOW()
-     WHERE id = $12
+     WHERE id = $${values.length}
      RETURNING *`,
-    [
-      nom,
-      prenom,
-      adresse,
-      ville,
-      code_postal,
-      nom_mutuelle,
-      prix_mutuelle,
-      status,
-      notes,
-      assigned_to,
-      center_id,
-      id,
-    ],
+    values,
   );
   return result.rows[0];
 };
@@ -178,6 +186,10 @@ const searchClients = async (query, offset = 0, limit = 100, centerId = null) =>
        OR ville ILIKE $1
        OR code_postal ILIKE $1
        OR nom_mutuelle ILIKE $1
+       OR email ILIKE $1
+       OR tel_gsm ILIKE $1
+       OR tel_fixe ILIKE $1
+       OR profession ILIKE $1
      )
      ${centerFilter}
      ORDER BY created_at DESC
@@ -194,20 +206,9 @@ const bulkInsertClients = async (clients, centerId) => {
     for (const row of clients) {
       await client.query(
         `INSERT INTO clients
-          (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, notes, center_id, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
-        [
-          row.nom,
-          row.prenom,
-          row.adresse,
-          row.ville,
-          row.code_postal,
-          row.nom_mutuelle,
-          row.prix_mutuelle,
-          row.status || "NEW",
-          row.notes || "",
-          centerId,
-        ],
+          (${CLIENT_FIELDS.join(", ")}, created_at, updated_at)
+         VALUES (${CLIENT_FIELDS.map((_, index) => `$${index + 1}`).join(", ")}, NOW(), NOW())`,
+        buildInsertQuery({ ...row, center_id: centerId }).values,
       );
     }
     await client.query("COMMIT");

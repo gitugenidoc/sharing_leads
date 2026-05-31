@@ -30,12 +30,32 @@ const createTables = async () => {
       nom VARCHAR(255) NOT NULL,
       prenom VARCHAR(255) NOT NULL,
       adresse VARCHAR(500) NOT NULL,
+      adresse2 VARCHAR(500),
       ville VARCHAR(255) NOT NULL,
       code_postal VARCHAR(10) NOT NULL,
+      civilite VARCHAR(50),
+      profession VARCHAR(255),
+      tel_fixe VARCHAR(50),
+      tel_gsm VARCHAR(50),
+      email VARCHAR(255),
+      tel_professionnel VARCHAR(50),
+      date_naissance VARCHAR(50),
+      date_naissance_conjoint VARCHAR(50),
+      naissance_enfant_1 VARCHAR(50),
+      naissance_enfant_2 VARCHAR(50),
+      naissance_enfant_3 VARCHAR(50),
+      regime_tns VARCHAR(255),
+      regime VARCHAR(255),
+      regime_conjoint VARCHAR(255),
+      remboursement_frais TEXT,
+      besoins_specifiques TEXT,
+      assurance_date VARCHAR(100),
+      deja_mutuelle VARCHAR(255),
       nom_mutuelle VARCHAR(255) NOT NULL,
       prix_mutuelle DECIMAL(10, 2) NOT NULL,
       status VARCHAR(50) NOT NULL DEFAULT 'NEW' CHECK (status IN ('NEW', 'CONTACTED', 'INTERESTED', 'QUALIFIED', 'CLOSED')),
       notes TEXT,
+      extra_data JSONB DEFAULT '{}'::jsonb,
       center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL,
       assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -45,6 +65,26 @@ const createTables = async () => {
 
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL");
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS adresse2 VARCHAR(500)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS civilite VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS profession VARCHAR(255)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_fixe VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_gsm VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(255)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_professionnel VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_naissance VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_naissance_conjoint VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_1 VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_2 VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_3 VARCHAR(50)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime_tns VARCHAR(255)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime VARCHAR(255)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime_conjoint VARCHAR(255)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS remboursement_frais TEXT");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS besoins_specifiques TEXT");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assurance_date VARCHAR(100)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS deja_mutuelle VARCHAR(255)");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS extra_data JSONB DEFAULT '{}'::jsonb");
   await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
   await pool.query(`
     ALTER TABLE users

@@ -205,6 +205,28 @@
       </main>
     </div>
 
+    <div
+      id="client-detail-modal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      style="display: none"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div class="mb-5 flex items-center justify-between gap-4">
+          <h3 id="client-detail-title" class="text-lg font-bold text-gray-900">
+            Fiche client
+          </h3>
+          <button
+            type="button"
+            onclick="closeClientDetails()"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Fermer
+          </button>
+        </div>
+        <div id="client-detail-body" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"></div>
+      </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script>
       let allLeads = [];
@@ -294,9 +316,14 @@
                   >${escapeHtml(lead.notes || "")}</textarea>
                 </td>
                 <td class="px-6 py-4 text-right">
-                  <button onclick="saveLeadRow(${lead.id})" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
-                    Enregistrer
-                  </button>
+                  <div class="flex justify-end gap-2">
+                    <button onclick="showClientDetails(${lead.id})" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50">
+                      Fiche
+                    </button>
+                    <button onclick="saveLeadRow(${lead.id})" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                      Enregistrer
+                    </button>
+                  </div>
                 </td>
               </tr>
             `,
@@ -393,6 +420,75 @@
           alert(err.formattedMessage || err.message);
           loadLeads();
         }
+      }
+
+      function showClientDetails(leadId) {
+        const lead = allLeads.find((item) => item.id === leadId);
+        if (!lead) return;
+        document.getElementById("client-detail-title").textContent =
+          `${lead.nom || ""} ${lead.prenom || ""}`.trim() || "Fiche client";
+        let extraData = {};
+        try {
+          extraData =
+            typeof lead.extra_data === "string"
+              ? JSON.parse(lead.extra_data || "{}")
+              : lead.extra_data || {};
+        } catch (err) {
+          extraData = {};
+        }
+        const fields = [
+          ["Civilite", lead.civilite],
+          ["Nom", lead.nom],
+          ["Prenom", lead.prenom],
+          ["Profession", lead.profession],
+          ["Adresse", [lead.adresse, lead.adresse2].filter(Boolean).join(" ")],
+          ["Ville", `${lead.code_postal || ""} ${lead.ville || ""}`.trim()],
+          ["Tel fixe", lead.tel_fixe],
+          ["Tel GSM", lead.tel_gsm],
+          ["E-mail", lead.email],
+          ["Tel professionnel", lead.tel_professionnel],
+          ["Date de naissance", lead.date_naissance],
+          ["Naissance conjoint", lead.date_naissance_conjoint],
+          ["Naissance enfant 1", lead.naissance_enfant_1],
+          ["Naissance enfant 2", lead.naissance_enfant_2],
+          ["Naissance enfant 3", lead.naissance_enfant_3],
+          ["Regime TNS", lead.regime_tns],
+          ["Regime", lead.regime],
+          ["Regime conjoint", lead.regime_conjoint],
+          ["Remboursement frais", lead.remboursement_frais],
+          ["Besoins specifiques", lead.besoins_specifiques],
+          ["Date assurance", lead.assurance_date],
+          ["Mutuelle actuelle", lead.deja_mutuelle || lead.nom_mutuelle],
+          ["Statut", lead.status],
+          ["Notes", lead.notes],
+        ];
+        const extraFields = Object.entries(extraData)
+          .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+          .slice(0, 40);
+        document.getElementById("client-detail-body").innerHTML =
+          renderDetailFields(fields) +
+          (extraFields.length
+            ? `<div class="col-span-full pt-3 text-sm font-semibold text-gray-900">Colonnes importees</div>${renderDetailFields(extraFields)}`
+            : "");
+        document.getElementById("client-detail-modal").style.display = "flex";
+      }
+
+      function renderDetailFields(fields) {
+        return fields
+          .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+          .map(
+            ([label, value]) => `
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs font-semibold uppercase text-gray-500">${escapeHtml(label)}</p>
+                <p class="mt-1 whitespace-pre-wrap text-sm text-gray-900">${escapeHtml(value)}</p>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      function closeClientDetails() {
+        document.getElementById("client-detail-modal").style.display = "none";
       }
 
       function updateCount(count) {

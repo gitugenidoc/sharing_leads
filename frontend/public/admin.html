@@ -491,8 +491,9 @@
                     onchange="handleFileSelect(event)"
                   />
                   <p class="text-xs text-gray-500">
-                    Colonnes attendues: nom, prenom, adresse, ville,
-                    code_postal, nom_mutuelle, prix_mutuelle, status, notes
+                    Colonnes reconnues automatiquement: nom/lastname,
+                    prenom/firstname, zipcode/code postal, portable, email,
+                    statut/status et autres colonnes de fiche.
                   </p>
                 </div>
                 <div
@@ -620,6 +621,29 @@
         </form>
       </div>
     </div>
+    <!-- USER MODAL -->
+    <div
+      id="client-detail-modal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      style="display: none"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div class="mb-5 flex items-center justify-between gap-4">
+          <h3 id="client-detail-title" class="text-lg font-bold text-gray-900">
+            Fiche client
+          </h3>
+          <button
+            type="button"
+            onclick="closeClientDetails()"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Fermer
+          </button>
+        </div>
+        <div id="client-detail-body" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"></div>
+      </div>
+    </div>
+
     <!-- USER MODAL -->
     <div
       id="user-modal"
@@ -802,7 +826,10 @@
           <td class="px-6 py-4">${Number(lead.prix_mutuelle || 0).toFixed(2)} EUR</td>
           <td class="px-6 py-4 text-gray-600 max-w-xs truncate" title="${escapeHtml(lead.notes || "")}">${escapeHtml(lead.notes || "")}</td>
           <td class="px-6 py-4 text-right">
-            <button onclick="deleteLeadHandler(${lead.id})" class="text-red-600 hover:text-red-700 font-medium text-sm">Supprimer</button>
+            <div class="flex justify-end gap-3">
+              <button onclick="showClientDetails(${lead.id})" class="text-indigo-600 hover:text-indigo-700 font-medium text-sm">Fiche</button>
+              <button onclick="deleteLeadHandler(${lead.id})" class="text-red-600 hover:text-red-700 font-medium text-sm">Supprimer</button>
+            </div>
           </td>
         </tr>
       `,
@@ -820,9 +847,83 @@
             l.prenom.toLowerCase().includes(query) ||
             l.ville.toLowerCase().includes(query) ||
             l.code_postal.includes(query) ||
-            l.nom_mutuelle.toLowerCase().includes(query),
+            (l.nom_mutuelle || "").toLowerCase().includes(query) ||
+            (l.email || "").toLowerCase().includes(query) ||
+            (l.tel_gsm || "").toLowerCase().includes(query) ||
+            (l.tel_fixe || "").toLowerCase().includes(query),
         );
         renderLeads(filtered);
+      }
+
+      function showClientDetails(leadId) {
+        const lead = allLeads.find((item) => item.id === leadId);
+        if (!lead) return;
+        document.getElementById("client-detail-title").textContent =
+          `${lead.nom || ""} ${lead.prenom || ""}`.trim() || "Fiche client";
+
+        const fields = [
+          ["Civilite", lead.civilite],
+          ["Nom", lead.nom],
+          ["Prenom", lead.prenom],
+          ["Profession", lead.profession],
+          ["Adresse", [lead.adresse, lead.adresse2].filter(Boolean).join(" ")],
+          ["Ville", `${lead.code_postal || ""} ${lead.ville || ""}`.trim()],
+          ["Tel fixe", lead.tel_fixe],
+          ["Tel GSM", lead.tel_gsm],
+          ["E-mail", lead.email],
+          ["Tel professionnel", lead.tel_professionnel],
+          ["Date de naissance", lead.date_naissance],
+          ["Naissance conjoint", lead.date_naissance_conjoint],
+          ["Naissance enfant 1", lead.naissance_enfant_1],
+          ["Naissance enfant 2", lead.naissance_enfant_2],
+          ["Naissance enfant 3", lead.naissance_enfant_3],
+          ["Affilie TNS", lead.regime_tns],
+          ["Regime", lead.regime],
+          ["Regime conjoint", lead.regime_conjoint],
+          ["Remboursement frais", lead.remboursement_frais],
+          ["Besoins specifiques", lead.besoins_specifiques],
+          ["Date assurance", lead.assurance_date],
+          ["Mutuelle actuelle", lead.deja_mutuelle || lead.nom_mutuelle],
+          ["Statut", lead.status],
+          ["Notes", lead.notes],
+        ];
+        let extraData = {};
+        try {
+          extraData =
+            typeof lead.extra_data === "string"
+              ? JSON.parse(lead.extra_data || "{}")
+              : lead.extra_data || {};
+        } catch (err) {
+          extraData = {};
+        }
+        const extraFields = Object.entries(extraData)
+          .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+          .slice(0, 40);
+
+        document.getElementById("client-detail-body").innerHTML =
+          renderDetailFields(fields) +
+          (extraFields.length
+            ? `<div class="col-span-full pt-3 text-sm font-semibold text-gray-900">Colonnes importees</div>${renderDetailFields(extraFields)}`
+            : "");
+        document.getElementById("client-detail-modal").style.display = "flex";
+      }
+
+      function renderDetailFields(fields) {
+        return fields
+          .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+          .map(
+            ([label, value]) => `
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p class="text-xs font-semibold uppercase text-gray-500">${escapeHtml(label)}</p>
+                <p class="mt-1 whitespace-pre-wrap text-sm text-gray-900">${escapeHtml(value)}</p>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      function closeClientDetails() {
+        document.getElementById("client-detail-modal").style.display = "none";
       }
 
       async function updateLeadStatus(leadId, status) {
@@ -1279,10 +1380,20 @@
             headers: { Authorization: `Bearer ${getToken()}` },
             body: formData,
           });
-          if (!response.ok) throw new Error(await response.text());
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || "Erreur import");
+          }
 
           msg.textContent = "Import réussi!";
-          msg.className = "p-4 rounded-lg bg-green-100 text-green-800";
+          const errorText = result.errors?.length
+            ? ` ${result.errors.length} ligne(s) ignoree(s).`
+            : "";
+          msg.textContent = `${result.imported || 0}/${result.total || 0} client(s) importe(s).${errorText}`;
+          msg.className =
+            (result.imported || 0) > 0
+              ? "p-4 rounded-lg bg-green-100 text-green-800"
+              : "p-4 rounded-lg bg-yellow-100 text-yellow-800";
           await loadLeads();
           renderImportAgentAssignments(true);
           document.getElementById("file-input").value = "";
