@@ -4,205 +4,106 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SecurAssure - Agent</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      * {
-        font-family: "Poppins", sans-serif;
-      }
-      .material-symbols-outlined {
-        font-variation-settings:
-          "FILL" 0,
-          "wght" 400;
-      }
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#d62d5a",
+              surface: "#ffffff",
+              background: "#f9fafa",
+              border: "#eef0f2",
+              textMain: "#1e293b",
+              textMuted: "#64748b",
+            },
+            fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          },
+        },
+      };
+    </script>
+    <style data-purpose="custom-utilities">
+      body { background-color: #f3f4f6; padding: 2rem; }
+      .dashboard-container { background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06); display: flex; height: calc(100vh - 4rem); max-width: 1600px; margin: 0 auto; border: 1px solid #e5e7eb; }
+      .sidebar { width: 64px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+      .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: #fafafa; }
+      .topbar { height: 64px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between; background: white; }
+      .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+      .card { background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); }
+      .mini-bar { width: 8px; border-radius: 2px; background-color: #f1f5f9; margin: 0 2px; display: inline-block; vertical-align: bottom; }
+      .mini-bar.active { background-color: #e2e8f0; }
+      .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background-color: #e2e8f0; position: relative; cursor: pointer; }
+      .toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: .2s; }
+      .toggle-switch.active { background-color: #d62d5a; }
+      .toggle-switch.active::after { transform: translateX(16px); }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
   </head>
-  <body class="bg-gray-50 text-gray-900">
-    <div class="flex min-h-screen">
-      <aside
-        id="agent-sidebar"
-        class="hidden md:flex w-64 shrink-0 flex-col bg-gray-900 p-6 text-white"
-      >
-        <div class="mb-8 flex items-center gap-3">
-          <img src="/logo.png" alt="SecurAssure" class="h-16" />
+  <body class="text-textMain antialiased">
+    <div class="dashboard-container">
+      <!-- BEGIN: Sidebar -->
+      <nav id="agent-sidebar" class="sidebar bg-white">
+        <div class="mb-8 w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white text-xl"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div class="flex flex-col gap-6 w-full items-center flex-1">
+          <button onclick="refreshClients()" class="text-primary border-r-2 border-primary w-full text-center py-1" title="Actualiser"><i class="fa-solid fa-border-all text-lg"></i></button>
+          <button onclick="scrollToClients()" class="text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Mes clients"><i class="fa-regular fa-envelope text-lg"></i></button>
         </div>
+        <div class="flex flex-col gap-6 w-full items-center mt-auto">
+          <button onclick="toggleSortClients()" class="text-textMuted hover:text-primary transition-colors" title="Trier"><i class="fa-solid fa-gear text-lg"></i></button>
+          <button onclick="handleLogout()" class="text-textMuted hover:text-primary transition-colors" title="Deconnexion"><i class="fa-solid fa-rocket text-lg"></i></button>
+        </div>
+      </nav>
+      <!-- END: Sidebar -->
 
-        <nav class="flex-1 space-y-2">
-          <button
-            onclick="refreshClients()"
-            class="w-full flex items-center gap-3 rounded-lg bg-indigo-600 px-4 py-3 font-medium text-white transition hover:bg-indigo-700"
-          >
-            <span class="material-symbols-outlined">refresh</span>
-            <span>Actualiser</span>
-          </button>
-          <button
-            onclick="scrollToClients()"
-            class="w-full flex items-center gap-3 rounded-lg px-4 py-3 font-medium text-gray-200 transition hover:bg-gray-800"
-          >
-            <span class="material-symbols-outlined">people</span>
-            <span>Mes clients</span>
-          </button>
-        </nav>
-
-        <button
-          onclick="handleLogout()"
-          class="mt-6 w-full flex items-center gap-3 rounded-lg px-4 py-3 font-medium text-red-300 transition hover:bg-red-900"
-        >
-          <span class="material-symbols-outlined">logout</span>
-          <span>Déconnexion</span>
-        </button>
-      </aside>
-
-      <main class="flex-1 overflow-hidden">
-        <header
-          class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 md:px-8"
-        >
-          <div class="flex items-center gap-3">
-            <button
-              onclick="toggleMobileMenu()"
-              class="rounded-lg p-2 transition hover:bg-gray-100 md:hidden"
-              aria-label="Menu"
-            >
-              <span class="material-symbols-outlined">menu</span>
-            </button>
-            <div>
-              <h1 class="text-2xl font-bold">Mes clients</h1>
-              <p class="text-sm text-gray-500">
-                Portefeuille assigné depuis l'espace admin
-              </p>
-            </div>
+      <!-- BEGIN: Main Content Area -->
+      <div class="main-content">
+        <!-- BEGIN: Topbar -->
+        <header class="topbar">
+          <div class="relative w-96">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input id="agent-search-input" oninput="applyClientFilters()" class="w-full pl-9 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Rechercher dans mes clients" type="text" />
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 text-gray-400 text-xs"><i class="fa-brands fa-apple"></i><span>S</span></div>
           </div>
           <div class="flex items-center gap-4">
-            <span id="leads-count" class="text-sm font-semibold text-gray-600"
-              >0 clients</span
-            >
-            <div
-              id="user-avatar"
-              class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 font-bold text-white"
-            >
-              A
-            </div>
+            <span id="leads-count" class="text-sm font-semibold text-gray-600">0 clients</span>
+            <div id="user-avatar" class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 flex items-center justify-center text-xs font-semibold text-textMain">A</div>
+            <button onclick="refreshClients()" class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-opacity-90 transition" title="Actualiser"><i class="fa-solid fa-rotate-right"></i></button>
+            <button onclick="handleLogout()" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition" title="Deconnexion"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
           </div>
         </header>
+        <!-- END: Topbar -->
 
-        <section class="h-[calc(100vh-73px)] overflow-y-auto p-4 md:p-8">
-          <div
-            id="clients-panel"
-            class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
-          >
-            <div
-              class="flex flex-col gap-4 border-b border-gray-200 p-4 md:flex-row md:items-center md:justify-between"
-            >
-              <div>
-                <h2 class="text-lg font-semibold">Liste des clients</h2>
-                <p id="status-message" class="text-sm text-gray-500">
-                  Chargement...
-                </p>
-              </div>
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <div class="relative">
-                  <span
-                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    style="font-size: 20px"
-                    >search</span
-                  >
-                  <input
-                    id="agent-search-input"
-                    type="text"
-                    oninput="applyClientFilters()"
-                    placeholder="Rechercher..."
-                    class="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:w-64"
-                  />
-                </div>
-                <select
-                  id="status-filter"
-                  onchange="applyClientFilters()"
-                  class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Tous les statuts</option>
-                  <option value="NEW">Nouveau</option>
-                  <option value="CONTACTED">Contacté</option>
-                  <option value="INTERESTED">Intéressé</option>
-                  <option value="QUALIFIED">Qualifié</option>
-                  <option value="CLOSED">Fermé</option>
-                </select>
-                <button
-                  onclick="toggleSortClients()"
-                  class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium transition hover:bg-gray-50"
-                >
-                  <span class="material-symbols-outlined" style="font-size: 18px"
-                    >sort</span
-                  >
-                  Trier
-                </button>
+        <!-- BEGIN: Dashboard Content -->
+        <main class="content-area">
+          <div class="grid grid-cols-4 gap-4 mb-4">
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Mes clients</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-total">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> assignes</div></div><div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-6 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-5 active"></div></div></div><button onclick="refreshClients()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Nouveaux</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-new">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> a traiter</div></div><div class="flex items-end h-8"><div class="mini-bar h-3"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-2 active"></div></div></div><button onclick="document.getElementById('status-filter').value='NEW'; applyClientFilters();" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Interesses</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-interested">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> suivi commercial</div></div><div class="flex items-end h-8"><div class="mini-bar h-5"></div><div class="mini-bar h-7 active"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-6 active"></div></div></div><button onclick="document.getElementById('status-filter').value='INTERESTED'; applyClientFilters();" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Fermes</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-closed">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> contrats clos</div></div><div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-6 active"></div></div></div><button onclick="document.getElementById('status-filter').value='CLOSED'; applyClientFilters();" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+          </div>
+
+          <div id="clients-panel" class="card">
+            <div class="flex justify-between items-center mb-4">
+              <div><h3 class="text-base font-semibold text-textMain">Liste des clients</h3><p id="status-message" class="text-sm text-gray-500">Chargement...</p></div>
+              <div class="flex gap-2">
+                <select id="status-filter" onchange="applyClientFilters()" class="border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"><option value="">Tous les statuts</option><option value="NEW">Nouveau</option><option value="CONTACTED">Contacte</option><option value="INTERESTED">Interesse</option><option value="QUALIFIED">Qualifie</option><option value="CLOSED">Ferme</option></select>
+                <button onclick="toggleSortClients()" class="border border-gray-200 rounded px-2 py-1.5 text-gray-400 hover:bg-gray-50"><i class="fa-solid fa-ellipsis"></i></button>
               </div>
             </div>
-
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[1280px] text-left">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Nom
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Prenom
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Ville
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Statut
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Mutuelle
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Prix
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Commentaire
-                    </th>
-                    <th
-                      class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-700"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody id="leads-tbody" class="divide-y divide-gray-200">
-                  <tr>
-                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
-                      Chargement des clients...
-                    </td>
-                  </tr>
-                </tbody>
+              <table class="w-full min-w-[1280px] text-sm text-left">
+                <thead class="text-xs text-gray-500 bg-gray-50/50 uppercase"><tr><th class="px-4 py-3 font-medium rounded-tl-lg">Nom</th><th class="px-4 py-3 font-medium">Prenom</th><th class="px-4 py-3 font-medium">Ville</th><th class="px-4 py-3 font-medium">Statut</th><th class="px-4 py-3 font-medium">Mutuelle</th><th class="px-4 py-3 font-medium">Prix</th><th class="px-4 py-3 font-medium">Commentaire</th><th class="px-4 py-3 font-medium text-right rounded-tr-lg">Operation</th></tr></thead>
+                <tbody id="leads-tbody" class="divide-y divide-gray-100"><tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Chargement des clients...</td></tr></tbody>
               </table>
             </div>
           </div>
-        </section>
-      </main>
+        </main>
+        <!-- END: Dashboard Content -->
+      </div>
+      <!-- END: Main Content Area -->
     </div>
 
     <div
@@ -219,7 +120,7 @@
             <button
               id="client-detail-mail-btn"
               type="button"
-              class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition"
+              class="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
             >
               Envoyer e-mail
             </button>
@@ -261,7 +162,7 @@
               type="text"
               id="email-subject"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
@@ -270,7 +171,7 @@
               id="email-body"
               rows="12"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans text-sm"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-sans text-sm"
             ></textarea>
           </div>
           
@@ -291,7 +192,7 @@
             <button
               type="submit"
               id="email-submit-btn"
-              class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition"
+              class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-opacity-90 transition"
             >
               Envoyer
             </button>
@@ -354,15 +255,15 @@
             (lead) => `
               <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4">
-                  <input data-client-field="nom" data-client-id="${lead.id}" value="${escapeHtml(lead.nom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <input data-client-field="nom" data-client-id="${lead.id}" value="${escapeHtml(lead.nom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </td>
                 <td class="px-6 py-4">
-                  <input data-client-field="prenom" data-client-id="${lead.id}" value="${escapeHtml(lead.prenom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <input data-client-field="prenom" data-client-id="${lead.id}" value="${escapeHtml(lead.prenom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex min-w-64 gap-2">
-                    <input data-client-field="ville" data-client-id="${lead.id}" value="${escapeHtml(lead.ville || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                    <input data-client-field="code_postal" data-client-id="${lead.id}" value="${escapeHtml(lead.code_postal || "")}" maxlength="5" class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input data-client-field="ville" data-client-id="${lead.id}" value="${escapeHtml(lead.ville || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
+                    <input data-client-field="code_postal" data-client-id="${lead.id}" value="${escapeHtml(lead.code_postal || "")}" maxlength="5" class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                 </td>
                 <td class="px-6 py-4">
@@ -375,25 +276,25 @@
                   </select>
                 </td>
                 <td class="px-6 py-4">
-                  <input data-client-field="nom_mutuelle" data-client-id="${lead.id}" value="${escapeHtml(lead.nom_mutuelle || "")}" class="w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <input data-client-field="nom_mutuelle" data-client-id="${lead.id}" value="${escapeHtml(lead.nom_mutuelle || "")}" class="w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </td>
                 <td class="px-6 py-4">
-                  <input data-client-field="prix_mutuelle" data-client-id="${lead.id}" type="number" min="0" step="0.01" value="${Number(lead.prix_mutuelle || 0).toFixed(2)}" class="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <input data-client-field="prix_mutuelle" data-client-id="${lead.id}" type="number" min="0" step="0.01" value="${Number(lead.prix_mutuelle || 0).toFixed(2)}" class="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </td>
                 <td class="px-6 py-4">
                   <textarea
                     data-client-field="notes"
                     data-client-id="${lead.id}"
                     rows="2"
-                    class="w-full min-w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    class="w-full min-w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >${escapeHtml(lead.notes || "")}</textarea>
                 </td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex justify-end gap-2">
-                    <button onclick="showClientDetails(${lead.id})" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50">
+                    <button onclick="showClientDetails(${lead.id})" class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-primary transition hover:bg-gray-50">
                       Fiche
                     </button>
-                    <button onclick="saveLeadRow(${lead.id})" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                    <button onclick="saveLeadRow(${lead.id})" class="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition hover:bg-opacity-90">
                       Enregistrer
                     </button>
                   </div>
