@@ -90,7 +90,7 @@ function initializeDataFiles() {
   if (!fs.existsSync(USERS_FILE)) {
     const admin = {
       id: 1,
-      email: "admin@test.com",
+      email: "contact@jechangemamutuelle.online",
       name: "Admin User",
       password: bcrypt.hashSync("admin123", 10),
       role: "ADMIN",
@@ -626,7 +626,7 @@ app.listen(PORT, () => {
   console.log(`📊 Data stored in: ${DATA_DIR}`);
   console.log(`📁 Uploads stored in: ${UPLOAD_DIR}`);
   console.log("\n🔑 Test Credentials:");
-  console.log("  Admin: admin@test.com / admin123");
+  console.log("  Admin: contact@jechangemamutuelle.online / admin123");
   console.log("  Agent1: agent1@test.com / agent123");
   console.log("  Agent2: agent2@test.com / agent123");
   console.log("\n🔒 Security:");

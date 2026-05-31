@@ -93,7 +93,7 @@ Test the API is working:
 # Login test
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@test.com","password":"admin123"}'
+  -d '{"email":"contact@jechangemamutuelle.online","password":"admin123"}'
 
 # Get clients (with token from login response)
 curl -X GET http://localhost:5000/api/clients \

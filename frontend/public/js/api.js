@@ -289,3 +289,13 @@ const uploadExcel = async (file) => {
 
   return json;
 };
+
+const sendMail = async (recipientEmail, recipientName, subject, body) => {
+  const data = await apiCall("POST", "/mail/send", {
+    recipientEmail,
+    recipientName,
+    subject,
+    body,
+  });
+  return data;
+};

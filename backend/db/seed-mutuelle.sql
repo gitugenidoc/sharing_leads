@@ -2,7 +2,7 @@
 
 -- Insert test users
 INSERT INTO users (email, name, password, role) VALUES
-('admin@test.com', 'Admin User', '$2a$10$N9qo8uLOickgx2ZMRZoHyuPHZRE8LrDqQBQrI5g2VnKuOOGHEfvLm', 'ADMIN'),
+('contact@jechangemamutuelle.online', 'Admin User', '$2a$10$N9qo8uLOickgx2ZMRZoHyuPHZRE8LrDqQBQrI5g2VnKuOOGHEfvLm', 'ADMIN'),
 ('agent1@test.com', 'Agent One', '$2a$10$N9qo8uLOickgx2ZMRZoHyuPHZRE8LrDqQBQrI5g2VnKuOOGHEfvLm', 'AGENT'),
 ('agent2@test.com', 'Agent Two', '$2a$10$N9qo8uLOickgx2ZMRZoHyuPHZRE8LrDqQBQrI5g2VnKuOOGHEfvLm', 'AGENT')
 ON CONFLICT (email) DO NOTHING;

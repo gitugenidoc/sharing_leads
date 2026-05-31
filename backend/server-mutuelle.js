@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const XLSX = require("xlsx");
 const rateLimit = require("express-rate-limit");
+const nodemailer = require("nodemailer");
 const {
   validateClient,
   validateUser,
@@ -18,12 +19,39 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+const getTransporter = async () => {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: parseInt(process.env.SMTP_PORT) === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  } else {
+    // Ethereal automatic test account for testing
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
+};
 const JWT_SECRET = process.env.JWT_SECRET || "test-secret";
 
 // Data files
 const DATA_DIR = path.join(__dirname, "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 const CLIENTS_FILE = path.join(DATA_DIR, "clients.json");
+const EMAILS_FILE = path.join(DATA_DIR, "emails.json");
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 
 // Create uploads directory
@@ -199,6 +227,17 @@ function readClients() {
 
 function writeClients(clients) {
   fs.writeFileSync(CLIENTS_FILE, JSON.stringify(clients, null, 2));
+}
+
+function readEmails() {
+  if (!fs.existsSync(EMAILS_FILE)) {
+    fs.writeFileSync(EMAILS_FILE, "[]");
+  }
+  return JSON.parse(fs.readFileSync(EMAILS_FILE, "utf8"));
+}
+
+function writeEmails(emails) {
+  fs.writeFileSync(EMAILS_FILE, JSON.stringify(emails, null, 2));
 }
 
 // Middleware: Verify JWT
@@ -394,6 +433,126 @@ app.delete("/api/users/:id", verifyToken, isAdmin, (req, res) => {
       details: error.message,
     });
   }
+});
+
+// Helper for timed assignments auto-release
+function releaseExpiredAssignments() {
+  try {
+    const clients = readClients();
+    const now = new Date();
+    let modified = false;
+
+    clients.forEach(c => {
+      if (c.assigned_to && c.assignment_expires_at && new Date(c.assignment_expires_at) < now) {
+        c.assigned_to = null;
+        c.assigned_at = null;
+        c.assignment_expires_at = null;
+        c.updated_at = now.toISOString();
+        modified = true;
+      }
+    });
+
+    if (modified) {
+      writeClients(clients);
+      console.log("[Auto-Release JSON] Released expired client assignments.");
+    }
+  } catch (err) {
+    console.error("Error in releaseExpiredAssignments:", err);
+  }
+}
+
+// Mail service templates
+const MAIL_TEMPLATES = [
+  {
+    id: "relance",
+    name: "Relance Client",
+    subject: "Des nouvelles de votre demande de mutuelle - SecurAssure",
+    body: "Bonjour [Nom] [Prenom],\n\nNous avons tenté de vous joindre aujourd'hui au sujet de votre demande de comparatif de mutuelle.\n\nPourriez-vous nous indiquer vos disponibilités afin que nous puissions faire le point ensemble sur vos besoins ?\n\nCordialement,\nL'équipe SecurAssure"
+  },
+  {
+    id: "offre_senior",
+    name: "Offre Mutuelle Senior",
+    subject: "Des garanties renforcées pour votre mutuelle - SecurAssure",
+    body: "Bonjour [Nom] [Prenom],\n\nDécouvrez nos nouvelles garanties spécifiquement conçues pour les seniors : prise en charge renforcée des frais d'optique, de dentaire et des médecines douces.\n\nNous sommes à votre disposition pour vous réaliser un devis gratuit et personnalisé.\n\nCordialement,\nL'équipe SecurAssure"
+  },
+  {
+    id: "confirm_rdv",
+    name: "Confirmation de Rendez-vous",
+    subject: "Confirmation de votre rendez-vous - SecurAssure",
+    body: "Bonjour [Nom] [Prenom],\n\nNous vous confirmons votre rendez-vous avec un de nos conseillers SecurAssure.\n\nNous vous recontacterons au numéro fourni.\n\nCordialement,\nL'équipe SecurAssure"
+  }
+];
+
+// Mail Routes
+app.get("/api/mail/templates", verifyToken, (req, res) => {
+  res.json(MAIL_TEMPLATES);
+});
+
+app.post("/api/mail/send", verifyToken, async (req, res) => {
+  const { recipientEmail, recipientName, subject, body } = req.body;
+  const senderId = req.user.id;
+
+  if (!recipientEmail || !subject || !body) {
+    return res.status(400).json({ error: "Champs obligatoires manquants" });
+  }
+
+  try {
+    const transporter = await getTransporter();
+    const mailOptions = {
+      from: process.env.SMTP_FROM || `"SecurAssure" <contact@jechangemamutuelle.online>`,
+      to: recipientEmail,
+      subject: subject,
+      text: body,
+      html: body.replace(/\n/g, "<br>"),
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    let previewUrl = "";
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+      previewUrl = nodemailer.getTestMessageUrl(info);
+    }
+
+    const emails = readEmails();
+    const newEmail = {
+      id: Math.max(...emails.map(e => e.id), 0) + 1,
+      sender_id: senderId,
+      sender_name: req.user.name,
+      recipient_email: recipientEmail,
+      recipient_name: recipientName,
+      subject,
+      body,
+      status: 'SENT',
+      created_at: new Date().toISOString()
+    };
+
+    emails.push(newEmail);
+    writeEmails(emails);
+
+    res.json({
+      message: previewUrl ? "E-mail envoyé avec succès (simulation SMTP)" : "E-mail envoyé avec succès",
+      mailId: newEmail.id,
+      status: "SENT",
+      created_at: newEmail.created_at,
+      previewUrl,
+    });
+  } catch (err) {
+    console.error("Error sending mail in mutuelle server:", err);
+    res.status(500).json({ error: "Erreur lors de l'envoi de l'e-mail : " + err.message });
+  }
+});
+
+app.get("/api/mail/history", verifyToken, (req, res) => {
+  const userId = req.user.id;
+  const userRole = req.user.role;
+  const emails = readEmails();
+
+  let filtered = emails;
+  if (userRole === "AGENT") {
+    filtered = emails.filter(e => e.sender_id === userId);
+  }
+
+  filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  res.json(filtered);
 });
 
 // Routes: Clients

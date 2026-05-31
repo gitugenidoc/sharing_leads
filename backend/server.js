@@ -23,6 +23,7 @@ const usersRoutes = require("./routes/users");
 const leadsRoutes = require("./routes/leads");
 const clientsRoutes = require("./routes/clients");
 const logsRoutes = require("./routes/logs");
+const mailRoutes = require("./routes/mail");
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use("/api/users", usersRoutes);
 app.use("/api/leads", leadsRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/logs", logsRoutes);
+app.use("/api/mail", mailRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

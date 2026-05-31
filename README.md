@@ -59,7 +59,7 @@ En production, `DATABASE_URL` peut remplacer les variables `DB_*`.
 
 ## Compte cree par la migration
 
-- Super admin: `admin@test.com` / `admin123`
+- Super admin: `contact@jechangemamutuelle.online` / `admin123`
 
 Change ces identifiants avant toute mise en production.
 
@@ -71,7 +71,7 @@ Change ces identifiants avant toute mise en production.
   centre, importe les clients de ce centre et assigne ces clients a ses agents.
 - `AGENT`: voit uniquement les clients qui lui sont assignes.
 
-Dans l'interface admin, `admin@test.com` est le super admin. Pour creer un
+Dans l'interface admin, `contact@jechangemamutuelle.online` est le super admin. Pour creer un
 centre, il suffit de creer un utilisateur avec le role `Admin de centre` et de
 renseigner le nom du centre. Ensuite cet admin de centre peut se connecter et
 creer ses propres agents.

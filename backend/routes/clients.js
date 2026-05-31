@@ -383,7 +383,8 @@ router.post("/assign-random", verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: "Assignable agent not found" });
     }
 
-    const clients = await Client.assignRandomClients(userId, count, agent.center_id);
+    const durationHours = parseFloat(req.body.durationHours || req.body.duration) || 24;
+    const clients = await Client.assignRandomClients(userId, count, agent.center_id, durationHours);
     await Promise.all(
       clients.map((client) =>
         Log.createAuditLog({
@@ -538,7 +539,8 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: "Assignable agent not found" });
     }
 
-    const client = await Client.assignClient(req.params.id, userId);
+    const durationHours = parseFloat(req.body.durationHours || req.body.duration) || 24;
+    const client = await Client.assignClient(req.params.id, userId, durationHours);
     await Log.createAuditLog({
       userId: req.user.id,
       action: "ASSIGN",

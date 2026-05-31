@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "email": "admin@test.com",
+    "email": "contact@jechangemamutuelle.online",
     "name": "Admin User",
     "password": "$2a$10$BX29kyORsa8IwVj3zN4nJu3BkOH8j5osSV95O7TyVHo0z6ccbzm2a",
     "role": "ADMIN",

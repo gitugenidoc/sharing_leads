@@ -85,6 +85,8 @@ const createTables = async () => {
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assurance_date VARCHAR(100)");
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS deja_mutuelle VARCHAR(255)");
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS extra_data JSONB DEFAULT '{}'::jsonb");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assignment_expires_at TIMESTAMP");
   await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
   await pool.query(`
     ALTER TABLE users
@@ -117,6 +119,19 @@ const createTables = async () => {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mail_logs (
+      id SERIAL PRIMARY KEY,
+      sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      recipient_email VARCHAR(255) NOT NULL,
+      recipient_name VARCHAR(255),
+      subject VARCHAR(255) NOT NULL,
+      body TEXT NOT NULL,
+      status VARCHAR(50) DEFAULT 'SENT',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   await pool.query("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)");
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_users_center_id ON users(center_id)",
@@ -145,6 +160,12 @@ const createTables = async () => {
   );
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_mail_logs_sender_id ON mail_logs(sender_id)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_mail_logs_created_at ON mail_logs(created_at)",
   );
 
   await pool.query(`
@@ -185,9 +206,17 @@ const createTables = async () => {
 const ensureSuperAdminOnly = async () => {
   const adminPassword = await bcrypt.hash("admin123", 10);
 
+  // Update existing admin@test.com to new email if contact@jechangemamutuelle.online does not exist yet
+  await pool.query(
+    `UPDATE users 
+     SET email = 'contact@jechangemamutuelle.online' 
+     WHERE email = 'admin@test.com' 
+     AND NOT EXISTS (SELECT 1 FROM users WHERE email = 'contact@jechangemamutuelle.online')`
+  );
+
   await pool.query(
     `INSERT INTO users (email, name, password, role, center_id)
-     VALUES ('admin@test.com', 'Super Admin', $1, 'SUPER_ADMIN', NULL)
+     VALUES ('contact@jechangemamutuelle.online', 'Super Admin', $1, 'SUPER_ADMIN', NULL)
      ON CONFLICT (email) DO UPDATE SET
       role = 'SUPER_ADMIN',
       center_id = EXCLUDED.center_id`,
