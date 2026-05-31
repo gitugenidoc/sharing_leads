@@ -34,22 +34,22 @@ const getTransporter = async () => {
 // Mail templates
 const MAIL_TEMPLATES = [
   {
-    id: "relance",
-    name: "Relance Client",
-    subject: "Des nouvelles de votre demande de mutuelle - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nNous avons tenté de vous joindre aujourd'hui au sujet de votre demande de comparatif de mutuelle.\n\nPourriez-vous nous indiquer vos disponibilités afin que nous puissions faire le point ensemble sur vos besoins ?\n\nCordialement,\nL'équipe SecurAssure"
+    "id": "relance_contact",
+    "name": "Relance contact",
+    "subject": "Des nouvelles de votre demande de mutuelle - SecurAssure",
+    "body": "Bonjour [Civilite] [Nom],\n\nNous avons tente de vous joindre au sujet de votre demande de comparatif mutuelle.\n\nPouvez-vous nous indiquer vos disponibilites afin que nous puissions faire le point sur vos besoins et votre tarif actuel ([PrixMutuelle]) ?\n\nCordialement,\nL'equipe SecurAssure"
   },
   {
-    id: "offre_senior",
-    name: "Offre Mutuelle Senior",
-    subject: "Des garanties renforcées pour votre mutuelle - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nDécouvrez nos nouvelles garanties spécifiquement conçues pour les seniors : prise en charge renforcée des frais d'optique, de dentaire et des médecines douces.\n\nNous sommes à votre disposition pour vous réaliser un devis gratuit et personnalisé.\n\nCordialement,\nL'équipe SecurAssure"
+    "id": "proposition_devis",
+    "name": "Proposition devis",
+    "subject": "Votre devis mutuelle personnalise - SecurAssure",
+    "body": "Bonjour [Civilite] [Nom],\n\nD'apres les informations de votre fiche, votre mutuelle actuelle est [Mutuelle] pour un tarif de [PrixMutuelle].\n\nNous pouvons vous proposer une comparaison personnalisee avec des garanties adaptees a vos besoins : [Besoins].\n\nUn conseiller peut vous rappeler rapidement pour finaliser le devis.\n\nCordialement,\nL'equipe SecurAssure"
   },
   {
-    id: "confirm_rdv",
-    name: "Confirmation de Rendez-vous",
-    subject: "Confirmation de votre rendez-vous - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nNous vous confirmons votre rendez-vous avec un de nos conseillers SecurAssure.\n\nNous vous recontacterons au numéro fourni.\n\nCordialement,\nL'équipe SecurAssure"
+    "id": "confirmation_rdv",
+    "name": "Confirmation rendez-vous",
+    "subject": "Confirmation de votre rendez-vous - SecurAssure",
+    "body": "Bonjour [Civilite] [Nom],\n\nNous vous confirmons votre rendez-vous avec un conseiller SecurAssure.\n\nNous vous recontacterons au numero indique dans votre fiche afin de valider les garanties et le budget mutuelle.\n\nCordialement,\nL'equipe SecurAssure"
   }
 ];
 

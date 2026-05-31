@@ -687,6 +687,13 @@
             </button>
             <button
               type="button"
+              onclick="saveClientDetails()"
+              class="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+            >
+              Enregistrer
+            </button>
+            <button
+              type="button"
               onclick="closeClientDetails()"
               class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
@@ -716,6 +723,10 @@
               readonly
               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 focus:outline-none"
             />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Template</label>
+            <select id="email-template" onchange="applySelectedMailTemplate()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Sujet *</label>
@@ -980,31 +991,36 @@
           `${lead.nom || ""} ${lead.prenom || ""}`.trim() || "Fiche client";
 
         const fields = [
-          ["Civilite", lead.civilite],
-          ["Nom", lead.nom],
-          ["Prenom", lead.prenom],
-          ["Profession", lead.profession],
-          ["Adresse", [lead.adresse, lead.adresse2].filter(Boolean).join(" ")],
-          ["Ville", `${lead.code_postal || ""} ${lead.ville || ""}`.trim()],
-          ["Tel fixe", lead.tel_fixe],
-          ["Tel GSM", lead.tel_gsm],
-          ["E-mail", lead.email],
-          ["Tel professionnel", lead.tel_professionnel],
-          ["Date de naissance", lead.date_naissance],
-          ["Naissance conjoint", lead.date_naissance_conjoint],
-          ["Naissance enfant 1", lead.naissance_enfant_1],
-          ["Naissance enfant 2", lead.naissance_enfant_2],
-          ["Naissance enfant 3", lead.naissance_enfant_3],
-          ["Affilie TNS", lead.regime_tns],
-          ["Regime", lead.regime],
-          ["Regime conjoint", lead.regime_conjoint],
-          ["Remboursement frais", lead.remboursement_frais],
-          ["Besoins specifiques", lead.besoins_specifiques],
-          ["Date assurance", lead.assurance_date],
-          ["Mutuelle actuelle", lead.deja_mutuelle || lead.nom_mutuelle],
-          ["Statut", lead.status],
-          ["Notes", lead.notes],
+          ["Civilite", "civilite", lead.civilite],
+          ["Nom", "nom", lead.nom],
+          ["Prenom", "prenom", lead.prenom],
+          ["Profession", "profession", lead.profession],
+          ["Adresse", "adresse", lead.adresse],
+          ["Adresse 2", "adresse2", lead.adresse2],
+          ["Ville", "ville", lead.ville],
+          ["Code postal", "code_postal", lead.code_postal],
+          ["Tel fixe", "tel_fixe", lead.tel_fixe],
+          ["Tel GSM", "tel_gsm", lead.tel_gsm],
+          ["E-mail", "email", lead.email],
+          ["Tel professionnel", "tel_professionnel", lead.tel_professionnel],
+          ["Date de naissance", "date_naissance", lead.date_naissance],
+          ["Naissance conjoint", "date_naissance_conjoint", lead.date_naissance_conjoint],
+          ["Naissance enfant 1", "naissance_enfant_1", lead.naissance_enfant_1],
+          ["Naissance enfant 2", "naissance_enfant_2", lead.naissance_enfant_2],
+          ["Naissance enfant 3", "naissance_enfant_3", lead.naissance_enfant_3],
+          ["Affilie TNS", "regime_tns", lead.regime_tns],
+          ["Regime", "regime", lead.regime],
+          ["Regime conjoint", "regime_conjoint", lead.regime_conjoint],
+          ["Remboursement frais", "remboursement_frais", lead.remboursement_frais],
+          ["Besoins specifiques", "besoins_specifiques", lead.besoins_specifiques],
+          ["Date assurance", "assurance_date", lead.assurance_date],
+          ["Mutuelle actuelle", "deja_mutuelle", lead.deja_mutuelle || lead.nom_mutuelle],
+          ["Nom mutuelle", "nom_mutuelle", lead.nom_mutuelle],
+          ["Prix mutuelle", "prix_mutuelle", lead.prix_mutuelle],
+          ["Statut", "status", lead.status],
+          ["Notes", "notes", lead.notes],
         ];
+        selectedLeadForDetails = lead;
         let extraData = {};
         try {
           extraData =
@@ -1021,7 +1037,7 @@
         document.getElementById("client-detail-body").innerHTML =
           renderDetailFields(fields) +
           (extraFields.length
-            ? `<div class="col-span-full pt-3 text-sm font-semibold text-gray-900">Colonnes importees</div>${renderDetailFields(extraFields)}`
+            ? `<div class="col-span-full pt-3 text-sm font-semibold text-gray-900">Colonnes importees</div>${renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true)}`
             : "");
 
         const mailBtn = document.getElementById("client-detail-mail-btn");
@@ -1032,16 +1048,25 @@
         document.getElementById("client-detail-modal").style.display = "flex";
       }
 
-      function renderDetailFields(fields) {
+      function renderDetailFields(fields, isExtra = false) {
         return fields
-          .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+          .filter(([, , value]) => value !== undefined && value !== null && String(value).trim() !== "")
           .map(
-            ([label, value]) => `
-              <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <p class="text-xs font-semibold uppercase text-gray-500">${escapeHtml(label)}</p>
-                <p class="mt-1 whitespace-pre-wrap text-sm text-gray-900">${escapeHtml(value)}</p>
-              </div>
-            `,
+            ([label, field, value]) => {
+              const escapedValue = escapeHtml(value);
+              const fieldAttr = isExtra
+                ? `data-extra-key="${escapeHtml(field)}"`
+                : `data-detail-field="${escapeHtml(field)}"`;
+              const control = ["notes", "remboursement_frais", "besoins_specifiques"].includes(field)
+                ? `<textarea ${fieldAttr} rows="3" class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">${escapedValue}</textarea>`
+                : `<input ${fieldAttr} value="${escapedValue}" class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />`;
+              return `
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p class="text-xs font-semibold uppercase text-gray-500">${escapeHtml(label)}</p>
+                  ${control}
+                </div>
+              `;
+            },
           )
           .join("");
       }
@@ -1050,43 +1075,94 @@
         document.getElementById("client-detail-modal").style.display = "none";
       }
 
+      let selectedLeadForDetails = null;
+
+      async function saveClientDetails() {
+        if (!selectedLeadForDetails) return;
+        const updates = {};
+        document.querySelectorAll("[data-detail-field]").forEach((input) => {
+          updates[input.dataset.detailField] = input.value;
+        });
+        updates.prix_mutuelle = parseFloat(updates.prix_mutuelle) || 0;
+        const extraData =
+          typeof selectedLeadForDetails.extra_data === "string"
+            ? JSON.parse(selectedLeadForDetails.extra_data || "{}")
+            : { ...(selectedLeadForDetails.extra_data || {}) };
+        document.querySelectorAll("[data-extra-key]").forEach((input) => {
+          extraData[input.dataset.extraKey] = input.value;
+        });
+        updates.extra_data = extraData;
+        try {
+          const updated = await updateLead(selectedLeadForDetails.id, updates);
+          const index = allLeads.findIndex((item) => item.id === updated.id);
+          if (index >= 0) allLeads[index] = updated;
+          selectedLeadForDetails = updated;
+          showClientDetails(updated.id);
+          if (typeof applyClientFilters === "function") applyClientFilters();
+          if (typeof renderLeads === "function") renderLeads(allLeads);
+          if (typeof updateDashboard === "function") updateDashboard();
+          alert("Fiche enregistree.");
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
+        }
+      }
+
+      let mailTemplates = [];
+
+      async function ensureMailTemplates() {
+        if (mailTemplates.length) return mailTemplates;
+        try {
+          mailTemplates = await getMailTemplates();
+        } catch (err) {
+          mailTemplates = [
+            { id: "relance_contact", name: "Relance contact", subject: "Des nouvelles de votre demande de mutuelle - SecurAssure", body: "Bonjour [Civilite] [Nom],\n\nNous avons tente de vous joindre au sujet de votre demande de comparatif mutuelle.\n\nCordialement,\nL'equipe SecurAssure" },
+            { id: "proposition_devis", name: "Proposition devis", subject: "Votre devis mutuelle personnalise - SecurAssure", body: "Bonjour [Civilite] [Nom],\n\nNous pouvons vous proposer une comparaison personnalisee adaptee a vos besoins : [Besoins].\n\nCordialement,\nL'equipe SecurAssure" },
+            { id: "confirmation_rdv", name: "Confirmation rendez-vous", subject: "Confirmation de votre rendez-vous - SecurAssure", body: "Bonjour [Civilite] [Nom],\n\nNous vous confirmons votre rendez-vous avec un conseiller SecurAssure.\n\nCordialement,\nL'equipe SecurAssure" },
+          ];
+        }
+        return mailTemplates;
+      }
+
+      function fillTemplate(template, lead) {
+        const values = {
+          Civilite: lead.civilite || "",
+          Nom: lead.nom || "",
+          Prenom: lead.prenom || "",
+          Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "Non renseignee",
+          PrixMutuelle: lead.prix_mutuelle ? Number(lead.prix_mutuelle).toFixed(2) + " EUR" : "Non renseigne",
+          Besoins: lead.besoins_specifiques || "Aucun besoin particulier specifie",
+        };
+        return template.replace(/\[(Civilite|Nom|Prenom|Mutuelle|PrixMutuelle|Besoins)\]/g, (_, key) => values[key]);
+      }
+
+      function applySelectedMailTemplate() {
+        if (!selectedLeadForMail) return;
+        const select = document.getElementById("email-template");
+        const template = mailTemplates.find((item) => item.id === select.value) || mailTemplates[0];
+        if (!template) return;
+        document.getElementById("email-subject").value = fillTemplate(template.subject, selectedLeadForMail);
+        document.getElementById("email-body").value = fillTemplate(template.body, selectedLeadForMail);
+      }
+
       let selectedLeadForMail = null;
 
-      function openEmailModal(leadId) {
+      async function openEmailModal(leadId) {
         const lead = allLeads.find((item) => item.id === leadId);
         if (!lead) return;
         if (!lead.email) {
-          alert("Erreur : Ce client n'a pas d'adresse e-mail renseignée.");
+          alert("Erreur : Ce client n'a pas d'adresse e-mail renseignee.");
           return;
         }
         selectedLeadForMail = lead;
-
         document.getElementById("email-recipient").value = lead.email;
-        document.getElementById("email-subject").value = `Votre demande de mutuelle - SecurAssure`;
-
-        // Prefill message body
-        const civilite = lead.civilite || "M.";
-        const name = lead.nom || "";
-        const mutuelle = lead.deja_mutuelle || lead.nom_mutuelle || "Non renseignée";
-        const prix = lead.prix_mutuelle ? `${Number(lead.prix_mutuelle).toFixed(2)} EUR` : "Non renseigné";
-        const besoins = lead.besoins_specifiques || "Aucun besoin particulier spécifié";
-
-        const body = `Bonjour ${civilite} ${name},
-
-Nous faisons suite à votre demande de comparatif de mutuelle.
-
-D'après vos informations actuelles :
-- Votre mutuelle actuelle : ${mutuelle}
-- Votre tarif actuel : ${prix}
-- Vos besoins spécifiques : ${besoins}
-
-Nous recherchons pour vous la meilleure couverture santé adaptée à vos besoins et au meilleur prix. Un de nos conseillers va prendre contact avec vous très rapidement.
-
-Cordialement,
-L'équipe SecurAssure`;
-
-        document.getElementById("email-body").value = body;
         document.getElementById("email-preview-box").style.display = "none";
+        const templates = await ensureMailTemplates();
+        const select = document.getElementById("email-template");
+        select.innerHTML = templates
+          .map((template) => `<option value="${template.id}">${escapeHtml(template.name)}</option>`)
+          .join("");
+        select.value = templates[0]?.id || "";
+        applySelectedMailTemplate();
         document.getElementById("email-modal").style.display = "flex";
       }
 

@@ -299,3 +299,8 @@ const sendMail = async (recipientEmail, recipientName, subject, body) => {
   });
   return data;
 };
+
+const getMailTemplates = async () => {
+  const data = await apiCall("GET", "/mail/templates");
+  return data;
+};

@@ -64,14 +64,14 @@ const toText = (value) =>
   value === undefined || value === null ? "" : String(value).trim();
 
 const FIELD_ALIASES = {
-  civilite: ["civilite", "civility", "title", "sexe"],
-  nom: ["nom", "lastname", "surname", "familyname"],
-  prenom: ["prenom", "firstname", "givenname", "forename"],
+  civilite: ["civilite", "civility", "title", "sexe", "gender", "mrsmme"],
+  nom: ["nom", "lastname", "surname", "familyname", "last", "clientname"],
+  prenom: ["prenom", "firstname", "givenname", "forename", "first"],
   profession: ["profession", "job", "occupation", "metier"],
-  adresse: ["adresse", "address", "address1", "street"],
-  adresse2: ["adresse2", "address2", "complementadresse"],
-  ville: ["ville", "city", "commune", "localite"],
-  code_postal: ["codepostal", "zipcode", "zip", "postalcode", "cp"],
+  adresse: ["adresse", "address", "address1", "street", "rue", "domicile"],
+  adresse2: ["adresse2", "address2", "complementadresse", "complement"],
+  ville: ["ville", "city", "commune", "localite", "town"],
+  code_postal: ["codepostal", "zipcode", "zip", "postalcode", "cp", "postcode"],
   tel_fixe: ["telfixe", "telephonefixe", "phone", "landline"],
   tel_gsm: [
     "telgsm",
@@ -81,25 +81,98 @@ const FIELD_ALIASES = {
     "portablephonenumber",
     "mobilephone",
     "cellphone",
+    "telephoneportable",
+    "phoneportable",
+    "numeroportable",
   ],
-  email: ["email", "emailaddress", "mail", "courriel"],
+  email: ["email", "emailaddress", "mail", "courriel", "e-mail"],
   tel_professionnel: ["telprofessionnel", "workphone", "businessphone"],
   date_naissance: ["datenaissance", "birthdate", "dateofbirth", "dob"],
-  date_naissance_conjoint: ["datenaissanceconjoint", "conjointbirthdate"],
-  naissance_enfant_1: ["datenaissance1erenfant", "child1birthdate"],
-  naissance_enfant_2: ["datenaissance2meenfant", "child2birthdate"],
-  naissance_enfant_3: ["datenaissance3meenfant", "child3birthdate"],
-  regime_tns: ["regimetns", "tns"],
-  regime: ["votreregime", "regime", "scheme"],
+  date_naissance_conjoint: ["datenaissanceconjoint", "conjointbirthdate", "birthdatespouse"],
+  naissance_enfant_1: ["datenaissance1erenfant", "child1birthdate", "birthdatechild1"],
+  naissance_enfant_2: ["datenaissance2meenfant", "child2birthdate", "birthdatechild2"],
+  naissance_enfant_3: ["datenaissance3meenfant", "child3birthdate", "birthdatechild3"],
+  regime_tns: ["regimetns", "tns", "travailleurnonsalarie"],
+  regime: ["votreregime", "regime", "scheme", "socialscheme"],
   regime_conjoint: ["regimeconjoint", "spousescheme"],
   remboursement_frais: ["remboursementfrais", "reimbursement"],
   besoins_specifiques: ["besoinsspecifiques", "specificneeds", "needs"],
   assurance_date: ["assurancedate", "dateassurance", "effectivedate", "startdate"],
   deja_mutuelle: ["dejamutuelle", "mutuelleactuelle", "currentinsurance"],
-  nom_mutuelle: ["nommutuelle", "mutuelle", "insurance"],
-  prix_mutuelle: ["prixmutuelle", "prix", "price", "amount"],
+  nom_mutuelle: ["nommutuelle", "mutuelle", "insurance", "assurance", "insurer"],
+  prix_mutuelle: ["prixmutuelle", "prix", "price", "amount", "cotisation", "premium"],
+  status: ["status", "statut", "etat", "stage", "situation"],
+  notes: ["notes", "commentaire", "comment", "observation", "remarks"],
+};
+
+const FIELD_KEYWORDS = {
+  nom: ["nom", "last", "surname", "family"],
+  prenom: ["prenom", "first", "given", "forename"],
+  code_postal: ["code", "postal", "zip", "postcode"],
+  tel_gsm: ["portable", "mobile", "gsm", "cell"],
+  tel_fixe: ["fixe", "phone", "landline"],
+  email: ["email", "mail", "courriel"],
+  ville: ["ville", "city", "town", "commune"],
+  adresse2: ["adresse2", "address2", "complement"],
+  adresse: ["adresse", "address", "street", "rue"],
+  profession: ["profession", "job", "metier", "occupation"],
+  date_naissance_conjoint: ["naissance", "birth", "conjoint", "spouse"],
+  date_naissance: ["naissance", "birth", "dob"],
+  naissance_enfant_1: ["naissance", "birth", "enfant1", "child1"],
+  naissance_enfant_2: ["naissance", "birth", "enfant2", "child2"],
+  naissance_enfant_3: ["naissance", "birth", "enfant3", "child3"],
+  regime_conjoint: ["regime", "conjoint", "spouse"],
+  regime_tns: ["regime", "tns"],
+  regime: ["regime", "scheme"],
+  remboursement_frais: ["remboursement", "frais", "reimbursement"],
+  besoins_specifiques: ["besoins", "specifiques", "needs"],
+  assurance_date: ["assurance", "date", "effect"],
+  deja_mutuelle: ["deja", "mutuelle", "actuelle", "current"],
+  nom_mutuelle: ["nom", "mutuelle", "insurance", "assurance"],
+  prix_mutuelle: ["prix", "mutuelle", "cotisation", "premium", "amount"],
   status: ["status", "statut", "etat", "stage"],
-  notes: ["notes", "commentaire", "comment", "observation"],
+  notes: ["notes", "commentaire", "observation", "remarks"],
+};
+
+const levenshtein = (left, right) => {
+  const matrix = Array.from({ length: left.length + 1 }, (_, row) => [row]);
+  for (let column = 1; column <= right.length; column += 1) matrix[0][column] = column;
+  for (let row = 1; row <= left.length; row += 1) {
+    for (let column = 1; column <= right.length; column += 1) {
+      const cost = left[row - 1] === right[column - 1] ? 0 : 1;
+      matrix[row][column] = Math.min(
+        matrix[row - 1][column] + 1,
+        matrix[row][column - 1] + 1,
+        matrix[row - 1][column - 1] + cost,
+      );
+    }
+  }
+  return matrix[left.length][right.length];
+};
+
+const similarity = (left, right) => {
+  if (!left || !right) return 0;
+  if (left === right) return 1;
+  if (left.includes(right) || right.includes(left)) return 0.86;
+  const maxLength = Math.max(left.length, right.length);
+  return maxLength ? 1 - levenshtein(left, right) / maxLength : 0;
+};
+
+const bestFieldByScore = (normalized) => {
+  let best = { field: null, score: 0 };
+  for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+    const aliasScore = Math.max(
+      ...aliases.map((alias) => similarity(normalized, normalizeHeader(alias))),
+    );
+    const keywordScore = (FIELD_KEYWORDS[field] || []).reduce(
+      (score, keyword) =>
+        normalized.includes(normalizeHeader(keyword)) ? score + 0.28 : score,
+      0,
+    );
+    const score = Math.max(aliasScore, Math.min(keywordScore, 0.9));
+    if (score > best.score) best = { field, score };
+  }
+  return best.score >= 0.72 ? best.field : null;
 };
 
 const inferFieldForHeader = (header) => {
@@ -137,14 +210,44 @@ const inferFieldForHeader = (header) => {
   if (normalized.includes("profession") || normalized.includes("job")) {
     return "profession";
   }
+  if (
+    (normalized.includes("naissance") || normalized.includes("birth")) &&
+    (normalized.includes("conjoint") || normalized.includes("spouse"))
+  ) {
+    return "date_naissance_conjoint";
+  }
+  if (
+    (normalized.includes("naissance") || normalized.includes("birth")) &&
+    (normalized.includes("enfant1") || normalized.includes("child1"))
+  ) {
+    return "naissance_enfant_1";
+  }
+  if (
+    (normalized.includes("naissance") || normalized.includes("birth")) &&
+    (normalized.includes("enfant2") || normalized.includes("child2"))
+  ) {
+    return "naissance_enfant_2";
+  }
+  if (
+    (normalized.includes("naissance") || normalized.includes("birth")) &&
+    (normalized.includes("enfant3") || normalized.includes("child3"))
+  ) {
+    return "naissance_enfant_3";
+  }
   if (normalized.includes("naissance") || normalized.includes("birth")) {
     return "date_naissance";
+  }
+  if (normalized.includes("prix") || normalized.includes("cotisation")) {
+    return "prix_mutuelle";
+  }
+  if (normalized.includes("nom") && normalized.includes("mutuelle")) {
+    return "nom_mutuelle";
   }
   if (normalized.includes("mutuelle")) return "deja_mutuelle";
   if (normalized.includes("besoin")) return "besoins_specifiques";
   if (normalized.includes("regime")) return "regime";
 
-  return null;
+  return bestFieldByScore(normalized);
 };
 
 const getRowValue = (row, aliases) => {
