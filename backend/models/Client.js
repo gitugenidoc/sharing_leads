@@ -32,6 +32,13 @@ const CLIENT_FIELDS = [
   "assigned_to",
   "assigned_at",
   "assignment_expires_at",
+  "reminder_at",
+  "reminder_priority",
+  "reminder_comment",
+  "nlp_score",
+  "nlp_label",
+  "last_contacted_at",
+  "last_action_at",
   "center_id",
   "extra_data",
 ];
@@ -56,6 +63,13 @@ const FLEXIBLE_CLIENT_COLUMNS = [
   ["besoins_specifiques", "TEXT"],
   ["assurance_date", "VARCHAR(100)"],
   ["deja_mutuelle", "VARCHAR(255)"],
+  ["reminder_at", "TIMESTAMP"],
+  ["reminder_priority", "VARCHAR(20) DEFAULT 'NORMAL'"],
+  ["reminder_comment", "TEXT"],
+  ["nlp_score", "INTEGER DEFAULT 0"],
+  ["nlp_label", "VARCHAR(30) DEFAULT 'INCOMPLET'"],
+  ["last_contacted_at", "TIMESTAMP"],
+  ["last_action_at", "TIMESTAMP"],
   ["extra_data", "JSONB DEFAULT '{}'::jsonb"],
 ];
 
@@ -68,7 +82,65 @@ const ensureFlexibleClientColumns = async (db = pool) => {
       `ALTER TABLE clients ADD COLUMN IF NOT EXISTS ${column} ${definition}`,
     );
   }
+  await db.query("ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_status_check");
+  await db.query(`
+    ALTER TABLE clients
+    ADD CONSTRAINT clients_status_check
+    CHECK (status IN (
+      'NEW',
+      'TO_CALL',
+      'UNREACHABLE',
+      'CALLBACK_SCHEDULED',
+      'QUOTE_SENT',
+      'INTERESTED',
+      'REFUSED',
+      'SIGNED',
+      'LOST',
+      'CONTACTED',
+      'QUALIFIED',
+      'CLOSED'
+    ))
+  `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS client_history (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      action VARCHAR(80) NOT NULL,
+      old_value JSONB,
+      new_value JSONB,
+      note TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.query("CREATE INDEX IF NOT EXISTS idx_client_history_client_id ON client_history(client_id)");
+  await db.query("CREATE INDEX IF NOT EXISTS idx_client_history_created_at ON client_history(created_at)");
+  await db.query("CREATE INDEX IF NOT EXISTS idx_clients_reminder_at ON clients(reminder_at)");
+  await db.query("CREATE INDEX IF NOT EXISTS idx_clients_nlp_label ON clients(nlp_label)");
   schemaReady = true;
+};
+
+const toText = (value) =>
+  value === undefined || value === null ? "" : String(value).trim();
+
+const calculateClientScore = (clientData) => {
+  const checks = [
+    toText(clientData.nom) && toText(clientData.prenom),
+    toText(clientData.email),
+    toText(clientData.tel_gsm) || toText(clientData.tel_fixe),
+    toText(clientData.ville) && toText(clientData.code_postal),
+    toText(clientData.nom_mutuelle) && clientData.nom_mutuelle !== "Non renseignee",
+    parseFloat(clientData.prix_mutuelle) > 0,
+    toText(clientData.status) && clientData.status !== "NEW",
+    toText(clientData.notes) || toText(clientData.besoins_specifiques),
+  ];
+  const score = Math.round(
+    (checks.filter(Boolean).length / checks.length) * 100,
+  );
+  let label = "INCOMPLET";
+  if (score >= 75) label = "CHAUD";
+  else if (score >= 45) label = "MOYEN";
+  return { score, label };
 };
 
 const normalizeClientData = (clientData) => ({
@@ -82,6 +154,14 @@ const normalizeClientData = (clientData) => ({
       : clientData.prix_mutuelle,
   status: clientData.status || "NEW",
   notes: clientData.notes || "",
+  reminder_priority: clientData.reminder_priority || "NORMAL",
+  nlp_score:
+    clientData.nlp_score === undefined || clientData.nlp_score === null
+      ? calculateClientScore(clientData).score
+      : clientData.nlp_score,
+  nlp_label:
+    clientData.nlp_label || calculateClientScore(clientData).label,
+  last_action_at: clientData.last_action_at || null,
   extra_data: clientData.extra_data || {},
 });
 
@@ -176,13 +256,44 @@ const getClientById = async (id) => {
 
 const createClient = async (clientData) => {
   await ensureFlexibleClientColumns();
-  const insert = buildInsertQuery(clientData);
+  const score = calculateClientScore(clientData);
+  const insert = buildInsertQuery({
+    ...clientData,
+    nlp_score: score.score,
+    nlp_label: score.label,
+  });
   const result = await pool.query(insert.text, insert.values);
   return result.rows[0];
 };
 
 const updateClient = async (id, clientData) => {
   await ensureFlexibleClientColumns();
+  const current = await getClientById(id);
+  const score = calculateClientScore({ ...current, ...clientData });
+  if (
+    Object.keys(clientData).some((field) =>
+      [
+        "nom",
+        "prenom",
+        "email",
+        "tel_gsm",
+        "tel_fixe",
+        "ville",
+        "code_postal",
+        "nom_mutuelle",
+        "prix_mutuelle",
+        "status",
+        "notes",
+        "besoins_specifiques",
+      ].includes(field),
+    )
+  ) {
+    clientData.nlp_score = score.score;
+    clientData.nlp_label = score.label;
+  }
+  if (!Object.prototype.hasOwnProperty.call(clientData, "last_action_at")) {
+    clientData.last_action_at = new Date();
+  }
   const fields = CLIENT_FIELDS.filter((field) =>
     Object.prototype.hasOwnProperty.call(clientData, field),
   );
@@ -245,11 +356,107 @@ const assignRandomClients = async (userId, count, centerId, durationHours = 24) 
        FROM clients
        WHERE (assigned_to IS NULL OR assignment_expires_at < NOW())
          AND center_id = $4
-       ORDER BY RANDOM()
+       ORDER BY
+         CASE
+           WHEN reminder_at IS NOT NULL AND reminder_at <= NOW() THEN 0
+           WHEN status IN ('TO_CALL', 'CALLBACK_SCHEDULED', 'NEW') THEN 1
+           WHEN status IN ('INTERESTED', 'QUOTE_SENT') THEN 2
+           ELSE 3
+         END,
+         CASE reminder_priority
+           WHEN 'HIGH' THEN 0
+           WHEN 'NORMAL' THEN 1
+           WHEN 'LOW' THEN 2
+           ELSE 3
+         END,
+         nlp_score DESC NULLS LAST,
+         created_at ASC
        LIMIT $3
      )
      RETURNING *`,
     [userId, expiresAt, count, centerId],
+  );
+  return result.rows;
+};
+
+const normalizeDuplicateValue = (value) =>
+  toText(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9@.]/g, "");
+
+const findPotentialDuplicates = async (clientData, centerId, db = pool) => {
+  await ensureFlexibleClientColumns(db);
+  const email = normalizeDuplicateValue(clientData.email);
+  const phone = normalizeDuplicateValue(clientData.tel_gsm || clientData.tel_fixe);
+  const nom = normalizeDuplicateValue(clientData.nom);
+  const prenom = normalizeDuplicateValue(clientData.prenom);
+  const codePostal = normalizeDuplicateValue(clientData.code_postal);
+  const params = [centerId];
+  const conditions = [];
+
+  if (email) {
+    params.push(email);
+    conditions.push(`LOWER(REGEXP_REPLACE(COALESCE(email, ''), '[^a-zA-Z0-9@.]', '', 'g')) = $${params.length}`);
+  }
+  if (phone) {
+    params.push(phone);
+    conditions.push(`REGEXP_REPLACE(COALESCE(tel_gsm, tel_fixe, ''), '[^0-9]', '', 'g') = $${params.length}`);
+  }
+  if (nom && prenom && codePostal) {
+    params.push(nom, prenom, codePostal);
+    conditions.push(`(
+      LOWER(REGEXP_REPLACE(COALESCE(nom, ''), '[^a-zA-Z0-9]', '', 'g')) = $${params.length - 2}
+      AND LOWER(REGEXP_REPLACE(COALESCE(prenom, ''), '[^a-zA-Z0-9]', '', 'g')) = $${params.length - 1}
+      AND REGEXP_REPLACE(COALESCE(code_postal, ''), '[^0-9]', '', 'g') = $${params.length}
+    )`);
+  }
+
+  if (!conditions.length) return [];
+  const result = await db.query(
+    `SELECT id, nom, prenom, email, tel_gsm, tel_fixe, code_postal, ville, status, assigned_to, nlp_label
+     FROM clients
+     WHERE center_id = $1 AND (${conditions.join(" OR ")})
+     ORDER BY created_at DESC
+     LIMIT 5`,
+    params,
+  );
+  return result.rows;
+};
+
+const addClientHistory = async ({
+  clientId,
+  userId,
+  action,
+  oldValue = null,
+  newValue = null,
+  note = "",
+}) => {
+  await ensureFlexibleClientColumns();
+  await pool.query(
+    `INSERT INTO client_history (client_id, user_id, action, old_value, new_value, note)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      clientId,
+      userId || null,
+      action,
+      oldValue ? JSON.stringify(oldValue) : null,
+      newValue ? JSON.stringify(newValue) : null,
+      note || null,
+    ],
+  );
+};
+
+const getClientHistory = async (clientId) => {
+  await ensureFlexibleClientColumns();
+  const result = await pool.query(
+    `SELECT client_history.*, users.name AS user_name, users.email AS user_email
+     FROM client_history
+     LEFT JOIN users ON users.id = client_history.user_id
+     WHERE client_history.client_id = $1
+     ORDER BY client_history.created_at DESC`,
+    [clientId],
   );
   return result.rows;
 };
@@ -291,11 +498,17 @@ const bulkInsertClients = async (clients, centerId) => {
     await client.query("BEGIN");
     await ensureFlexibleClientColumns(client);
     for (const row of clients) {
+      const score = calculateClientScore(row);
       await client.query(
         `INSERT INTO clients
           (${CLIENT_FIELDS.join(", ")}, created_at, updated_at)
          VALUES (${CLIENT_FIELDS.map((_, index) => `$${index + 1}`).join(", ")}, NOW(), NOW())`,
-        buildInsertQuery({ ...row, center_id: centerId }).values,
+        buildInsertQuery({
+          ...row,
+          center_id: centerId,
+          nlp_score: score.score,
+          nlp_label: score.label,
+        }).values,
       );
     }
     await client.query("COMMIT");
@@ -320,5 +533,9 @@ module.exports = {
   assignRandomClients,
   searchClients,
   bulkInsertClients,
+  findPotentialDuplicates,
+  addClientHistory,
+  getClientHistory,
+  calculateClientScore,
   ensureFlexibleClientColumns,
 };

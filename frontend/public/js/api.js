@@ -249,6 +249,16 @@ const assignRandomLeads = async (userId, count) => {
   return data;
 };
 
+const getClientHistory = async (id) => {
+  const data = await apiCall("GET", `/clients/${id}/history`);
+  return data.history || [];
+};
+
+const getClientStatuses = async () => {
+  const data = await apiCall("GET", "/clients/statuses/list");
+  return data;
+};
+
 const searchLeads = async (query, offset = 0, limit = 100) => {
   const data = await apiCall(
     "GET",
@@ -268,9 +278,12 @@ const getAuditLogs = async (offset = 0, limit = 100) => {
 };
 
 // File upload helper for Excel
-const uploadExcel = async (file) => {
+const uploadExcel = async (file, optionsData = {}) => {
   const formData = new FormData();
   formData.append("file", file);
+  Object.entries(optionsData).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) formData.append(key, value);
+  });
 
   const options = {
     method: "POST",
@@ -290,17 +303,56 @@ const uploadExcel = async (file) => {
   return json;
 };
 
-const sendMail = async (recipientEmail, recipientName, subject, body) => {
+const previewExcelImport = async (file, optionsData = {}) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  Object.entries(optionsData).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) formData.append(key, value);
+  });
+
+  const response = await fetch(`${API_BASE_URL}/clients/import/preview`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: formData,
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    const error = new Error(json.error || "Preview failed");
+    error.details = json.details || [];
+    error.duplicateCandidates = json.duplicateCandidates || [];
+    throw error;
+  }
+  return json;
+};
+
+const sendMail = async (
+  recipientEmail,
+  recipientName,
+  subject,
+  body,
+  clientId = null,
+  templateId = null,
+) => {
   const data = await apiCall("POST", "/mail/send", {
     recipientEmail,
     recipientName,
     subject,
     body,
+    clientId,
+    templateId,
   });
   return data;
 };
 
 const getMailTemplates = async () => {
   const data = await apiCall("GET", "/mail/templates");
+  return data;
+};
+
+const getMailHistory = async (clientId = null) => {
+  const endpoint = clientId ? `/mail/history?clientId=${clientId}` : "/mail/history";
+  const data = await apiCall("GET", endpoint);
   return data;
 };

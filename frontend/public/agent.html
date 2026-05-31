@@ -204,16 +204,16 @@
         <main class="content-area">
           <div class="grid grid-cols-4 gap-4 mb-4">
             <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Mes clients</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-total">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> assignes</div></div><div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-6 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-5 active"></div></div></div><button onclick="refreshClients()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
-            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Nouveaux</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-new">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> a traiter</div></div><div class="flex items-end h-8"><div class="mini-bar h-3"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-2 active"></div></div></div><button onclick="document.getElementById('status-filter').value='NEW'; applyClientFilters();" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
-            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Interesses</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-interested">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> suivi commercial</div></div><div class="flex items-end h-8"><div class="mini-bar h-5"></div><div class="mini-bar h-7 active"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-6 active"></div></div></div><button onclick="document.getElementById('status-filter').value='INTERESTED'; applyClientFilters();" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
-            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Fermes</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-closed">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> contrats clos</div></div><div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-6 active"></div></div></div><button onclick="document.getElementById('status-filter').value='CLOSED'; applyClientFilters();" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">A rappeler aujourd'hui</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-new">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> rappels planifies</div></div><div class="flex items-end h-8"><div class="mini-bar h-3"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-2 active"></div></div></div><button onclick="filterReminderToday()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">En retard</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-interested">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> rappels depasses</div></div><div class="flex items-end h-8"><div class="mini-bar h-5"></div><div class="mini-bar h-7 active"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-6 active"></div></div></div><button onclick="filterReminderOverdue()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
+            <div class="card flex flex-col justify-between"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Sans suivi 7j</h3><i class="fa-solid fa-ellipsis text-gray-400"></i></div><div class="flex justify-between items-end mb-4"><div><div class="text-3xl font-semibold text-textMain" id="agent-closed">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> a relancer</div></div><div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-6 active"></div></div></div><button onclick="filterStaleClients()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button></div>
           </div>
 
           <div id="clients-panel" class="card">
             <div class="flex justify-between items-center mb-4">
               <div><h3 class="text-base font-semibold text-textMain">Liste des clients</h3><p id="status-message" class="text-sm text-gray-500">Chargement...</p></div>
               <div class="flex gap-2">
-                <select id="status-filter" onchange="applyClientFilters()" class="border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"><option value="">Tous les statuts</option><option value="NEW">Nouveau</option><option value="CONTACTED">Contacte</option><option value="INTERESTED">Interesse</option><option value="QUALIFIED">Qualifie</option><option value="CLOSED">Ferme</option></select>
+                <select id="status-filter" onchange="applyClientFilters()" class="border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"><option value="">Tous les statuts</option><option value="NEW">Nouveau</option><option value="TO_CALL">A appeler</option><option value="UNREACHABLE">Injoignable</option><option value="CALLBACK_SCHEDULED">Rappel prevu</option><option value="QUOTE_SENT">Devis envoye</option><option value="INTERESTED">Interesse</option><option value="REFUSED">Refus</option><option value="SIGNED">Signe</option><option value="LOST">Perdu</option></select>
                 <button onclick="toggleSortClients()" class="border border-gray-200 rounded px-2 py-1.5 text-gray-400 hover:bg-gray-50"><i class="fa-solid fa-ellipsis"></i></button>
               </div>
             </div>
@@ -333,6 +333,79 @@
       let allLeads = [];
       let sortAscending = true;
 
+      const CLIENT_STATUSES = [
+        ["NEW", "Nouveau"],
+        ["TO_CALL", "A appeler"],
+        ["UNREACHABLE", "Injoignable"],
+        ["CALLBACK_SCHEDULED", "Rappel prevu"],
+        ["QUOTE_SENT", "Devis envoye"],
+        ["INTERESTED", "Interesse"],
+        ["REFUSED", "Refus"],
+        ["SIGNED", "Signe"],
+        ["LOST", "Perdu"],
+        ["CONTACTED", "Contacte"],
+        ["QUALIFIED", "Qualifie"],
+        ["CLOSED", "Ferme"],
+      ];
+      const REMINDER_PRIORITIES = [
+        ["LOW", "Basse"],
+        ["NORMAL", "Normale"],
+        ["HIGH", "Haute"],
+      ];
+
+      function statusLabel(status) {
+        return (CLIENT_STATUSES.find(([value]) => value === status) || [status, status || "-"])[1];
+      }
+
+      function renderStatusOptions(selected) {
+        return CLIENT_STATUSES.map(
+          ([value, label]) =>
+            `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`,
+        ).join("");
+      }
+
+      function renderPriorityOptions(selected) {
+        return REMINDER_PRIORITIES.map(
+          ([value, label]) =>
+            `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`,
+        ).join("");
+      }
+
+      function toDateInputValue(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toISOString().slice(0, 16);
+      }
+
+      function isReminderToday(lead) {
+        if (!lead.reminder_at) return false;
+        const reminder = new Date(lead.reminder_at);
+        const now = new Date();
+        return reminder.toDateString() === now.toDateString();
+      }
+
+      function isReminderOverdue(lead) {
+        return lead.reminder_at && new Date(lead.reminder_at) < new Date();
+      }
+
+      function daysSinceAction(lead) {
+        const base = lead.last_action_at || lead.updated_at || lead.created_at;
+        if (!base) return 0;
+        return Math.floor((Date.now() - new Date(base).getTime()) / 86400000);
+      }
+
+      function renderScoreBadge(lead) {
+        const label = lead.nlp_label || "INCOMPLET";
+        const color =
+          label === "CHAUD"
+            ? "bg-green-100 text-green-800"
+            : label === "MOYEN"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-700";
+        return `<span class="rounded-full px-2 py-1 text-xs font-semibold ${color}">${label} ${lead.nlp_score || 0}%</span>`;
+      }
+
       window.addEventListener("load", () => {
         const user = getUser();
         if (!user) {
@@ -395,12 +468,10 @@
                 </td>
                 <td class="px-6 py-4">
                   <select data-client-field="status" data-client-id="${lead.id}" class="rounded border border-gray-300 px-2 py-2 text-sm">
-                    <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
-                    <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacté</option>
-                    <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Intéressé</option>
-                    <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifié</option>
-                    <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Fermé</option>
+                    ${renderStatusOptions(lead.status)}
                   </select>
+                  <div class="mt-2">${renderScoreBadge(lead)}</div>
+                  ${isReminderOverdue(lead) ? '<div class="mt-1 text-xs font-semibold text-red-600">Rappel en retard</div>' : ""}
                 </td>
                 <td class="px-6 py-4">
                   <input data-client-field="nom_mutuelle" data-client-id="${lead.id}" value="${escapeHtml(lead.nom_mutuelle || "")}" class="w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
@@ -565,6 +636,11 @@
           ["Nom mutuelle", "nom_mutuelle", lead.nom_mutuelle],
           ["Prix mutuelle", "prix_mutuelle", lead.prix_mutuelle],
           ["Statut", "status", lead.status],
+          ["Rappel prevu", "reminder_at", lead.reminder_at],
+          ["Priorite rappel", "reminder_priority", lead.reminder_priority || "NORMAL"],
+          ["Commentaire rappel", "reminder_comment", lead.reminder_comment],
+          ["Score NLP", "nlp_score", lead.nlp_score || 0],
+          ["Qualification NLP", "nlp_label", lead.nlp_label || "INCOMPLET"],
           ["Notes", "notes", lead.notes],
         ];
         selectedLeadForDetails = lead;
@@ -575,7 +651,9 @@
           renderDetailFields(fields) +
           (extraFields.length
             ? renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true)
-            : "");
+            : "") +
+          `<section class="detail-section"><div class="detail-section-title"><span>Historique fiche</span><span id="history-count">0</span></div><div id="client-history-list" class="space-y-2 p-4 text-sm text-gray-600">Chargement...</div></section>`;
+        renderClientHistory(lead.id);
 
         const mailBtn = document.getElementById("client-detail-mail-btn");
         if (mailBtn) {
@@ -586,26 +664,85 @@
       }
 
       function renderDetailFields(fields, isExtra = false) {
-        return fields
-          .filter(([, , value]) => value !== undefined && value !== null && String(value).trim() !== "")
-          .map(
-            ([label, field, value]) => {
-              const escapedValue = escapeHtml(value);
-              const fieldAttr = isExtra
-                ? `data-extra-key="${escapeHtml(field)}"`
-                : `data-detail-field="${escapeHtml(field)}"`;
-              const control = ["notes", "remboursement_frais", "besoins_specifiques"].includes(field)
-                ? `<textarea ${fieldAttr} rows="3" class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">${escapedValue}</textarea>`
-                : `<input ${fieldAttr} value="${escapedValue}" class="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />`;
-              return `
-                <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <p class="text-xs font-semibold uppercase text-gray-500">${escapeHtml(label)}</p>
-                  ${control}
-                </div>
-              `;
-            },
-          )
+        const groups = {};
+        fields.forEach(([label, field, value]) => {
+          if (isExtra && (value === undefined || value === null || String(value).trim() === "")) return;
+          const category = isExtra
+            ? "Colonnes importees"
+            : ["status", "notes", "reminder_at", "reminder_priority", "reminder_comment", "nlp_score", "nlp_label"].includes(field)
+              ? "Suivi commercial"
+              : ["email", "tel_gsm", "tel_fixe", "tel_professionnel", "adresse", "adresse2", "ville", "code_postal"].includes(field)
+                ? "Coordonnees"
+                : ["deja_mutuelle", "nom_mutuelle", "prix_mutuelle", "regime", "regime_tns", "regime_conjoint", "remboursement_frais", "besoins_specifiques", "assurance_date"].includes(field)
+                  ? "Mutuelle"
+                  : "Identite";
+          groups[category] = groups[category] || [];
+          groups[category].push([label, field, value]);
+        });
+
+        return Object.entries(groups)
+          .map(([title, groupFields]) => `
+            <section class="detail-section">
+              <div class="detail-section-title"><span>${escapeHtml(title)}</span><span>${groupFields.length}</span></div>
+              <div class="field-grid">
+                ${groupFields.map(([label, field, value]) => renderDetailField(label, field, value, isExtra)).join("")}
+              </div>
+            </section>
+          `)
           .join("");
+      }
+
+      async function renderClientHistory(leadId) {
+        const list = document.getElementById("client-history-list");
+        if (!list) return;
+        try {
+          const history = await getClientHistory(leadId);
+          document.getElementById("history-count").textContent = history.length;
+          if (!history.length) {
+            list.innerHTML = "Aucune action importante enregistree.";
+            return;
+          }
+          list.innerHTML = history
+            .slice(0, 12)
+            .map((item) => `
+              <div class="rounded-lg border border-gray-100 bg-white p-3">
+                <div class="flex items-center justify-between gap-3">
+                  <strong class="text-gray-900">${escapeHtml(item.action)}</strong>
+                  <span class="text-xs text-gray-500">${formatDate(item.created_at)}</span>
+                </div>
+                <div class="mt-1 text-xs text-gray-500">${escapeHtml(item.user_name || item.user_email || "Systeme")}</div>
+                ${item.note ? `<div class="mt-2">${escapeHtml(item.note)}</div>` : ""}
+              </div>
+            `)
+            .join("");
+        } catch (err) {
+          list.innerHTML = "Historique indisponible.";
+        }
+      }
+
+      function renderDetailField(label, field, value, isExtra) {
+        const escapedValue = escapeHtml(value || "");
+        const fieldAttr = isExtra
+          ? `data-extra-key="${escapeHtml(field)}"`
+          : `data-detail-field="${escapeHtml(field)}"`;
+        let control = "";
+        if (field === "status") {
+          control = `<select ${fieldAttr} class="field-control">${renderStatusOptions(value)}</select>`;
+        } else if (field === "reminder_priority") {
+          control = `<select ${fieldAttr} class="field-control">${renderPriorityOptions(value || "NORMAL")}</select>`;
+        } else if (field === "reminder_at") {
+          control = `<input ${fieldAttr} type="datetime-local" value="${toDateInputValue(value)}" class="field-control" />`;
+        } else if (["notes", "remboursement_frais", "besoins_specifiques", "reminder_comment"].includes(field)) {
+          control = `<textarea ${fieldAttr} rows="3" class="field-control textarea">${escapedValue}</textarea>`;
+        } else if (field === "prix_mutuelle") {
+          control = `<input ${fieldAttr} type="number" min="0" step="0.01" value="${escapedValue}" class="field-control" />`;
+        } else if (["nlp_score", "nlp_label"].includes(field)) {
+          control = `<input value="${escapedValue}" class="field-control bg-gray-50 text-gray-500" readonly />`;
+        } else {
+          control = `<input ${fieldAttr} value="${escapedValue}" class="field-control" />`;
+        }
+        const wide = ["notes", "remboursement_frais", "besoins_specifiques", "reminder_comment"].includes(field) ? "field-card-wide" : "";
+        return `<div class="field-card ${wide}"><label class="field-label">${escapeHtml(label)}</label>${control}</div>`;
       }
 
       function closeClientDetails() {
@@ -665,11 +802,12 @@
           Civilite: lead.civilite || "",
           Nom: lead.nom || "",
           Prenom: lead.prenom || "",
+          Ville: lead.ville || "",
           Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "Non renseignee",
           PrixMutuelle: lead.prix_mutuelle ? Number(lead.prix_mutuelle).toFixed(2) + " EUR" : "Non renseigne",
           Besoins: lead.besoins_specifiques || "Aucun besoin particulier specifie",
         };
-        return template.replace(/\[(Civilite|Nom|Prenom|Mutuelle|PrixMutuelle|Besoins)\]/g, (_, key) => values[key]);
+        return template.replace(/\[(Civilite|Nom|Prenom|Ville|Mutuelle|PrixMutuelle|Besoins)\]/g, (_, key) => values[key]);
       }
 
       function applySelectedMailTemplate() {
@@ -679,6 +817,10 @@
         if (!template) return;
         document.getElementById("email-subject").value = fillTemplate(template.subject, selectedLeadForMail);
         document.getElementById("email-body").value = fillTemplate(template.body, selectedLeadForMail);
+        const help = document.getElementById("email-template-help");
+        if (help) {
+          help.textContent = `Variables disponibles: ${(template.variables || ["Civilite", "Nom", "Prenom", "Ville", "Mutuelle", "PrixMutuelle", "Besoins"]).join(", ")}.`;
+        }
       }
 
       let selectedLeadForMail = null;
@@ -718,7 +860,15 @@
           submitBtn.disabled = true;
           submitBtn.textContent = "Envoi en cours...";
 
-          const result = await sendMail(recipient, selectedLeadForMail ? selectedLeadForMail.nom : "", subject, body);
+          const templateId = document.getElementById("email-template").value;
+          const result = await sendMail(
+            recipient,
+            selectedLeadForMail ? `${selectedLeadForMail.nom || ""} ${selectedLeadForMail.prenom || ""}`.trim() : "",
+            subject,
+            body,
+            selectedLeadForMail?.id || null,
+            templateId,
+          );
 
           alert("E-mail envoyé avec succès !");
           
@@ -731,6 +881,7 @@
           } else {
             closeEmailModal();
           }
+          await loadLeads();
         } catch (err) {
           alert("Erreur lors de l'envoi de l'e-mail : " + err.message);
         } finally {
@@ -744,6 +895,25 @@
       function updateCount(count) {
         document.getElementById("leads-count").textContent =
           `${count} client${count > 1 ? "s" : ""}`;
+        document.getElementById("agent-total").textContent = allLeads.length;
+        document.getElementById("agent-new").textContent =
+          allLeads.filter(isReminderToday).length;
+        document.getElementById("agent-interested").textContent =
+          allLeads.filter(isReminderOverdue).length;
+        document.getElementById("agent-closed").textContent =
+          allLeads.filter((lead) => daysSinceAction(lead) >= 7).length;
+      }
+
+      function filterReminderToday() {
+        renderLeads(allLeads.filter(isReminderToday));
+      }
+
+      function filterReminderOverdue() {
+        renderLeads(allLeads.filter(isReminderOverdue));
+      }
+
+      function filterStaleClients() {
+        renderLeads(allLeads.filter((lead) => daysSinceAction(lead) >= 7));
       }
 
       function scrollToClients() {
@@ -774,6 +944,14 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
+      }
+
+      function formatDate(value) {
+        if (!value) return "-";
+        return new Date(value).toLocaleString("fr-FR", {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
       }
     </script>
   </body>

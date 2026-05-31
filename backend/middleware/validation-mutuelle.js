@@ -33,7 +33,21 @@ const validatePrice = (price) => {
 };
 
 // Validate status
-const validStatuses = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CLOSED"];
+const validStatuses = [
+  "NEW",
+  "TO_CALL",
+  "UNREACHABLE",
+  "CALLBACK_SCHEDULED",
+  "QUOTE_SENT",
+  "INTERESTED",
+  "REFUSED",
+  "SIGNED",
+  "LOST",
+  // Legacy statuses are kept to avoid breaking existing data/imports.
+  "CONTACTED",
+  "QUALIFIED",
+  "CLOSED",
+];
 const validateStatus = (status) => validStatuses.includes(status);
 
 // Validate client data

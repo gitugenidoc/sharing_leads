@@ -30,6 +30,21 @@ const isSuperAdmin = (user) => user.role === "SUPER_ADMIN";
 const getAdminCenterId = (user) =>
   isSuperAdmin(user) ? null : user.center_id || -1;
 
+const CLIENT_STATUS_LABELS = {
+  NEW: "Nouveau",
+  TO_CALL: "A appeler",
+  UNREACHABLE: "Injoignable",
+  CALLBACK_SCHEDULED: "Rappel prevu",
+  QUOTE_SENT: "Devis envoye",
+  INTERESTED: "Interesse",
+  REFUSED: "Refus",
+  SIGNED: "Signe",
+  LOST: "Perdu",
+  CONTACTED: "Contacte",
+  QUALIFIED: "Qualifie",
+  CLOSED: "Ferme",
+};
+
 const canAccessClient = (user, client) => {
   if (isSuperAdmin(user)) return true;
   if (user.role === "ADMIN") {
@@ -282,14 +297,27 @@ const normalizeImportedStatus = (value) => {
   const text = normalizeHeader(value);
   if (!text) return "NEW";
   if (["new", "nouveau", "nouvelle"].includes(text)) return "NEW";
-  if (["contacted", "contacte", "appele"].includes(text)) return "CONTACTED";
+  if (["aappeler", "tocall", "appeler", "appel"].includes(text)) return "TO_CALL";
+  if (["injoignable", "unreachable", "nonjoignable"].includes(text)) {
+    return "UNREACHABLE";
+  }
+  if (["rappelprevu", "callbackscheduled", "rappel", "rdv"].includes(text)) {
+    return "CALLBACK_SCHEDULED";
+  }
+  if (["devisenvoye", "quotesent", "devis", "proposition"].includes(text)) {
+    return "QUOTE_SENT";
+  }
+  if (["refus", "refuse", "refused"].includes(text)) return "REFUSED";
+  if (["signe", "signee", "signed", "contrat"].includes(text)) return "SIGNED";
+  if (["perdu", "lost"].includes(text)) return "LOST";
+  if (["contacted", "contacte", "appele"].includes(text)) return "TO_CALL";
   if (["interested", "interesse", "interessee"].includes(text)) {
     return "INTERESTED";
   }
   if (["qualified", "qualifie", "qualifiee"].includes(text)) {
     return "QUALIFIED";
   }
-  if (["closed", "ferme", "signe", "signee"].includes(text)) return "CLOSED";
+  if (["closed", "ferme"].includes(text)) return "SIGNED";
   return "NEW";
 };
 
@@ -358,6 +386,101 @@ const mapExcelRowToClient = (row) => {
   };
 };
 
+const readImportRows = (file) => {
+  const workbook = XLSX.read(file.data, { type: "buffer" });
+  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(worksheet).filter(rowHasContent);
+};
+
+const analyzeImportRows = async (rows, centerId) => {
+  const headerSet = new Set();
+  rows.forEach((row) => Object.keys(row).forEach((header) => headerSet.add(header)));
+  const recognizedColumns = [];
+  const unknownColumns = [];
+  Array.from(headerSet).forEach((header) => {
+    const mappedTo = inferFieldForHeader(header);
+    if (mappedTo) recognizedColumns.push({ source: header, mappedTo });
+    else unknownColumns.push(header);
+  });
+
+  const clients = [];
+  const errors = [];
+  const duplicateCandidates = [];
+  for (const [index, row] of rows.entries()) {
+    const client = mapExcelRowToClient(row);
+    client._importRow = index + 2;
+    const score = Client.calculateClientScore(client);
+    client.nlp_score = score.score;
+    client.nlp_label = score.label;
+    const validation = validateClient(client);
+    if (!validation.isValid) {
+      errors.push({ row: index + 2, message: validation.errors.join("; ") });
+      continue;
+    }
+    const duplicates = centerId
+      ? await Client.findPotentialDuplicates(client, centerId)
+      : [];
+    if (duplicates.length) {
+      duplicateCandidates.push({
+        row: index + 2,
+        client: {
+          nom: client.nom,
+          prenom: client.prenom,
+          email: client.email,
+          tel_gsm: client.tel_gsm,
+          code_postal: client.code_postal,
+        },
+        matches: duplicates,
+      });
+    }
+    clients.push(client);
+  }
+
+  return {
+    recognizedColumns,
+    unknownColumns,
+    clients,
+    errors,
+    duplicateCandidates,
+    preview: clients.slice(0, 5).map((client) => ({
+      nom: client.nom,
+      prenom: client.prenom,
+      ville: client.ville,
+      code_postal: client.code_postal,
+      email: client.email,
+      tel_gsm: client.tel_gsm,
+      status: client.status,
+      nlp_score: client.nlp_score,
+      nlp_label: client.nlp_label,
+    })),
+  };
+};
+
+const getClientChangeSummary = (oldClient, updatedClient, requestedUpdates) => {
+  const importantFields = [
+    "status",
+    "notes",
+    "reminder_at",
+    "reminder_priority",
+    "reminder_comment",
+    "assigned_to",
+    "nom_mutuelle",
+    "prix_mutuelle",
+    "email",
+    "tel_gsm",
+  ];
+  return importantFields
+    .filter((field) => Object.prototype.hasOwnProperty.call(requestedUpdates, field))
+    .filter((field) => String(oldClient[field] || "") !== String(updatedClient[field] || ""))
+    .reduce((changes, field) => {
+      changes[field] = {
+        old: oldClient[field] || null,
+        new: updatedClient[field] || null,
+      };
+      return changes;
+    }, {});
+};
+
 router.get("/search", verifyToken, async (req, res) => {
   try {
     const { q, offset = 0, limit = 100 } = req.query;
@@ -410,6 +533,53 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/statuses/list", verifyToken, (req, res) => {
+  res.json(
+    Object.entries(CLIENT_STATUS_LABELS).map(([value, label]) => ({
+      value,
+      label,
+    })),
+  );
+});
+
+router.post("/import/preview", verifyToken, isAdmin, async (req, res) => {
+  try {
+    if (!req.files || !req.files.file) {
+      return res.status(400).json({ error: "File required" });
+    }
+    if (!isAllowedImportFile(req.files.file)) {
+      return res.status(400).json({
+        error: "Only Excel or CSV files are accepted",
+      });
+    }
+    const centerId = resolveCenterIdForWrite(req.user, req.body);
+    if (!centerId) {
+      return res.status(400).json({ error: "Center is required for import" });
+    }
+    const rows = readImportRows(req.files.file);
+    if (rows.length > MAX_IMPORT_ROWS) {
+      return res.status(400).json({
+        error: `Import is limited to ${MAX_IMPORT_ROWS} rows`,
+      });
+    }
+    const analysis = await analyzeImportRows(rows, centerId);
+    res.json({
+      total: rows.length,
+      validRows: analysis.clients.length,
+      invalidRows: analysis.errors.length,
+      duplicateRows: analysis.duplicateCandidates.length,
+      recognizedColumns: analysis.recognizedColumns,
+      unknownColumns: analysis.unknownColumns,
+      errors: analysis.errors,
+      duplicateCandidates: analysis.duplicateCandidates,
+      preview: analysis.preview,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.post("/import", verifyToken, isAdmin, async (req, res) => {
   try {
     if (!req.files || !req.files.file) {
@@ -421,30 +591,67 @@ router.post("/import", verifyToken, isAdmin, async (req, res) => {
       });
     }
 
-    const workbook = XLSX.read(req.files.file.data, { type: "buffer" });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(worksheet).filter(rowHasContent);
+    const rows = readImportRows(req.files.file);
     if (rows.length > MAX_IMPORT_ROWS) {
       return res.status(400).json({
         error: `Import is limited to ${MAX_IMPORT_ROWS} rows`,
       });
     }
 
-    const clients = [];
-    const errors = [];
-    rows.forEach((row, index) => {
-      const client = mapExcelRowToClient(row);
-      const validation = validateClient(client);
-      if (!validation.isValid) {
-        errors.push({ row: index + 2, message: validation.errors.join("; ") });
-        return;
-      }
-      clients.push(client);
-    });
-
     const centerId = resolveCenterIdForWrite(req.user, req.body);
     if (!centerId) {
       return res.status(400).json({ error: "Center is required for import" });
+    }
+    const analysis = await analyzeImportRows(rows, centerId);
+    const skipDuplicates =
+      req.body.skipDuplicates === "true" || req.body.skipDuplicates === true;
+    const allowDuplicates =
+      req.body.allowDuplicates === "true" || req.body.allowDuplicates === true;
+    const mergeDuplicates =
+      req.body.mergeDuplicates === "true" || req.body.mergeDuplicates === true;
+    const duplicateRows = new Set(
+      analysis.duplicateCandidates.map((item) => item.row),
+    );
+    let clients = skipDuplicates || mergeDuplicates
+      ? analysis.clients.filter((client) => !duplicateRows.has(client._importRow))
+      : analysis.clients;
+
+    if (!skipDuplicates && !allowDuplicates && !mergeDuplicates && analysis.duplicateCandidates.length > 0) {
+      return res.status(409).json({
+        error: "Doublons probables detectes",
+        duplicateCandidates: analysis.duplicateCandidates,
+        previewRequired: true,
+      });
+    }
+
+    let mergedDuplicates = 0;
+    if (mergeDuplicates) {
+      for (const duplicate of analysis.duplicateCandidates) {
+        const incoming = analysis.clients.find(
+          (client) => client._importRow === duplicate.row,
+        );
+        const target = duplicate.matches[0];
+        if (!incoming || !target) continue;
+        const updates = Object.fromEntries(
+          Object.entries(incoming).filter(
+            ([key, value]) =>
+              !key.startsWith("_") &&
+              value !== undefined &&
+              value !== null &&
+              String(value).trim() !== "",
+          ),
+        );
+        const updated = await Client.updateClient(target.id, updates);
+        await Client.addClientHistory({
+          clientId: updated.id,
+          userId: req.user.id,
+          action: "MERGE_DUPLICATE",
+          oldValue: target,
+          newValue: updated,
+          note: `Fusion depuis la ligne import ${duplicate.row}`,
+        });
+        mergedDuplicates += 1;
+      }
     }
 
     if (clients.length > 0) {
@@ -456,14 +663,18 @@ router.post("/import", verifyToken, isAdmin, async (req, res) => {
       filename: req.files.file.name,
       totalRows: rows.length,
       importedRows: clients.length,
-      failedRows: errors.length,
+      failedRows: analysis.errors.length,
     });
 
     res.json({
       message: `${clients.length} clients imported successfully`,
       imported: clients.length,
       total: rows.length,
-      errors,
+      skippedDuplicates: skipDuplicates ? analysis.duplicateCandidates.length : 0,
+      mergedDuplicates,
+      errors: analysis.errors,
+      duplicateCandidates: analysis.duplicateCandidates,
+      preview: analysis.preview,
     });
   } catch (err) {
     console.error(err);
@@ -546,8 +757,22 @@ router.post("/", verifyToken, isAdmin, async (req, res) => {
 
     const centerId = resolveCenterIdForWrite(req.user, req.body);
     if (!centerId) return res.status(400).json({ error: "Center is required" });
+    const duplicates = await Client.findPotentialDuplicates(req.body, centerId);
+    if (duplicates.length && !req.body.forceCreate) {
+      return res.status(409).json({
+        error: "Doublon probable detecte",
+        duplicates,
+      });
+    }
 
     const client = await Client.createClient({ ...req.body, center_id: centerId });
+    await Client.addClientHistory({
+      clientId: client.id,
+      userId: req.user.id,
+      action: "CREATE",
+      newValue: client,
+      note: "Fiche creee",
+    });
     await Log.createAuditLog({
       userId: req.user.id,
       action: "CREATE",
@@ -587,6 +812,17 @@ router.put("/:id", verifyToken, async (req, res) => {
     }
 
     const updatedClient = await Client.updateClient(req.params.id, updates);
+    const changes = getClientChangeSummary(client, updatedClient, updates);
+    if (Object.keys(changes).length > 0) {
+      await Client.addClientHistory({
+        clientId: updatedClient.id,
+        userId: req.user.id,
+        action: changes.status ? "STATUS_CHANGE" : "UPDATE",
+        oldValue: client,
+        newValue: updatedClient,
+        note: updates.notes || updates.reminder_comment || "",
+      });
+    }
     await Log.createAuditLog({
       userId: req.user.id,
       action: "UPDATE",
@@ -625,6 +861,21 @@ router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+router.get("/:id/history", verifyToken, async (req, res) => {
+  try {
+    const client = await Client.getClientById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    if (!canAccessClient(req.user, client)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    const history = await Client.getClientHistory(req.params.id);
+    res.json({ history });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
   try {
     const { userId } = req.body;
@@ -644,6 +895,14 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
 
     const durationHours = parseFloat(req.body.durationHours || req.body.duration) || 24;
     const client = await Client.assignClient(req.params.id, userId, durationHours);
+    await Client.addClientHistory({
+      clientId: client.id,
+      userId: req.user.id,
+      action: "ASSIGN",
+      oldValue: { assigned_to: existingClient.assigned_to },
+      newValue: { assigned_to: userId },
+      note: `Assigne a ${agent.name}`,
+    });
     await Log.createAuditLog({
       userId: req.user.id,
       action: "ASSIGN",

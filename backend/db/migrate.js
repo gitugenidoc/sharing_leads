@@ -53,8 +53,15 @@ const createTables = async () => {
       deja_mutuelle VARCHAR(255),
       nom_mutuelle VARCHAR(255) NOT NULL,
       prix_mutuelle DECIMAL(10, 2) NOT NULL,
-      status VARCHAR(50) NOT NULL DEFAULT 'NEW' CHECK (status IN ('NEW', 'CONTACTED', 'INTERESTED', 'QUALIFIED', 'CLOSED')),
+      status VARCHAR(50) NOT NULL DEFAULT 'NEW',
       notes TEXT,
+      reminder_at TIMESTAMP,
+      reminder_priority VARCHAR(20) DEFAULT 'NORMAL',
+      reminder_comment TEXT,
+      nlp_score INTEGER DEFAULT 0,
+      nlp_label VARCHAR(30) DEFAULT 'INCOMPLET',
+      last_contacted_at TIMESTAMP,
+      last_action_at TIMESTAMP,
       extra_data JSONB DEFAULT '{}'::jsonb,
       center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL,
       assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -87,6 +94,32 @@ const createTables = async () => {
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS extra_data JSONB DEFAULT '{}'::jsonb");
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP");
   await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assignment_expires_at TIMESTAMP");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_at TIMESTAMP");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_priority VARCHAR(20) DEFAULT 'NORMAL'");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_comment TEXT");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS nlp_score INTEGER DEFAULT 0");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS nlp_label VARCHAR(30) DEFAULT 'INCOMPLET'");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_contacted_at TIMESTAMP");
+  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMP");
+  await pool.query("ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_status_check");
+  await pool.query(`
+    ALTER TABLE clients
+    ADD CONSTRAINT clients_status_check
+    CHECK (status IN (
+      'NEW',
+      'TO_CALL',
+      'UNREACHABLE',
+      'CALLBACK_SCHEDULED',
+      'QUOTE_SENT',
+      'INTERESTED',
+      'REFUSED',
+      'SIGNED',
+      'LOST',
+      'CONTACTED',
+      'QUALIFIED',
+      'CLOSED'
+    ))
+  `);
   await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
   await pool.query(`
     ALTER TABLE users
@@ -123,11 +156,28 @@ const createTables = async () => {
     CREATE TABLE IF NOT EXISTS mail_logs (
       id SERIAL PRIMARY KEY,
       sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
+      template_id VARCHAR(100),
       recipient_email VARCHAR(255) NOT NULL,
       recipient_name VARCHAR(255),
       subject VARCHAR(255) NOT NULL,
       body TEXT NOT NULL,
       status VARCHAR(50) DEFAULT 'SENT',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await pool.query("ALTER TABLE mail_logs ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL");
+  await pool.query("ALTER TABLE mail_logs ADD COLUMN IF NOT EXISTS template_id VARCHAR(100)");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS client_history (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      action VARCHAR(80) NOT NULL,
+      old_value JSONB,
+      new_value JSONB,
+      note TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -156,6 +206,12 @@ const createTables = async () => {
     "CREATE INDEX IF NOT EXISTS idx_clients_created_at ON clients(created_at)",
   );
   await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_clients_reminder_at ON clients(reminder_at)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_clients_nlp_label ON clients(nlp_label)",
+  );
+  await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id)",
   );
   await pool.query(
@@ -165,7 +221,16 @@ const createTables = async () => {
     "CREATE INDEX IF NOT EXISTS idx_mail_logs_sender_id ON mail_logs(sender_id)",
   );
   await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_mail_logs_client_id ON mail_logs(client_id)",
+  );
+  await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_mail_logs_created_at ON mail_logs(created_at)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_client_history_client_id ON client_history(client_id)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_client_history_created_at ON client_history(created_at)",
   );
 
   await pool.query(`
