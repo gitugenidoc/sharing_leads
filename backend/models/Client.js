@@ -34,6 +34,41 @@ const CLIENT_FIELDS = [
   "extra_data",
 ];
 
+const FLEXIBLE_CLIENT_COLUMNS = [
+  ["adresse2", "VARCHAR(500)"],
+  ["civilite", "VARCHAR(50)"],
+  ["profession", "VARCHAR(255)"],
+  ["tel_fixe", "VARCHAR(50)"],
+  ["tel_gsm", "VARCHAR(50)"],
+  ["email", "VARCHAR(255)"],
+  ["tel_professionnel", "VARCHAR(50)"],
+  ["date_naissance", "VARCHAR(50)"],
+  ["date_naissance_conjoint", "VARCHAR(50)"],
+  ["naissance_enfant_1", "VARCHAR(50)"],
+  ["naissance_enfant_2", "VARCHAR(50)"],
+  ["naissance_enfant_3", "VARCHAR(50)"],
+  ["regime_tns", "VARCHAR(255)"],
+  ["regime", "VARCHAR(255)"],
+  ["regime_conjoint", "VARCHAR(255)"],
+  ["remboursement_frais", "TEXT"],
+  ["besoins_specifiques", "TEXT"],
+  ["assurance_date", "VARCHAR(100)"],
+  ["deja_mutuelle", "VARCHAR(255)"],
+  ["extra_data", "JSONB DEFAULT '{}'::jsonb"],
+];
+
+let schemaReady = false;
+
+const ensureFlexibleClientColumns = async (db = pool) => {
+  if (schemaReady) return;
+  for (const [column, definition] of FLEXIBLE_CLIENT_COLUMNS) {
+    await db.query(
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS ${column} ${definition}`,
+    );
+  }
+  schemaReady = true;
+};
+
 const normalizeClientData = (clientData) => ({
   ...clientData,
   nom_mutuelle: clientData.nom_mutuelle || "Non renseignee",
@@ -115,12 +150,14 @@ const getClientById = async (id) => {
 };
 
 const createClient = async (clientData) => {
+  await ensureFlexibleClientColumns();
   const insert = buildInsertQuery(clientData);
   const result = await pool.query(insert.text, insert.values);
   return result.rows[0];
 };
 
 const updateClient = async (id, clientData) => {
+  await ensureFlexibleClientColumns();
   const fields = CLIENT_FIELDS.filter((field) =>
     Object.prototype.hasOwnProperty.call(clientData, field),
   );
@@ -171,6 +208,7 @@ const assignRandomClients = async (userId, count, centerId) => {
 };
 
 const searchClients = async (query, offset = 0, limit = 100, centerId = null) => {
+  await ensureFlexibleClientColumns();
   const params = [`%${query}%`, limit, offset];
   let centerFilter = "";
   if (centerId) {
@@ -203,6 +241,7 @@ const bulkInsertClients = async (clients, centerId) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await ensureFlexibleClientColumns(client);
     for (const row of clients) {
       await client.query(
         `INSERT INTO clients
@@ -233,4 +272,5 @@ module.exports = {
   assignRandomClients,
   searchClients,
   bulkInsertClients,
+  ensureFlexibleClientColumns,
 };
