@@ -1,0 +1,72 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const jwt = require("jsonwebtoken");
+
+process.env.JWT_SECRET = "test-secret";
+
+const { verifyToken, isAdmin } = require("../backend/middleware/auth");
+
+const createResponse = () => {
+  const res = {
+    statusCode: 200,
+    body: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload) {
+      this.body = payload;
+      return this;
+    },
+  };
+  return res;
+};
+
+test("verifyToken rejects requests without a bearer token", () => {
+  const req = { headers: {} };
+  const res = createResponse();
+  let nextCalled = false;
+
+  verifyToken(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 401);
+  assert.deepEqual(res.body, { error: "Token required" });
+});
+
+test("verifyToken attaches decoded users and calls next", () => {
+  const token = jwt.sign(
+    { id: 7, email: "agent@example.com", role: "AGENT", name: "Agent" },
+    process.env.JWT_SECRET,
+  );
+  const req = { headers: { authorization: `Bearer ${token}` } };
+  const res = createResponse();
+  let nextCalled = false;
+
+  verifyToken(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, true);
+  assert.equal(req.user.id, 7);
+  assert.equal(req.user.role, "AGENT");
+  assert.equal(res.statusCode, 200);
+});
+
+test("isAdmin allows admins and rejects agents", () => {
+  const adminReq = { user: { role: "ADMIN" } };
+  const agentReq = { user: { role: "AGENT" } };
+  const res = createResponse();
+  let nextCalled = false;
+
+  isAdmin(adminReq, createResponse(), () => {
+    nextCalled = true;
+  });
+  isAdmin(agentReq, res, () => {});
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.body, { error: "Admin access required" });
+});

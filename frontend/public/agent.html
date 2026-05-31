@@ -56,7 +56,7 @@
           class="mt-6 w-full flex items-center gap-3 rounded-lg px-4 py-3 font-medium text-red-300 transition hover:bg-red-900"
         >
           <span class="material-symbols-outlined">logout</span>
-          <span>Deconnexion</span>
+          <span>Déconnexion</span>
         </button>
       </aside>
 
@@ -75,7 +75,7 @@
             <div>
               <h1 class="text-2xl font-bold">Mes clients</h1>
               <p class="text-sm text-gray-500">
-                Portefeuille assigne depuis l'espace admin
+                Portefeuille assigné depuis l'espace admin
               </p>
             </div>
           </div>
@@ -128,10 +128,10 @@
                 >
                   <option value="">Tous les statuts</option>
                   <option value="NEW">Nouveau</option>
-                  <option value="CONTACTED">Contacte</option>
-                  <option value="INTERESTED">Interesse</option>
-                  <option value="QUALIFIED">Qualifie</option>
-                  <option value="CLOSED">Ferme</option>
+                  <option value="CONTACTED">Contacté</option>
+                  <option value="INTERESTED">Intéressé</option>
+                  <option value="QUALIFIED">Qualifié</option>
+                  <option value="CLOSED">Fermé</option>
                 </select>
                 <button
                   onclick="toggleSortClients()"
@@ -146,7 +146,7 @@
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[980px] text-left">
+              <table class="w-full min-w-[1280px] text-left">
                 <thead class="bg-gray-50">
                   <tr>
                     <th
@@ -183,6 +183,11 @@
                       class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-700"
                     >
                       Commentaire
+                    </th>
+                    <th
+                      class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-700"
+                    >
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -236,7 +241,7 @@
           console.error(err);
           statusMessage.textContent = err.formattedMessage || err.message;
           tbody.innerHTML =
-            '<tr><td colspan="7" class="px-6 py-8 text-center text-red-600">Erreur serveur</td></tr>';
+            '<tr><td colspan="8" class="px-6 py-8 text-center text-red-600">Erreur serveur</td></tr>';
         }
       }
 
@@ -244,7 +249,7 @@
         const tbody = document.getElementById("leads-tbody");
         if (!leads.length) {
           tbody.innerHTML =
-            '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Aucun client assigne</td></tr>';
+            '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Aucun client assigné</td></tr>';
           updateCount(0);
           return;
         }
@@ -253,26 +258,45 @@
           .map(
             (lead) => `
               <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 font-medium text-gray-900">${escapeHtml(lead.nom || "")}</td>
-                <td class="px-6 py-4 text-gray-600">${escapeHtml(lead.prenom || "")}</td>
-                <td class="px-6 py-4 text-gray-600">${escapeHtml(lead.ville || "")} ${escapeHtml(lead.code_postal || "")}</td>
                 <td class="px-6 py-4">
-                  <select onchange="updateLeadStatus(${lead.id}, this.value)" class="rounded border border-gray-300 px-2 py-1 text-sm">
+                  <input data-client-field="nom" data-client-id="${lead.id}" value="${escapeHtml(lead.nom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </td>
+                <td class="px-6 py-4">
+                  <input data-client-field="prenom" data-client-id="${lead.id}" value="${escapeHtml(lead.prenom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex min-w-64 gap-2">
+                    <input data-client-field="ville" data-client-id="${lead.id}" value="${escapeHtml(lead.ville || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input data-client-field="code_postal" data-client-id="${lead.id}" value="${escapeHtml(lead.code_postal || "")}" maxlength="5" class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <select data-client-field="status" data-client-id="${lead.id}" class="rounded border border-gray-300 px-2 py-2 text-sm">
                     <option value="NEW" ${lead.status === "NEW" ? "selected" : ""}>Nouveau</option>
-                    <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacte</option>
-                    <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Interesse</option>
-                    <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifie</option>
-                    <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Ferme</option>
+                    <option value="CONTACTED" ${lead.status === "CONTACTED" ? "selected" : ""}>Contacté</option>
+                    <option value="INTERESTED" ${lead.status === "INTERESTED" ? "selected" : ""}>Intéressé</option>
+                    <option value="QUALIFIED" ${lead.status === "QUALIFIED" ? "selected" : ""}>Qualifié</option>
+                    <option value="CLOSED" ${lead.status === "CLOSED" ? "selected" : ""}>Fermé</option>
                   </select>
                 </td>
-                <td class="px-6 py-4 text-gray-600">${escapeHtml(lead.nom_mutuelle || "")}</td>
-                <td class="px-6 py-4 text-gray-600">${Number(lead.prix_mutuelle || 0).toFixed(2)} EUR</td>
+                <td class="px-6 py-4">
+                  <input data-client-field="nom_mutuelle" data-client-id="${lead.id}" value="${escapeHtml(lead.nom_mutuelle || "")}" class="w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </td>
+                <td class="px-6 py-4">
+                  <input data-client-field="prix_mutuelle" data-client-id="${lead.id}" type="number" min="0" step="0.01" value="${Number(lead.prix_mutuelle || 0).toFixed(2)}" class="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </td>
                 <td class="px-6 py-4">
                   <textarea
+                    data-client-field="notes"
+                    data-client-id="${lead.id}"
                     rows="2"
-                    onblur="saveLeadComment(${lead.id}, this.value)"
                     class="w-full min-w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >${escapeHtml(lead.notes || "")}</textarea>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button onclick="saveLeadRow(${lead.id})" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                    Enregistrer
+                  </button>
                 </td>
               </tr>
             `,
@@ -326,6 +350,31 @@
           if (lead) {
             lead.status = status;
           }
+          applyClientFilters();
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
+          loadLeads();
+        }
+      }
+
+      async function saveLeadRow(leadId) {
+        const fields = document.querySelectorAll(
+          `[data-client-id="${leadId}"][data-client-field]`,
+        );
+        const data = {};
+        fields.forEach((field) => {
+          data[field.dataset.clientField] = field.value;
+        });
+        data.prix_mutuelle = parseFloat(data.prix_mutuelle) || 0;
+
+        try {
+          const updatedLead = await updateLead(leadId, data);
+          const index = allLeads.findIndex((item) => item.id === leadId);
+          if (index >= 0) {
+            allLeads[index] = updatedLead;
+          }
+          document.getElementById("status-message").textContent =
+            "Ligne enregistrée.";
           applyClientFilters();
         } catch (err) {
           alert(err.formattedMessage || err.message);

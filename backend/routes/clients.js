@@ -1,13 +1,31 @@
 const express = require("express");
 const XLSX = require("xlsx");
 const Client = require("../models/Client");
+const Log = require("../models/Log");
 const { verifyToken, isAdmin } = require("../middleware/auth");
 const {
   validateClient,
-  validateStatus,
 } = require("../middleware/validation-mutuelle");
 
 const router = express.Router();
+const MAX_IMPORT_ROWS = 5000;
+const ALLOWED_IMPORT_EXTENSIONS = [".xlsx", ".xls", ".csv"];
+const ALLOWED_IMPORT_MIME_TYPES = [
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+  "text/csv",
+  "application/csv",
+  "application/octet-stream",
+];
+
+const isAllowedImportFile = (file) => {
+  const name = file.name || "";
+  const extension = name.slice(name.lastIndexOf(".")).toLowerCase();
+  return (
+    ALLOWED_IMPORT_EXTENSIONS.includes(extension) &&
+    ALLOWED_IMPORT_MIME_TYPES.includes(file.mimetype)
+  );
+};
 
 const mapExcelRowToClient = (row) => ({
   nom: row.nom || row.Nom || "",
@@ -75,10 +93,20 @@ router.post("/import", verifyToken, isAdmin, async (req, res) => {
     if (!req.files || !req.files.file) {
       return res.status(400).json({ error: "File required" });
     }
+    if (!isAllowedImportFile(req.files.file)) {
+      return res.status(400).json({
+        error: "Only Excel or CSV files are accepted",
+      });
+    }
 
     const workbook = XLSX.read(req.files.file.data, { type: "buffer" });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(worksheet);
+    if (rows.length > MAX_IMPORT_ROWS) {
+      return res.status(400).json({
+        error: `Import is limited to ${MAX_IMPORT_ROWS} rows`,
+      });
+    }
     const clients = [];
     const errors = [];
 
@@ -95,6 +123,14 @@ router.post("/import", verifyToken, isAdmin, async (req, res) => {
     if (clients.length > 0) {
       await Client.bulkInsertClients(clients);
     }
+
+    await Log.createImportLog({
+      adminId: req.user.id,
+      filename: req.files.file.name,
+      totalRows: rows.length,
+      importedRows: clients.length,
+      failedRows: errors.length,
+    });
 
     res.json({
       message: `${clients.length} clients imported successfully`,
@@ -120,6 +156,17 @@ router.post("/assign-random", verifyToken, isAdmin, async (req, res) => {
     }
 
     const clients = await Client.assignRandomClients(userId, count);
+    await Promise.all(
+      clients.map((client) =>
+        Log.createAuditLog({
+          userId: req.user.id,
+          action: "ASSIGN_RANDOM",
+          entityType: "client",
+          entityId: client.id,
+          newValue: { assigned_to: userId },
+        }),
+      ),
+    );
     res.json({
       assigned: clients.length,
       requested: count,
@@ -171,6 +218,13 @@ router.post("/", verifyToken, isAdmin, async (req, res) => {
     }
 
     const client = await Client.createClient(req.body);
+    await Log.createAuditLog({
+      userId: req.user.id,
+      action: "CREATE",
+      entityType: "client",
+      entityId: client.id,
+      newValue: client,
+    });
     res.status(201).json(client);
   } catch (err) {
     console.error(err);
@@ -187,11 +241,22 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (req.user.role !== "ADMIN" && client.assigned_to !== req.user.id) {
       return res.status(403).json({ error: "Unauthorized" });
     }
-    if (req.body.status && !validateStatus(req.body.status)) {
-      return res.status(400).json({ error: "Invalid status" });
+    const validation = validateClient({ ...client, ...req.body });
+    if (!validation.isValid) {
+      return res
+        .status(400)
+        .json({ error: "Validation failed", details: validation.errors });
     }
 
     const updatedClient = await Client.updateClient(req.params.id, req.body);
+    await Log.createAuditLog({
+      userId: req.user.id,
+      action: "UPDATE",
+      entityType: "client",
+      entityId: updatedClient.id,
+      oldValue: client,
+      newValue: updatedClient,
+    });
     res.json(updatedClient);
   } catch (err) {
     console.error(err);
@@ -201,7 +266,19 @@ router.put("/:id", verifyToken, async (req, res) => {
 
 router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   try {
+    const client = await Client.getClientById(req.params.id);
+    if (!client) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+
     await Client.deleteClient(req.params.id);
+    await Log.createAuditLog({
+      userId: req.user.id,
+      action: "DELETE",
+      entityType: "client",
+      entityId: client.id,
+      oldValue: client,
+    });
     res.json({ message: "Client deleted" });
   } catch (err) {
     console.error(err);
@@ -217,6 +294,13 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
     }
 
     const client = await Client.assignClient(req.params.id, userId);
+    await Log.createAuditLog({
+      userId: req.user.id,
+      action: "ASSIGN",
+      entityType: "client",
+      entityId: client.id,
+      newValue: { assigned_to: userId },
+    });
     res.json(client);
   } catch (err) {
     console.error(err);

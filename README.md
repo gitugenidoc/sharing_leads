@@ -1,271 +1,153 @@
-# Lead Management Dashboard
+# SecurAssure - Gestion de clients mutuelle
 
-A complete web application for managing leads with admin and agent roles. Admin can import leads from Excel, assign them to agents, and agents can manage their assigned leads.
+Application web Node.js/Express pour gerer des clients mutuelle avec deux roles:
+administrateur et agent. L'administrateur importe, cree et assigne les clients;
+les agents consultent leur portefeuille, changent les statuts et ajoutent des
+commentaires.
 
-## Features
+## Fonctionnalites
 
-- **Authentication**: JWT-based login/registration system
-- **Admin Dashboard**:
-  - View all leads
-  - Create/Edit/Delete leads
-  - Import leads from Excel (bulk)
-  - Manage users (create, edit, delete)
-  - Assign leads to agents
-  - Search and filter leads
-- **Agent Dashboard**:
-  - View assigned leads (20-30 per agent)
-  - Update lead status and notes
-  - Search and filter own leads
-- **RBAC**: Role-based access control (Admin vs Agent)
-- **Database**: PostgreSQL with migrations
-- **Frontend**: Vanilla HTML/CSS/JavaScript (no frameworks)
+- Authentification JWT avec roles `ADMIN` et `AGENT`
+- Dashboard administrateur: statistiques, liste clients, utilisateurs, import Excel/CSV
+- Dashboard agent: clients assignes, recherche, filtre, tri, statut et notes
+- Import Excel/CSV avec validation ligne par ligne
+- Assignation manuelle ou aleatoire des clients aux agents
+- Journalisation des imports et des actions clients, consultable par l'admin
+- Limitation des tentatives de login et des appels API
+- Limite d'upload a 5 MB et controle des types de fichiers d'import
+- Base PostgreSQL avec migration et donnees de demarrage
+- Frontend HTML/CSS/JavaScript statique
 
-## Tech Stack
+## Prerequis
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL
-- **Authentication**: JWT (jsonwebtoken)
-- **File Upload**: express-fileupload
-- **Excel Parsing**: xlsx
+- Node.js 18+
+- npm
+- PostgreSQL 12+
 
-## Installation
+## Installation locale
 
-### Prerequisites
-
-- Node.js (v14+)
-- PostgreSQL (v12+)
-- npm or yarn
-
-### Setup Steps
-
-1. **Clone/Download the project**
-
-   ```bash
-   cd sharing_leads
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your PostgreSQL credentials
-   ```
-
-4. **Create PostgreSQL database**
-
-   ```bash
-   psql -U postgres
-   CREATE DATABASE leads_db;
-   \q
-   ```
-
-5. **Run database migrations**
-
-   ```bash
-   npm run db:migrate
-   ```
-
-6. **Start the server**
-
-   ```bash
-   npm start
-   # or for development with auto-reload:
-   npm run dev
-   ```
-
-7. **Access the application**
-   - Frontend: `http://localhost:3000` (or serve from backend public folder)
-   - Backend API: `http://localhost:5000/api`
-
-## Usage
-
-### Admin Workflow
-
-1. **Login** - Navigate to `/index.html` and login with admin credentials
-2. **Create Users** - Go to "Users" tab and create agent accounts
-3. **Import Leads** - Go to "Import" tab, upload Excel file with leads
-4. **Assign Leads** - In "Leads" tab, assign leads to specific agents using the dropdown
-5. **Manage Leads** - Edit or delete leads as needed
-
-### Agent Workflow
-
-1. **Login** - Use agent credentials on `/index.html`
-2. **View Leads** - See all assigned leads on the dashboard
-3. **Update Status** - Click on a lead and update its status (New → Contacted → Interested → Qualified → Closed)
-4. **Add Notes** - Add internal notes to track communication
-5. **Search** - Find specific leads using name, email, or phone
-
-## Excel Import Format
-
-The Excel file should have the following columns (headers):
-
-- **name** (required) - Lead name
-- **email** - Email address
-- **phone** - Phone number
-- **status** - Lead status (default: NEW)
-- **source** - Lead source (default: IMPORT)
-- **amount** - Deal amount
-- **notes** - Additional notes
-
-Example:
-
-```
-| name        | email              | phone         | status   | source | amount | notes      |
-|-----|-----------------|-----------|----------|--------|--------|---------|
-| John Doe    | john@example.com   | 555-1234  | NEW     | Web    | 5000   | Interested|
-| Jane Smith  | jane@example.com   | 555-5678  | NEW     | Phone  | 3000   |           |
+```bash
+npm install
+copy .env.example .env
+npm run db:migrate
+npm start
 ```
 
-## API Endpoints
+L'application sert le frontend et l'API depuis le meme serveur:
 
-### Authentication
+- Interface: `http://localhost:5000`
+- API: `http://localhost:5000/api`
+- Sante API: `http://localhost:5000/api/health`
 
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user (requires token)
+## Variables d'environnement
 
-### Users (Admin only)
-
-- `GET /api/users` - Get all users
-- `GET /api/users/:id` - Get user by ID
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user
-
-### Leads
-
-- `GET /api/leads` - Get all leads (admin only) with pagination
-- `GET /api/leads/me` - Get current user's assigned leads
-- `GET /api/leads/:id` - Get lead by ID
-- `POST /api/leads` - Create lead (admin only)
-- `PUT /api/leads/:id` - Update lead (admin or assignee)
-- `DELETE /api/leads/:id` - Delete lead (admin only)
-- `PUT /api/leads/:id/assign` - Assign lead to user (admin only)
-- `POST /api/leads/import` - Bulk import leads from Excel (admin only)
-- `GET /api/leads/search?q=query` - Search leads
-
-## Database Schema
-
-### users table
-
-```sql
-- id (SERIAL PRIMARY KEY)
-- email (VARCHAR UNIQUE)
-- password (VARCHAR)
-- name (VARCHAR)
-- role (VARCHAR) - 'ADMIN' or 'AGENT'
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=lead_management
+DB_USER=postgres
+DB_PASSWORD=your_password
+JWT_SECRET=your_jwt_secret_key_here_change_in_production
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5000
 ```
 
-### leads table
+En production, `DATABASE_URL` peut remplacer les variables `DB_*`.
+`JWT_SECRET` est obligatoire en production.
 
-```sql
-- id (SERIAL PRIMARY KEY)
-- name (VARCHAR)
-- email (VARCHAR)
-- phone (VARCHAR)
-- status (VARCHAR) - 'NEW', 'CONTACTED', 'INTERESTED', 'QUALIFIED', 'CLOSED'
-- source (VARCHAR)
-- amount (DECIMAL)
-- notes (TEXT)
-- assigned_to (INTEGER, FOREIGN KEY -> users.id)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
+## Comptes crees par la migration
+
+- Admin: `admin@test.com` / `admin123`
+- Agent 1: `agent1@test.com` / `agent123`
+- Agent 2: `agent2@test.com` / `agent123`
+
+Change ces identifiants avant toute mise en production.
+
+## Format Excel/CSV attendu
+
+Colonnes acceptees:
+
+- `nom`
+- `prenom`
+- `adresse`
+- `ville`
+- `code_postal`
+- `nom_mutuelle`
+- `prix_mutuelle`
+- `status`
+- `notes`
+
+Les variantes avec majuscules ou libelles comme `Nom`, `Prenom`,
+`Code postal`, `Nom mutuelle` et `Prix mutuelle` sont aussi prises en charge.
+
+L'import accepte `.xlsx`, `.xls` et `.csv`, avec une limite de 5 MB et 5000
+lignes par fichier.
+
+## Scripts
+
+```bash
+npm start          # demarre le serveur Express
+npm run dev        # demarre avec nodemon
+npm run db:migrate # cree les tables et insere les donnees de test
+npm run check      # verifie la syntaxe des fichiers backend principaux
+npm test           # execute les tests Node
 ```
 
-### lead_assignments table
+## API principale
 
-```sql
-- id (SERIAL PRIMARY KEY)
-- lead_id (INTEGER, FOREIGN KEY -> leads.id)
-- user_id (INTEGER, FOREIGN KEY -> users.id)
-- assigned_at (TIMESTAMP)
-- unassigned_at (TIMESTAMP)
-```
+### Authentification
 
-## Project Structure
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `GET /api/auth/me`
 
-```
-sharing_leads/
-├── backend/
-│   ├── config/
-│   │   └── db.js                 # PostgreSQL connection
-│   ├── models/
-│   │   ├── User.js               # User model
-│   │   └── Lead.js               # Lead model
-│   ├── middleware/
-│   │   └── auth.js               # Authentication & authorization
-│   ├── routes/
-│   │   ├── auth.js               # Auth endpoints
-│   │   ├── users.js              # User endpoints
-│   │   └── leads.js              # Lead endpoints
-│   ├── db/
-│   │   └── migrate.js            # Database migrations
-│   └── server.js                 # Express app entry point
-├── frontend/
-│   └── public/
-│       ├── index.html            # Login/Register page
-│       ├── admin.html            # Admin dashboard
-│       ├── agent.html            # Agent dashboard
-│       ├── css/
-│       │   └── style.css         # Styles
-│       └── js/
-│           └── api.js            # API client functions
-├── package.json
-├── .env.example
-├── .gitignore
-└── README.md
-```
+L'inscription publique cree uniquement des agents. La creation d'un utilisateur
+admin necessite un JWT admin.
 
-## Troubleshooting
+### Utilisateurs
 
-### Port already in use
+- `GET /api/users`
+- `GET /api/users/:id`
+- `PUT /api/users/:id`
+- `DELETE /api/users/:id`
 
-- Change PORT in `.env` file
-- Or kill process using port: `lsof -i :5000`
+### Clients
 
-### Database connection error
+- `GET /api/clients`
+- `GET /api/clients/me`
+- `GET /api/clients/search?q=...`
+- `GET /api/clients/:id`
+- `POST /api/clients`
+- `PUT /api/clients/:id`
+- `DELETE /api/clients/:id`
+- `PUT /api/clients/:id/assign`
+- `POST /api/clients/assign-random`
+- `POST /api/clients/import`
 
-- Check PostgreSQL is running
-- Verify DB credentials in `.env`
-- Ensure database `leads_db` exists
+### Journal admin
 
-### Excel import fails
+- `GET /api/logs/imports`
+- `GET /api/logs/audit`
 
-- Verify Excel format matches specification
-- Check file size (recommend < 10MB)
-- Ensure first row has headers
+Les routes de logs sont reservees aux administrateurs.
 
-### Can't login
+Les anciennes routes `/api/leads` existent encore dans le code, mais le frontend
+actuel utilise `/api/clients`.
 
-- Verify user exists in database
-- Check password is correct
-- Try registering a new user
+## Deploiement
 
-## Performance Notes
+Le fichier `vercel.json` configure:
 
-- Initial setup: ~5000 leads = 500MB disk
-- Search: ~100ms for full table scan
-- Pagination: 50 leads per page recommended
-- Excel import: ~1000 leads = ~5 seconds
+- les routes `/api/*` vers `backend/server.js`
+- les fichiers statiques depuis `frontend/public`
 
-## Future Enhancements
+Avant deploiement, renseigner au minimum:
 
-- [ ] Email notifications on lead assignment
-- [ ] Lead activity audit log
-- [ ] Advanced filtering and segmentation
-- [ ] Dashboard charts and analytics
-- [ ] Lead conversion tracking
-- [ ] Integration with CRM systems
-- [ ] Mobile app
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `NODE_ENV=production`
+- `FRONTEND_URL`
 
-## License
-
-MIT
+La migration PostgreSQL doit etre executee sur la base cible avant l'ouverture de
+l'application.

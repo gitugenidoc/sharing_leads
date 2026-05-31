@@ -2,7 +2,9 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Log = require("../models/Log");
 const { verifyToken } = require("../middleware/auth");
+const { validateUser } = require("../middleware/validation-mutuelle");
 require("dotenv").config();
 
 const router = express.Router();
@@ -11,12 +13,33 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
+    let requestedRole = role || "AGENT";
+    let creatorUserId = null;
 
-    // Validate input
-    if (!email || !password || !name) {
+    if (requestedRole === "ADMIN") {
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role !== "ADMIN") {
+          return res.status(403).json({ error: "Admin access required" });
+        }
+        creatorUserId = decoded.id;
+      } catch (err) {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+    } else {
+      requestedRole = "AGENT";
+    }
+
+    const validation = validateUser({ email, password, name, role: requestedRole });
+    if (!validation.isValid) {
       return res
         .status(400)
-        .json({ error: "Email, password, and name are required" });
+        .json({ error: "Validation failed", details: validation.errors });
     }
 
     // Check if user exists
@@ -33,8 +56,18 @@ router.post("/register", async (req, res) => {
       email,
       hashedPassword,
       name,
-      role || "AGENT",
+      requestedRole,
     );
+
+    if (creatorUserId) {
+      await Log.createAuditLog({
+        userId: creatorUserId,
+        action: "CREATE",
+        entityType: "user",
+        entityId: newUser.id,
+        newValue: newUser,
+      });
+    }
 
     res.status(201).json({
       id: newUser.id,

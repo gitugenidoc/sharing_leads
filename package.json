@@ -10,7 +10,9 @@
     "dev": "nodemon backend/server.js",
     "dev:mutuelle": "nodemon backend/server-mutuelle.js",
     "dev:mock": "nodemon backend/server-mutuelle.js",
-    "db:migrate": "node backend/db/migrate.js"
+    "db:migrate": "node backend/db/migrate.js",
+    "check": "node --check backend/server.js && node --check backend/routes/auth.js && node --check backend/routes/clients.js && node --check backend/routes/users.js && node --check backend/routes/logs.js",
+    "test": "node --test"
   },
   "keywords": [
     "leads",

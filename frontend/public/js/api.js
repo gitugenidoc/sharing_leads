@@ -243,6 +243,16 @@ const searchLeads = async (query, offset = 0, limit = 100) => {
   return data;
 };
 
+const getImportLogs = async (offset = 0, limit = 100) => {
+  const data = await apiCall("GET", `/logs/imports?offset=${offset}&limit=${limit}`);
+  return data;
+};
+
+const getAuditLogs = async (offset = 0, limit = 100) => {
+  const data = await apiCall("GET", `/logs/audit?offset=${offset}&limit=${limit}`);
+  return data;
+};
+
 // File upload helper for Excel
 const uploadExcel = async (file) => {
   const formData = new FormData();
