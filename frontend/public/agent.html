@@ -37,6 +37,130 @@
       .toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: .2s; }
       .toggle-switch.active { background-color: #d62d5a; }
       .toggle-switch.active::after { transform: translateX(16px); }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.46);
+        padding: 1.5rem;
+      }
+      .modal-panel {
+        width: min(1120px, 100%);
+        max-height: min(90vh, 860px);
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-panel-sm { width: min(520px, 100%); }
+      .modal-panel-md { width: min(760px, 100%); }
+      .modal-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #eef0f2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      .modal-kicker {
+        color: #d62d5a;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+      .modal-body { overflow-y: auto; padding: 1.25rem; }
+      .action-row { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
+      .btn-primary, .btn-secondary, .btn-danger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        min-height: 36px;
+        border-radius: 8px;
+        padding: .5rem .8rem;
+        font-size: 13px;
+        font-weight: 650;
+        transition: .18s ease;
+      }
+      .btn-primary { background: #d62d5a; color: white; border: 1px solid #d62d5a; }
+      .btn-primary:hover { filter: brightness(.96); }
+      .btn-secondary { background: white; color: #334155; border: 1px solid #e5e7eb; }
+      .btn-secondary:hover { background: #f8fafc; }
+      .detail-section {
+        border: 1px solid #eef0f2;
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden;
+      }
+      .detail-section + .detail-section { margin-top: 1rem; }
+      .detail-section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #f1f5f9;
+        background: #fbfcfd;
+        padding: .75rem 1rem;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e293b;
+      }
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .75rem;
+        padding: 1rem;
+      }
+      .field-card {
+        min-width: 0;
+        border: 1px solid #eef0f2;
+        border-radius: 10px;
+        background: #fafafa;
+        padding: .75rem;
+      }
+      .field-label {
+        display: block;
+        margin-bottom: .4rem;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+      .field-control {
+        width: 100%;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+        padding: .55rem .7rem;
+        color: #1e293b;
+        font-size: 13px;
+        outline: none;
+      }
+      .field-control:focus { border-color: #d62d5a; box-shadow: 0 0 0 3px rgba(214, 45, 90, .10); }
+      .field-control.textarea { min-height: 92px; resize: vertical; line-height: 1.45; }
+      .field-card-wide { grid-column: span 2 / span 2; }
+      .field-card-full { grid-column: 1 / -1; }
+      .mail-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1rem; }
+      .mail-template-box { border: 1px solid #eef0f2; border-radius: 12px; background: #fbfcfd; padding: 1rem; }
+      .mail-help { margin-top: .75rem; color: #64748b; font-size: 12px; line-height: 1.45; }
+      .mail-message { min-height: 260px; font-family: Inter, system-ui, sans-serif; line-height: 1.55; }
+      @media (max-width: 980px) {
+        .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .mail-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 640px) {
+        body { padding: .75rem; }
+        .field-grid { grid-template-columns: 1fr; }
+        .field-card-wide { grid-column: auto; }
+      }
+
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -108,72 +232,63 @@
 
     <div
       id="client-detail-modal"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      class="modal-backdrop"
       style="display: none"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-        <div class="mb-5 flex items-center justify-between gap-4">
-          <h3 id="client-detail-title" class="text-lg font-bold text-gray-900">
-            Fiche client
-          </h3>
-          <div class="flex gap-2">
+      <div class="modal-panel">
+        <div class="modal-header"><div><div class="modal-kicker">Fiche mutuelle</div><h3 id="client-detail-title" class="text-lg font-bold text-gray-900">Fiche client</h3><p class="text-sm text-textMuted">Modifiez les donnees importees et les informations de suivi.</p></div><div class="action-row">
             <button
               id="client-detail-mail-btn"
               type="button"
-              class="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+              class="btn-primary"
             >
               Envoyer e-mail
             </button>
             <button
               type="button"
               onclick="saveClientDetails()"
-              class="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition"
+              class="btn-primary"
             >
               Enregistrer
             </button>
             <button
               type="button"
               onclick="closeClientDetails()"
-              class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              class="btn-secondary"
             >
               Fermer
             </button>
           </div>
         </div>
-        <div id="client-detail-body" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"></div>
+        <div id="client-detail-body" class="modal-body"></div>
       </div>
     </div>
 
     <!-- EMAIL MODAL -->
     <div
       id="email-modal"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      class="modal-backdrop"
       style="display: none"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Envoyer un e-mail</h3>
-        <form onsubmit="handleSendMail(event)" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Destinataire *</label>
+      <div class="modal-panel modal-panel-md">
+        <div class="modal-header"><div><div class="modal-kicker">Communication client</div><h3 class="text-lg font-bold text-gray-900">Envoyer un e-mail</h3><p class="text-sm text-textMuted">Choisissez le contexte puis ajustez le message avant envoi.</p></div></div><form onsubmit="handleSendMail(event)" class="modal-body space-y-4">
+          <div class="mail-layout"><div class="mail-template-box"><label class="field-label">Destinataire</label>
             <input
               type="email"
               id="email-recipient"
               required
               readonly
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 focus:outline-none"
+              class="field-control bg-gray-50 text-gray-600"
             />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Template</label>
-            <select id="email-template" onchange="applySelectedMailTemplate()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></select>
-          </div>
+          <div class="mt-4"><label class="field-label">Template conseille</label><select id="email-template" onchange="applySelectedMailTemplate()" class="field-control"></select><p id="email-template-help" class="mail-help">Le contenu est adapte automatiquement avec les donnees de la fiche.</p></div></div><div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Sujet *</label>
             <input
               type="text"
               id="email-subject"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              class="field-control"
             />
           </div>
           <div>
@@ -182,31 +297,32 @@
               id="email-body"
               rows="12"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-sans text-sm"
+              class="field-control textarea mail-message"
             ></textarea>
           </div>
           
           <!-- Ethereal Preview Box -->
-          <div id="email-preview-box" class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800" style="display: none">
-            <span class="font-semibold">Aperçu SMTP : </span>
-            <a id="email-preview-link" href="#" target="_blank" class="underline font-medium hover:text-blue-900">Cliquez ici pour voir l'e-mail envoyé</a>.
+          <div id="email-preview-box" class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800" style="display: none">
+            <span class="font-semibold">Apercu SMTP : </span>
+            <a id="email-preview-link" href="#" target="_blank" class="underline font-medium hover:text-blue-900">Cliquez ici pour voir l'e-mail envoye</a>.
           </div>
 
-          <div class="flex gap-2 pt-2">
+          <div class="action-row pt-2">
             <button
               type="button"
               onclick="closeEmailModal()"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+              class="btn-secondary flex-1"
             >
               Annuler
             </button>
             <button
               type="submit"
               id="email-submit-btn"
-              class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-opacity-90 transition"
+              class="btn-primary flex-1"
             >
               Envoyer
             </button>
+          </div>
           </div>
         </form>
       </div>
@@ -458,7 +574,7 @@
         document.getElementById("client-detail-body").innerHTML =
           renderDetailFields(fields) +
           (extraFields.length
-            ? `<div class="col-span-full pt-3 text-sm font-semibold text-gray-900">Colonnes importees</div>${renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true)}`
+            ? renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true)
             : "");
 
         const mailBtn = document.getElementById("client-detail-mail-btn");
