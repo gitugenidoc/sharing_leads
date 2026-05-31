@@ -1,15 +1,27 @@
 const pool = require("../config/db");
 
-const getAllClients = async (offset = 0, limit = 100) => {
+const withCenterFilter = (baseQuery, centerId, nextParamIndex) => {
+  if (!centerId) {
+    return { text: baseQuery, params: [] };
+  }
+  return {
+    text: `${baseQuery} WHERE clients.center_id = $${nextParamIndex}`,
+    params: [centerId],
+  };
+};
+
+const getAllClients = async (offset = 0, limit = 100, centerId = null) => {
+  const scope = withCenterFilter("SELECT * FROM clients", centerId, 3);
   const result = await pool.query(
-    "SELECT * FROM clients ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-    [limit, offset],
+    `${scope.text} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+    [limit, offset, ...scope.params],
   );
   return result.rows;
 };
 
-const getClientsCount = async () => {
-  const result = await pool.query("SELECT COUNT(*) FROM clients");
+const getClientsCount = async (centerId = null) => {
+  const scope = withCenterFilter("SELECT COUNT(*) FROM clients", centerId, 1);
+  const result = await pool.query(scope.text, scope.params);
   return parseInt(result.rows[0].count, 10);
 };
 
@@ -46,12 +58,13 @@ const createClient = async (clientData) => {
     status,
     notes,
     assigned_to,
+    center_id,
   } = clientData;
 
   const result = await pool.query(
     `INSERT INTO clients
-      (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, notes, assigned_to, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+      (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, notes, assigned_to, center_id, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
      RETURNING *`,
     [
       nom,
@@ -64,6 +77,7 @@ const createClient = async (clientData) => {
       status || "NEW",
       notes || "",
       assigned_to || null,
+      center_id || null,
     ],
   );
   return result.rows[0];
@@ -81,6 +95,7 @@ const updateClient = async (id, clientData) => {
     status,
     notes,
     assigned_to,
+    center_id,
   } = clientData;
 
   const result = await pool.query(
@@ -95,8 +110,9 @@ const updateClient = async (id, clientData) => {
       status = COALESCE($8, status),
       notes = COALESCE($9, notes),
       assigned_to = COALESCE($10, assigned_to),
+      center_id = COALESCE($11, center_id),
       updated_at = NOW()
-     WHERE id = $11
+     WHERE id = $12
      RETURNING *`,
     [
       nom,
@@ -109,6 +125,7 @@ const updateClient = async (id, clientData) => {
       status,
       notes,
       assigned_to,
+      center_id,
       id,
     ],
   );
@@ -127,7 +144,7 @@ const assignClient = async (clientId, userId) => {
   return result.rows[0];
 };
 
-const assignRandomClients = async (userId, count) => {
+const assignRandomClients = async (userId, count, centerId) => {
   const result = await pool.query(
     `UPDATE clients
      SET assigned_to = $1, updated_at = NOW()
@@ -135,39 +152,50 @@ const assignRandomClients = async (userId, count) => {
        SELECT id
        FROM clients
        WHERE assigned_to IS NULL
+         AND center_id = $3
        ORDER BY RANDOM()
        LIMIT $2
      )
      RETURNING *`,
-    [userId, count],
+    [userId, count, centerId],
   );
   return result.rows;
 };
 
-const searchClients = async (query, offset = 0, limit = 100) => {
+const searchClients = async (query, offset = 0, limit = 100, centerId = null) => {
+  const params = [`%${query}%`, limit, offset];
+  let centerFilter = "";
+  if (centerId) {
+    params.push(centerId);
+    centerFilter = "AND center_id = $4";
+  }
+
   const result = await pool.query(
     `SELECT * FROM clients
-     WHERE nom ILIKE $1
-        OR prenom ILIKE $1
-        OR ville ILIKE $1
-        OR code_postal ILIKE $1
-        OR nom_mutuelle ILIKE $1
+     WHERE (
+       nom ILIKE $1
+       OR prenom ILIKE $1
+       OR ville ILIKE $1
+       OR code_postal ILIKE $1
+       OR nom_mutuelle ILIKE $1
+     )
+     ${centerFilter}
      ORDER BY created_at DESC
      LIMIT $2 OFFSET $3`,
-    [`%${query}%`, limit, offset],
+    params,
   );
   return result.rows;
 };
 
-const bulkInsertClients = async (clients) => {
+const bulkInsertClients = async (clients, centerId) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     for (const row of clients) {
       await client.query(
         `INSERT INTO clients
-          (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, notes, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
+          (nom, prenom, adresse, ville, code_postal, nom_mutuelle, prix_mutuelle, status, notes, center_id, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
         [
           row.nom,
           row.prenom,
@@ -178,6 +206,7 @@ const bulkInsertClients = async (clients) => {
           row.prix_mutuelle,
           row.status || "NEW",
           row.notes || "",
+          centerId,
         ],
       );
     }

@@ -1,13 +1,14 @@
 # SecurAssure - Gestion de clients mutuelle
 
-Application web Node.js/Express pour gerer des clients mutuelle avec deux roles:
-administrateur et agent. L'administrateur importe, cree et assigne les clients;
-les agents consultent leur portefeuille, changent les statuts et ajoutent des
-commentaires.
+Application web Node.js/Express pour gerer des clients mutuelle avec une
+hierarchie multi-centres: super administrateur, administrateurs de centre et
+agents. Le super administrateur gere tous les centres. Chaque administrateur de
+centre gere uniquement ses agents et ses clients.
 
 ## Fonctionnalites
 
-- Authentification JWT avec roles `ADMIN` et `AGENT`
+- Authentification JWT avec roles `SUPER_ADMIN`, `ADMIN` et `AGENT`
+- Gestion multi-centres: un admin par centre, puis ses agents
 - Dashboard administrateur: statistiques, liste clients, utilisateurs, import Excel/CSV
 - Dashboard agent: clients assignes, recherche, filtre, tri, statut et notes
 - Import Excel/CSV avec validation ligne par ligne
@@ -58,11 +59,25 @@ En production, `DATABASE_URL` peut remplacer les variables `DB_*`.
 
 ## Comptes crees par la migration
 
-- Admin: `admin@test.com` / `admin123`
+- Super admin: `admin@test.com` / `admin123`
+- Admin centre demo: `centre@test.com` / `admin123`
 - Agent 1: `agent1@test.com` / `agent123`
 - Agent 2: `agent2@test.com` / `agent123`
 
 Change ces identifiants avant toute mise en production.
+
+## Organisation multi-centres
+
+- `SUPER_ADMIN`: voit tous les centres, cree les admins de centre et peut creer
+  des agents en choisissant un centre.
+- `ADMIN`: voit uniquement son centre, cree uniquement des agents rattaches a ce
+  centre, importe les clients de ce centre et assigne ces clients a ses agents.
+- `AGENT`: voit uniquement les clients qui lui sont assignes.
+
+Dans l'interface admin, `admin@test.com` est le super admin. Pour creer un
+centre, il suffit de creer un utilisateur avec le role `Admin de centre` et de
+renseigner le nom du centre. Ensuite cet admin de centre peut se connecter et
+creer ses propres agents.
 
 ## Format Excel/CSV attendu
 
@@ -108,6 +123,7 @@ admin necessite un JWT admin.
 ### Utilisateurs
 
 - `GET /api/users`
+- `GET /api/users/centers`
 - `GET /api/users/:id`
 - `PUT /api/users/:id`
 - `DELETE /api/users/:id`

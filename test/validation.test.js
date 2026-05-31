@@ -47,11 +47,20 @@ test("validateStatus only allows supported workflow values", () => {
   assert.equal(validateStatus("ARCHIVED"), false);
 });
 
-test("validateUser accepts a valid admin or agent", () => {
+test("validateUser accepts valid supported roles", () => {
   assert.equal(
     validateUser({
       email: "admin@example.com",
       name: "Admin User",
+      password: "secret123",
+      role: "SUPER_ADMIN",
+    }).isValid,
+    true,
+  );
+  assert.equal(
+    validateUser({
+      email: "center@example.com",
+      name: "Center Admin",
       password: "secret123",
       role: "ADMIN",
     }).isValid,

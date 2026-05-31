@@ -1,50 +1,107 @@
 const pool = require("../config/db");
 
-// Query helper
 const query = (text, params) => pool.query(text, params);
 
-// Get all users
-const getAllUsers = async () => {
+const USER_SELECT = `
+  SELECT users.id, users.email, users.name, users.role, users.center_id,
+         centers.name AS center_name, users.created_at
+  FROM users
+  LEFT JOIN centers ON centers.id = users.center_id
+`;
+
+const normalizeCenterName = (name) => (name || "").trim();
+
+const getAllUsers = async (viewer = null) => {
+  const params = [];
+  let where = "";
+
+  if (viewer?.role === "ADMIN") {
+    params.push(viewer.center_id);
+    where = "WHERE users.center_id = $1 AND users.role <> 'SUPER_ADMIN'";
+  }
+
   const result = await query(
-    "SELECT id, email, name, role, created_at FROM users ORDER BY created_at DESC",
+    `${USER_SELECT}
+     ${where}
+     ORDER BY users.created_at DESC`,
+    params,
   );
   return result.rows;
 };
 
-// Get user by email
-const getUserByEmail = async (email) => {
-  const result = await query("SELECT * FROM users WHERE email = $1", [email]);
+const getCenters = async () => {
+  const result = await query(
+    "SELECT id, name, created_at FROM centers ORDER BY name ASC",
+  );
+  return result.rows;
+};
+
+const getOrCreateCenter = async (name) => {
+  const centerName = normalizeCenterName(name);
+  if (!centerName) {
+    return null;
+  }
+
+  const result = await query(
+    `INSERT INTO centers (name)
+     VALUES ($1)
+     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+     RETURNING id, name`,
+    [centerName],
+  );
   return result.rows[0];
 };
 
-// Get user by ID
+const getUserByEmail = async (email) => {
+  const result = await query(
+    `SELECT users.*, centers.name AS center_name
+     FROM users
+     LEFT JOIN centers ON centers.id = users.center_id
+     WHERE users.email = $1`,
+    [email],
+  );
+  return result.rows[0];
+};
+
 const getUserById = async (id) => {
   const result = await query(
-    "SELECT id, email, name, role, created_at FROM users WHERE id = $1",
+    `${USER_SELECT}
+     WHERE users.id = $1`,
     [id],
   );
   return result.rows[0];
 };
 
-// Create user
-const createUser = async (email, password, name, role = "AGENT") => {
+const createUser = async ({
+  email,
+  password,
+  name,
+  role = "AGENT",
+  centerId = null,
+}) => {
   const result = await query(
-    "INSERT INTO users (email, password, name, role, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id, email, name, role, created_at",
-    [email, password, name, role],
+    `INSERT INTO users (email, password, name, role, center_id, created_at)
+     VALUES ($1, $2, $3, $4, $5, NOW())
+     RETURNING id`,
+    [email, password, name, role, centerId],
   );
-  return result.rows[0];
+  return getUserById(result.rows[0].id);
 };
 
-// Update user
-const updateUser = async (id, name, role) => {
+const updateUser = async (id, { name, role, centerId = null }) => {
   const result = await query(
-    "UPDATE users SET name = $1, role = $2 WHERE id = $3 RETURNING id, email, name, role, created_at",
-    [name, role, id],
+    `UPDATE users
+     SET name = $1, role = $2, center_id = $3
+     WHERE id = $4
+     RETURNING id`,
+    [name, role, centerId, id],
   );
-  return result.rows[0];
+  if (!result.rows[0]) {
+    return null;
+  }
+  return getUserById(result.rows[0].id);
 };
 
-// Delete user
 const deleteUser = async (id) => {
   await query("DELETE FROM users WHERE id = $1", [id]);
 };
@@ -52,6 +109,8 @@ const deleteUser = async (id) => {
 module.exports = {
   query,
   getAllUsers,
+  getCenters,
+  getOrCreateCenter,
   getUserByEmail,
   getUserById,
   createUser,

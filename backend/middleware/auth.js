@@ -18,10 +18,19 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Check if user is admin
+const isAdminRole = (role) => ["SUPER_ADMIN", "ADMIN"].includes(role);
+
+// Check if user can access admin features
 const isAdmin = (req, res, next) => {
-  if (req.user.role !== "ADMIN") {
+  if (!isAdminRole(req.user.role)) {
     return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+};
+
+const isSuperAdmin = (req, res, next) => {
+  if (req.user.role !== "SUPER_ADMIN") {
+    return res.status(403).json({ error: "Super admin access required" });
   }
   next();
 };
@@ -29,7 +38,7 @@ const isAdmin = (req, res, next) => {
 // Check if user is owner or admin
 const isOwnerOrAdmin = (req, res, next) => {
   const leadUserId = req.leadUserId; // Should be set by the route handler
-  if (req.user.role !== "ADMIN" && req.user.id !== leadUserId) {
+  if (!isAdminRole(req.user.role) && req.user.id !== leadUserId) {
     return res.status(403).json({ error: "Unauthorized" });
   }
   next();
@@ -38,5 +47,7 @@ const isOwnerOrAdmin = (req, res, next) => {
 module.exports = {
   verifyToken,
   isAdmin,
+  isAdminRole,
+  isSuperAdmin,
   isOwnerOrAdmin,
 };

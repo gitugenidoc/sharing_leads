@@ -3,33 +3,80 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Log = require("../models/Log");
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, isAdminRole } = require("../middleware/auth");
 const { validateUser } = require("../middleware/validation-mutuelle");
 require("dotenv").config();
 
 const router = express.Router();
 
-// Register
+const getCreatorFromToken = async (req) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return null;
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  return User.getUserById(decoded.id);
+};
+
+const resolveCenterForNewUser = async ({ creator, requestedRole, body }) => {
+  if (!creator) {
+    return null;
+  }
+
+  if (creator.role === "ADMIN") {
+    if (requestedRole !== "AGENT") {
+      const error = new Error("Center admins can only create agents");
+      error.statusCode = 403;
+      throw error;
+    }
+    return creator.center_id;
+  }
+
+  if (creator.role === "SUPER_ADMIN") {
+    const centerName = body.center_name || body.centerName;
+    if (centerName) {
+      const center = await User.getOrCreateCenter(centerName);
+      return center.id;
+    }
+
+    if (body.center_id || body.centerId) {
+      return parseInt(body.center_id || body.centerId, 10);
+    }
+
+    if (requestedRole !== "SUPER_ADMIN") {
+      const error = new Error("Center is required for center admins and agents");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  return null;
+};
+
 router.post("/register", async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
     let requestedRole = role || "AGENT";
-    let creatorUserId = null;
+    let creator = null;
 
-    if (requestedRole === "ADMIN") {
-      const token = req.headers.authorization?.split(" ")[1];
-      if (!token) {
-        return res.status(403).json({ error: "Admin access required" });
-      }
-
+    if (req.headers.authorization) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== "ADMIN") {
-          return res.status(403).json({ error: "Admin access required" });
-        }
-        creatorUserId = decoded.id;
+        creator = await getCreatorFromToken(req);
       } catch (err) {
         return res.status(401).json({ error: "Invalid token" });
+      }
+    }
+
+    if (creator) {
+      if (!isAdminRole(creator.role)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      if (requestedRole === "SUPER_ADMIN") {
+        return res.status(403).json({ error: "Super admin cannot be created here" });
+      }
+      if (creator.role === "ADMIN") {
+        requestedRole = "AGENT";
       }
     } else {
       requestedRole = "AGENT";
@@ -42,26 +89,28 @@ router.post("/register", async (req, res) => {
         .json({ error: "Validation failed", details: validation.errors });
     }
 
-    // Check if user exists
     const existingUser = await User.getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const newUser = await User.createUser(
-      email,
-      hashedPassword,
-      name,
+    const centerId = await resolveCenterForNewUser({
+      creator,
       requestedRole,
-    );
+      body: req.body,
+    });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.createUser({
+      email,
+      password: hashedPassword,
+      name,
+      role: requestedRole,
+      centerId,
+    });
 
-    if (creatorUserId) {
+    if (creator) {
       await Log.createAuditLog({
-        userId: creatorUserId,
+        userId: creator.id,
         action: "CREATE",
         entityType: "user",
         entityId: newUser.id,
@@ -74,38 +123,42 @@ router.post("/register", async (req, res) => {
       email: newUser.email,
       name: newUser.name,
       role: newUser.role,
+      center_id: newUser.center_id,
+      center_name: newUser.center_name,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(err.statusCode || 500).json({ error: err.message || "Server error" });
   }
 });
 
-// Login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    // Check if user exists
     const user = await User.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Compare passwords
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Generate JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        center_id: user.center_id,
+        center_name: user.center_name,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
@@ -117,6 +170,8 @@ router.post("/login", async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        center_id: user.center_id,
+        center_name: user.center_name,
       },
     });
   } catch (err) {
@@ -125,7 +180,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Get current user
 router.get("/me", verifyToken, (req, res) => {
   res.json({ user: req.user });
 });

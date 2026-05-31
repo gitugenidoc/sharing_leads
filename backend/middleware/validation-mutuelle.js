@@ -91,7 +91,7 @@ const validateUser = (data) => {
     errors.push("Name must be at least 2 characters");
   }
 
-  const validRoles = ["ADMIN", "AGENT"];
+  const validRoles = ["SUPER_ADMIN", "ADMIN", "AGENT"];
   if (data.role && !validRoles.includes(data.role)) {
     errors.push(`Role must be one of: ${validRoles.join(", ")}`);
   }

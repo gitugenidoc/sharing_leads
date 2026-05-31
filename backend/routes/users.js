@@ -1,15 +1,41 @@
 const express = require("express");
 const User = require("../models/User");
 const Log = require("../models/Log");
-const { verifyToken, isAdmin } = require("../middleware/auth");
+const { verifyToken, isAdmin, isAdminRole } = require("../middleware/auth");
 const { validateUser } = require("../middleware/validation-mutuelle");
 
 const router = express.Router();
 
-// Get all users (admin only)
+const canManageUser = (actor, target) => {
+  if (actor.role === "SUPER_ADMIN") {
+    return target.role !== "SUPER_ADMIN" || actor.id === target.id;
+  }
+  if (actor.role === "ADMIN") {
+    return (
+      target.role === "AGENT" &&
+      actor.center_id &&
+      actor.center_id === target.center_id
+    );
+  }
+  return actor.id === target.id;
+};
+
+router.get("/centers", verifyToken, isAdmin, async (req, res) => {
+  try {
+    if (req.user.role !== "SUPER_ADMIN") {
+      return res.json([]);
+    }
+    const centers = await User.getCenters();
+    res.json(centers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.get("/", verifyToken, isAdmin, async (req, res) => {
   try {
-    const users = await User.getAllUsers();
+    const users = await User.getAllUsers(req.user);
     res.json(users);
   } catch (err) {
     console.error(err);
@@ -17,17 +43,15 @@ router.get("/", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// Get user by ID
 router.get("/:id", verifyToken, async (req, res) => {
   try {
-    // Can only view own user or if admin
-    if (req.user.id !== parseInt(req.params.id) && req.user.role !== "ADMIN") {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
     const user = await User.getUserById(req.params.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!canManageUser(req.user, user) && req.user.id !== user.id) {
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     res.json(user);
@@ -37,23 +61,54 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
-// Update user (admin only)
 router.put("/:id", verifyToken, isAdmin, async (req, res) => {
   try {
-    const { name, role } = req.body;
-    const validation = validateUser({ email: "valid@example.com", name, role });
+    const existingUser = await User.getUserById(req.params.id);
+    if (!existingUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!canManageUser(req.user, existingUser)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const requestedRole =
+      req.user.role === "ADMIN" ? "AGENT" : req.body.role || existingUser.role;
+    if (requestedRole === "SUPER_ADMIN" && req.user.id !== existingUser.id) {
+      return res.status(403).json({ error: "Cannot promote users to super admin" });
+    }
+
+    const validation = validateUser({
+      email: existingUser.email,
+      name: req.body.name,
+      role: requestedRole,
+    });
     if (!validation.isValid) {
       return res
         .status(400)
         .json({ error: "Validation failed", details: validation.errors });
     }
 
-    const existingUser = await User.getUserById(req.params.id);
-    if (!existingUser) {
-      return res.status(404).json({ error: "User not found" });
+    let centerId = existingUser.center_id;
+    if (req.user.role === "ADMIN") {
+      centerId = req.user.center_id;
+    } else if (req.body.center_name || req.body.centerName) {
+      const center = await User.getOrCreateCenter(
+        req.body.center_name || req.body.centerName,
+      );
+      centerId = center.id;
+    } else if (req.body.center_id || req.body.centerId) {
+      centerId = parseInt(req.body.center_id || req.body.centerId, 10);
     }
 
-    const user = await User.updateUser(req.params.id, name, role);
+    if (requestedRole !== "SUPER_ADMIN" && !centerId) {
+      return res.status(400).json({ error: "Center is required" });
+    }
+
+    const user = await User.updateUser(req.params.id, {
+      name: req.body.name,
+      role: requestedRole,
+      centerId: requestedRole === "SUPER_ADMIN" ? null : centerId,
+    });
     await Log.createAuditLog({
       userId: req.user.id,
       action: "UPDATE",
@@ -66,11 +121,10 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(err.statusCode || 500).json({ error: err.message || "Server error" });
   }
 });
 
-// Delete user (admin only)
 router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   try {
     if (req.user.id === parseInt(req.params.id, 10)) {
@@ -80,6 +134,9 @@ router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
     const user = await User.getUserById(req.params.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+    if (!isAdminRole(req.user.role) || !canManageUser(req.user, user)) {
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     await User.deleteUser(req.params.id);

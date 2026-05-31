@@ -55,18 +55,22 @@ test("verifyToken attaches decoded users and calls next", () => {
   assert.equal(res.statusCode, 200);
 });
 
-test("isAdmin allows admins and rejects agents", () => {
+test("isAdmin allows super admins and center admins, and rejects agents", () => {
+  const superAdminReq = { user: { role: "SUPER_ADMIN" } };
   const adminReq = { user: { role: "ADMIN" } };
   const agentReq = { user: { role: "AGENT" } };
   const res = createResponse();
-  let nextCalled = false;
+  let nextCalled = 0;
 
+  isAdmin(superAdminReq, createResponse(), () => {
+    nextCalled += 1;
+  });
   isAdmin(adminReq, createResponse(), () => {
-    nextCalled = true;
+    nextCalled += 1;
   });
   isAdmin(agentReq, res, () => {});
 
-  assert.equal(nextCalled, true);
+  assert.equal(nextCalled, 2);
   assert.equal(res.statusCode, 403);
   assert.deepEqual(res.body, { error: "Admin access required" });
 });

@@ -143,12 +143,21 @@ const login = async (email, password) => {
   return data;
 };
 
-const register = async (email, password, name, role = "AGENT") => {
+const register = async (
+  email,
+  password,
+  name,
+  role = "AGENT",
+  centerName = "",
+  centerId = "",
+) => {
   const data = await apiCall("POST", "/auth/register", {
     email,
     password,
     name,
     role,
+    center_name: centerName,
+    center_id: centerId,
   });
   return data;
 };
@@ -170,6 +179,11 @@ const getCurrentUser = async () => {
 // Users API calls
 const getAllUsers = async () => {
   const data = await apiCall("GET", "/users");
+  return data;
+};
+
+const getCenters = async () => {
+  const data = await apiCall("GET", "/users/centers");
   return data;
 };
 

@@ -1,6 +1,7 @@
 const express = require("express");
 const XLSX = require("xlsx");
 const Client = require("../models/Client");
+const User = require("../models/User");
 const Log = require("../models/Log");
 const { verifyToken, isAdmin } = require("../middleware/auth");
 const {
@@ -27,6 +28,38 @@ const isAllowedImportFile = (file) => {
   );
 };
 
+const isSuperAdmin = (user) => user.role === "SUPER_ADMIN";
+const getAdminCenterId = (user) => (isSuperAdmin(user) ? null : user.center_id || -1);
+
+const canAccessClient = (user, client) => {
+  if (isSuperAdmin(user)) return true;
+  if (user.role === "ADMIN") {
+    return user.center_id && user.center_id === client.center_id;
+  }
+  return client.assigned_to === user.id;
+};
+
+const resolveCenterIdForWrite = (user, body = {}) => {
+  if (user.role === "ADMIN") {
+    return user.center_id;
+  }
+  if (isSuperAdmin(user)) {
+    return parseInt(body.center_id || body.centerId, 10) || null;
+  }
+  return null;
+};
+
+const getAssignableAgent = async (user, userId) => {
+  const agent = await User.getUserById(userId);
+  if (!agent || agent.role !== "AGENT") {
+    return null;
+  }
+  if (!isSuperAdmin(user) && agent.center_id !== user.center_id) {
+    return null;
+  }
+  return agent;
+};
+
 const mapExcelRowToClient = (row) => ({
   nom: row.nom || row.Nom || "",
   prenom: row.prenom || row.Prenom || "",
@@ -51,8 +84,13 @@ router.get("/search", verifyToken, async (req, res) => {
     }
 
     let results;
-    if (req.user.role === "ADMIN") {
-      results = await Client.searchClients(q, parseInt(offset), parseInt(limit));
+    if (req.user.role === "ADMIN" || req.user.role === "SUPER_ADMIN") {
+      results = await Client.searchClients(
+        q,
+        parseInt(offset),
+        parseInt(limit),
+        getAdminCenterId(req.user),
+      );
     } else {
       const query = q.toLowerCase();
       results = (await Client.getUserClients(req.user.id, 0, 999999))
@@ -120,8 +158,13 @@ router.post("/import", verifyToken, isAdmin, async (req, res) => {
       clients.push(client);
     });
 
+    const centerId = resolveCenterIdForWrite(req.user, req.body);
+    if (!centerId) {
+      return res.status(400).json({ error: "Center is required for import" });
+    }
+
     if (clients.length > 0) {
-      await Client.bulkInsertClients(clients);
+      await Client.bulkInsertClients(clients, centerId);
     }
 
     await Log.createImportLog({
@@ -155,7 +198,16 @@ router.post("/assign-random", verifyToken, isAdmin, async (req, res) => {
       });
     }
 
-    const clients = await Client.assignRandomClients(userId, count);
+    const agent = await getAssignableAgent(req.user, userId);
+    if (!agent) {
+      return res.status(400).json({ error: "Assignable agent not found" });
+    }
+
+    const clients = await Client.assignRandomClients(
+      userId,
+      count,
+      agent.center_id,
+    );
     await Promise.all(
       clients.map((client) =>
         Log.createAuditLog({
@@ -182,8 +234,9 @@ router.get("/", verifyToken, isAdmin, async (req, res) => {
   try {
     const offset = parseInt(req.query.offset) || 0;
     const limit = parseInt(req.query.limit) || 100;
-    const clients = await Client.getAllClients(offset, limit);
-    const total = await Client.getClientsCount();
+    const centerId = getAdminCenterId(req.user);
+    const clients = await Client.getAllClients(offset, limit, centerId);
+    const total = await Client.getClientsCount(centerId);
 
     res.json({ clients, total, offset, limit });
   } catch (err) {
@@ -198,7 +251,7 @@ router.get("/:id", verifyToken, async (req, res) => {
     if (!client) {
       return res.status(404).json({ error: "Client not found" });
     }
-    if (req.user.role !== "ADMIN" && client.assigned_to !== req.user.id) {
+    if (!canAccessClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     res.json(client);
@@ -217,7 +270,12 @@ router.post("/", verifyToken, isAdmin, async (req, res) => {
         .json({ error: "Validation failed", details: validation.errors });
     }
 
-    const client = await Client.createClient(req.body);
+    const centerId = resolveCenterIdForWrite(req.user, req.body);
+    if (!centerId) {
+      return res.status(400).json({ error: "Center is required" });
+    }
+
+    const client = await Client.createClient({ ...req.body, center_id: centerId });
     await Log.createAuditLog({
       userId: req.user.id,
       action: "CREATE",
@@ -238,7 +296,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (!client) {
       return res.status(404).json({ error: "Client not found" });
     }
-    if (req.user.role !== "ADMIN" && client.assigned_to !== req.user.id) {
+    if (!canAccessClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     const validation = validateClient({ ...client, ...req.body });
@@ -248,7 +306,16 @@ router.put("/:id", verifyToken, async (req, res) => {
         .json({ error: "Validation failed", details: validation.errors });
     }
 
-    const updatedClient = await Client.updateClient(req.params.id, req.body);
+    const updates = { ...req.body };
+    delete updates.center_id;
+    delete updates.centerId;
+    if (updates.assigned_to) {
+      const agent = await getAssignableAgent(req.user, updates.assigned_to);
+      if (!agent || agent.center_id !== client.center_id) {
+        return res.status(400).json({ error: "Assignable agent not found" });
+      }
+    }
+    const updatedClient = await Client.updateClient(req.params.id, updates);
     await Log.createAuditLog({
       userId: req.user.id,
       action: "UPDATE",
@@ -269,6 +336,9 @@ router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
     const client = await Client.getClientById(req.params.id);
     if (!client) {
       return res.status(404).json({ error: "Client not found" });
+    }
+    if (!canAccessClient(req.user, client)) {
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     await Client.deleteClient(req.params.id);
@@ -291,6 +361,18 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
     const { userId } = req.body;
     if (!userId) {
       return res.status(400).json({ error: "User ID required" });
+    }
+
+    const existingClient = await Client.getClientById(req.params.id);
+    if (!existingClient) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+    if (!canAccessClient(req.user, existingClient)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    const agent = await getAssignableAgent(req.user, userId);
+    if (!agent || agent.center_id !== existingClient.center_id) {
+      return res.status(400).json({ error: "Assignable agent not found" });
     }
 
     const client = await Client.assignClient(req.params.id, userId);

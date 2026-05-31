@@ -11,12 +11,16 @@ const getPagination = (query) => {
   return { offset, limit };
 };
 
+const getCenterScope = (user) =>
+  user.role === "SUPER_ADMIN" ? null : user.center_id;
+
 router.get("/imports", verifyToken, isAdmin, async (req, res) => {
   try {
     const { offset, limit } = getPagination(req.query);
+    const centerId = getCenterScope(req.user);
     const [logs, total] = await Promise.all([
-      Log.getImportLogs(offset, limit),
-      Log.getImportLogsCount(),
+      Log.getImportLogs(offset, limit, centerId),
+      Log.getImportLogsCount(centerId),
     ]);
     res.json({ logs, total, offset, limit });
   } catch (err) {
@@ -28,9 +32,10 @@ router.get("/imports", verifyToken, isAdmin, async (req, res) => {
 router.get("/audit", verifyToken, isAdmin, async (req, res) => {
   try {
     const { offset, limit } = getPagination(req.query);
+    const centerId = getCenterScope(req.user);
     const [logs, total] = await Promise.all([
-      Log.getAuditLogs(offset, limit),
-      Log.getAuditLogsCount(),
+      Log.getAuditLogs(offset, limit, centerId),
+      Log.getAuditLogsCount(centerId),
     ]);
     res.json({ logs, total, offset, limit });
   } catch (err) {
