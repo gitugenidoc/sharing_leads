@@ -219,7 +219,7 @@
             </div>
             <div class="overflow-x-auto">
               <table class="w-full min-w-[1280px] text-sm text-left">
-                <thead class="text-xs text-gray-500 bg-gray-50/50 uppercase"><tr><th class="px-4 py-3 font-medium rounded-tl-lg">Nom</th><th class="px-4 py-3 font-medium">Prenom</th><th class="px-4 py-3 font-medium">Ville</th><th class="px-4 py-3 font-medium">Statut</th><th class="px-4 py-3 font-medium">Mutuelle</th><th class="px-4 py-3 font-medium">Prix</th><th class="px-4 py-3 font-medium">Commentaire</th><th class="px-4 py-3 font-medium text-right rounded-tr-lg">Operation</th></tr></thead>
+                <thead class="text-xs text-gray-500 bg-gray-50/50 uppercase"><tr><th class="px-4 py-3 font-medium rounded-tl-lg">Nom</th><th class="px-4 py-3 font-medium">Prenom</th><th class="px-4 py-3 font-medium">Telephone</th><th class="px-4 py-3 font-medium">Statut</th><th class="px-4 py-3 font-medium">Mutuelle</th><th class="px-4 py-3 font-medium">Prix</th><th class="px-4 py-3 font-medium">Commentaire</th><th class="px-4 py-3 font-medium text-right rounded-tr-lg">Operation</th></tr></thead>
                 <tbody id="leads-tbody" class="divide-y divide-gray-100"><tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Chargement des clients...</td></tr></tbody>
               </table>
             </div>
@@ -461,10 +461,7 @@
                   <input data-client-field="prenom" data-client-id="${lead.id}" value="${escapeHtml(lead.prenom || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </td>
                 <td class="px-6 py-4">
-                  <div class="flex min-w-64 gap-2">
-                    <input data-client-field="ville" data-client-id="${lead.id}" value="${escapeHtml(lead.ville || "")}" class="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
-                    <input data-client-field="code_postal" data-client-id="${lead.id}" value="${escapeHtml(lead.code_postal || "")}" maxlength="5" class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
-                  </div>
+                  <input data-client-field="tel_gsm" data-client-id="${lead.id}" value="${escapeHtml(getPrimaryPhone(lead, ""))}" class="w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </td>
                 <td class="px-6 py-4">
                   <select data-client-field="status" data-client-id="${lead.id}" class="rounded border border-gray-300 px-2 py-2 text-sm">
@@ -516,6 +513,9 @@
             lead.prenom,
             lead.ville,
             lead.code_postal,
+            lead.tel_gsm,
+            lead.tel_fixe,
+            lead.tel_professionnel,
             lead.nom_mutuelle,
             lead.status,
             lead.notes,
@@ -944,6 +944,15 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
+      }
+
+      function getPrimaryPhone(lead, fallback = "-") {
+        return (
+          lead.tel_gsm ||
+          lead.tel_fixe ||
+          lead.tel_professionnel ||
+          fallback
+        );
       }
 
       function formatDate(value) {
