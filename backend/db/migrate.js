@@ -70,38 +70,102 @@ const createTables = async () => {
     );
   `);
 
-  await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS adresse2 VARCHAR(500)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS civilite VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS profession VARCHAR(255)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_fixe VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_gsm VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(255)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_professionnel VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_naissance VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_naissance_conjoint VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_1 VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_2 VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_3 VARCHAR(50)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime_tns VARCHAR(255)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime VARCHAR(255)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime_conjoint VARCHAR(255)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS remboursement_frais TEXT");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS besoins_specifiques TEXT");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assurance_date VARCHAR(100)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS deja_mutuelle VARCHAR(255)");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS extra_data JSONB DEFAULT '{}'::jsonb");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assignment_expires_at TIMESTAMP");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_at TIMESTAMP");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_priority VARCHAR(20) DEFAULT 'NORMAL'");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_comment TEXT");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS nlp_score INTEGER DEFAULT 0");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS nlp_label VARCHAR(30) DEFAULT 'INCOMPLET'");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_contacted_at TIMESTAMP");
-  await pool.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMP");
-  await pool.query("ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_status_check");
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS adresse2 VARCHAR(500)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS civilite VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS profession VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_fixe VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_gsm VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS tel_professionnel VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_naissance VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS date_naissance_conjoint VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_1 VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_2 VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS naissance_enfant_3 VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime_tns VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS regime_conjoint VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS remboursement_frais TEXT",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS besoins_specifiques TEXT",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS assurance_date VARCHAR(100)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS deja_mutuelle VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS extra_data JSONB DEFAULT '{}'::jsonb",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS assignment_expires_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_priority VARCHAR(20) DEFAULT 'NORMAL'",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_comment TEXT",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS nlp_score INTEGER DEFAULT 0",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS nlp_label VARCHAR(30) DEFAULT 'INCOMPLET'",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_contacted_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_status_check",
+  );
   await pool.query(`
     ALTER TABLE clients
     ADD CONSTRAINT clients_status_check
@@ -120,7 +184,9 @@ const createTables = async () => {
       'CLOSED'
     ))
   `);
-  await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+  await pool.query(
+    "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check",
+  );
   await pool.query(`
     ALTER TABLE users
     ADD CONSTRAINT users_role_check
@@ -166,8 +232,12 @@ const createTables = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
-  await pool.query("ALTER TABLE mail_logs ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL");
-  await pool.query("ALTER TABLE mail_logs ADD COLUMN IF NOT EXISTS template_id VARCHAR(100)");
+  await pool.query(
+    "ALTER TABLE mail_logs ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL",
+  );
+  await pool.query(
+    "ALTER TABLE mail_logs ADD COLUMN IF NOT EXISTS template_id VARCHAR(100)",
+  );
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS client_history (
@@ -182,14 +252,18 @@ const createTables = async () => {
     );
   `);
 
-  await pool.query("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)");
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
+  );
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_users_center_id ON users(center_id)",
   );
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_clients_center_id ON clients(center_id)",
   );
-  await pool.query("CREATE INDEX IF NOT EXISTS idx_clients_nom ON clients(nom)");
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_clients_nom ON clients(nom)",
+  );
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_clients_prenom ON clients(prenom)",
   );
@@ -251,7 +325,9 @@ const createTables = async () => {
     EXECUTE FUNCTION update_updated_at_column();
   `);
 
-  await pool.query("DROP TRIGGER IF EXISTS update_clients_updated_at ON clients");
+  await pool.query(
+    "DROP TRIGGER IF EXISTS update_clients_updated_at ON clients",
+  );
   await pool.query(`
     CREATE TRIGGER update_clients_updated_at
     BEFORE UPDATE ON clients
@@ -259,7 +335,9 @@ const createTables = async () => {
     EXECUTE FUNCTION update_updated_at_column();
   `);
 
-  await pool.query("DROP TRIGGER IF EXISTS update_centers_updated_at ON centers");
+  await pool.query(
+    "DROP TRIGGER IF EXISTS update_centers_updated_at ON centers",
+  );
   await pool.query(`
     CREATE TRIGGER update_centers_updated_at
     BEFORE UPDATE ON centers
@@ -267,6 +345,8 @@ const createTables = async () => {
     EXECUTE FUNCTION update_updated_at_column();
   `);
 };
+
+const SUPER_ADMIN_EMAIL = "contact@jechangemamutuelle.online";
 
 const ensureSuperAdminOnly = async () => {
   const adminPassword = await bcrypt.hash("admin123", 10);
@@ -276,7 +356,7 @@ const ensureSuperAdminOnly = async () => {
     `UPDATE users 
      SET email = 'contact@jechangemamutuelle.online' 
      WHERE email = 'admin@test.com' 
-     AND NOT EXISTS (SELECT 1 FROM users WHERE email = 'contact@jechangemamutuelle.online')`
+     AND NOT EXISTS (SELECT 1 FROM users WHERE email = 'contact@jechangemamutuelle.online')`,
   );
 
   await pool.query(
@@ -289,29 +369,21 @@ const ensureSuperAdminOnly = async () => {
   );
 };
 
-const removeDemoData = async () => {
-  const demoCenter = await pool.query("SELECT id FROM centers WHERE name = $1", [
-    "Centre Demo",
-  ]);
-  const demoCenterId = demoCenter.rows[0]?.id;
-
-  if (demoCenterId) {
-    await pool.query("DELETE FROM clients WHERE center_id = $1", [demoCenterId]);
-  }
-
-  await pool.query(
-    "DELETE FROM users WHERE email IN ('centre@test.com', 'agent1@test.com', 'agent2@test.com')",
-  );
-
-  if (demoCenterId) {
-    await pool.query("DELETE FROM centers WHERE id = $1", [demoCenterId]);
-  }
+const purgeToSuperAdminOnly = async () => {
+  await pool.query("DELETE FROM client_history");
+  await pool.query("DELETE FROM audit_logs");
+  await pool.query("DELETE FROM mail_logs");
+  await pool.query("DELETE FROM import_logs");
+  await pool.query("DELETE FROM clients");
+  await pool.query("DELETE FROM users WHERE email <> $1", [SUPER_ADMIN_EMAIL]);
+  await pool.query("DELETE FROM centers");
 };
 
 const migrate = async () => {
   try {
     await createTables();
-    await removeDemoData();
+    await ensureSuperAdminOnly();
+    await purgeToSuperAdminOnly();
     await ensureSuperAdminOnly();
     console.log("Database migration completed");
   } catch (err) {

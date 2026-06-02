@@ -297,11 +297,11 @@
         </div>
         <!-- Main Nav -->
         <div class="flex flex-col gap-6 w-full items-center flex-1">
-          <button onclick="switchTab('dashboard')" class="sidebar-link active text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Dashboard"><i class="fa-solid fa-border-all text-lg"></i></button>
-          <button onclick="switchTab('leads')" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Clients"><i class="fa-regular fa-envelope text-lg"></i></button>
-          <button onclick="switchTab('users')" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Utilisateurs"><i class="fa-regular fa-user text-lg"></i></button>
-          <button onclick="switchTab('import')" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Importer"><i class="fa-solid fa-wand-magic-sparkles text-lg"></i></button>
-          <button onclick="switchTab('logs')" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Journal"><i class="fa-solid fa-bullhorn text-lg"></i></button>
+          <button onclick="switchTab('dashboard', event)" class="sidebar-link active text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Dashboard"><i class="fa-solid fa-border-all text-lg"></i></button>
+          <button onclick="switchTab('leads', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Clients"><i class="fa-regular fa-envelope text-lg"></i></button>
+          <button onclick="switchTab('users', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Utilisateurs"><i class="fa-regular fa-user text-lg"></i></button>
+          <button onclick="switchTab('import', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Importer"><i class="fa-solid fa-wand-magic-sparkles text-lg"></i></button>
+          <button onclick="switchTab('logs', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Journal"><i class="fa-solid fa-bullhorn text-lg"></i></button>
         </div>
         <!-- Bottom Nav -->
         <div class="flex flex-col gap-6 w-full items-center mt-auto">
@@ -357,7 +357,7 @@
                     </div>
                     <div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-6 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-5 active"></div></div>
                   </div>
-                  <button onclick="switchTab('leads')" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
+                  <button onclick="switchTab('leads', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
                 </div>
                 <div class="card flex flex-col justify-between">
                   <div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Clients Assignes</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
@@ -365,7 +365,7 @@
                     <div><div class="text-3xl font-semibold text-textMain" id="dash-assigned">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> distribues aux agents</div></div>
                     <div class="flex items-end h-8"><div class="mini-bar h-3"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-2 active"></div></div>
                   </div>
-                  <button onclick="switchTab('users')" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
+                  <button onclick="switchTab('users', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
                 </div>
                 <div class="card flex flex-col justify-between">
                   <div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Utilisateurs</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
@@ -373,7 +373,7 @@
                     <div><div class="text-3xl font-semibold text-textMain" id="dash-users">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> admins et agents</div></div>
                     <div class="flex items-end h-8"><div class="mini-bar h-5"></div><div class="mini-bar h-7 active"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-6 active"></div></div>
                   </div>
-                  <button onclick="switchTab('users')" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
+                  <button onclick="switchTab('users', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
                 </div>
                 <div class="card flex flex-col justify-between">
                   <div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Conversion</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
@@ -381,7 +381,7 @@
                     <div><div class="text-3xl font-semibold text-textMain" id="dash-conversion">0%</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> clients fermes</div></div>
                     <div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-6 active"></div></div>
                   </div>
-                  <button onclick="switchTab('leads')" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
+                  <button onclick="switchTab('leads', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
                 </div>
               </div>
               <!-- END: KPI Cards -->
@@ -419,7 +419,7 @@
               <div class="card">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="text-base font-semibold text-textMain">Derniers Clients</h3>
-                  <div class="flex gap-2"><button onclick="switchTab('leads')" class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-1">Voir tous <i class="fa-regular fa-eye"></i></button></div>
+                  <div class="flex gap-2"><button onclick="switchTab('leads', event)" class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-1">Voir tous <i class="fa-regular fa-eye"></i></button></div>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-sm text-left">
@@ -1074,7 +1074,7 @@
         updateDashboard();
       });
 
-      function switchTab(tab) {
+      function switchTab(tab, evt) {
         document
           .querySelectorAll(".tab-content")
           .forEach((el) => (el.style.display = "none"));
@@ -1082,7 +1082,8 @@
           .querySelectorAll(".sidebar-link")
           .forEach((el) => el.classList.remove("active"));
         document.getElementById(tab + "-tab").style.display = "block";
-        event.target.closest("button").classList.add("active");
+        const btn = evt ? (evt.target || evt).closest("button") : null;
+        if (btn) btn.classList.add("active");
         if (tab === "logs") {
           loadLogs();
         }
@@ -1129,8 +1130,9 @@
                 .filter(
                   (u) =>
                     u.role === "AGENT" &&
-                    (currentUser?.role !== "SUPER_ADMIN" ||
-                      u.center_id === lead.center_id),
+                    (currentUser?.role === "SUPER_ADMIN"
+                      ? true
+                      : u.center_id === lead.center_id),
                 )
                 .map(
                   (u) =>
@@ -2095,6 +2097,8 @@
         if (previewTitle) {
           previewTitle.textContent = `Derniers Clients | ${treated} traites | ${stale} sans suivi 7j | ${overdue} rappels en retard`;
         }
+        renderDashboardCharts();
+        updateDashboardPreviewTable();
       }
 
       function handleLogout() {

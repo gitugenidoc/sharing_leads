@@ -117,98 +117,18 @@ function initializeDataFiles() {
   if (!fs.existsSync(USERS_FILE)) {
     const admin = {
       id: 1,
-      email: "admin@test.com",
-      name: "Admin User",
+      email: "contact@jechangemamutuelle.online",
+      name: "Super Admin",
       password: bcrypt.hashSync("admin123", 10),
-      role: "ADMIN",
+      role: "SUPER_ADMIN",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    const agent1 = {
-      id: 2,
-      email: "agent1@test.com",
-      name: "Agent One",
-      password: bcrypt.hashSync("agent123", 10),
-      role: "AGENT",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    const agent2 = {
-      id: 3,
-      email: "agent2@test.com",
-      name: "Agent Two",
-      password: bcrypt.hashSync("agent123", 10),
-      role: "AGENT",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    fs.writeFileSync(
-      USERS_FILE,
-      JSON.stringify([admin, agent1, agent2], null, 2),
-    );
+    fs.writeFileSync(USERS_FILE, JSON.stringify([admin], null, 2));
   }
 
   if (!fs.existsSync(CLIENTS_FILE)) {
-    const clients = [];
-    const mutuelles = [
-      "Mutuelle France",
-      "Santéplus",
-      "Mutuelle Méditerranée",
-      "MGEN",
-      "Mutuelle Aquitaine",
-      "Allianz Mutuelle",
-      "Mutuelle du Nord",
-      "Santécarpe",
-      "Mutuelle Occitanie",
-      "Mutuelle Bretagne",
-    ];
-    const villes = [
-      "Paris",
-      "Lyon",
-      "Marseille",
-      "Toulouse",
-      "Bordeaux",
-      "Nice",
-      "Lille",
-      "Strasbourg",
-      "Montpellier",
-      "Rennes",
-    ];
-    const cps = [
-      "75001",
-      "69000",
-      "13000",
-      "31000",
-      "33000",
-      "06000",
-      "59000",
-      "67000",
-      "34000",
-      "35000",
-    ];
-
-    for (let i = 1; i <= 100; i++) {
-      clients.push({
-        id: i,
-        nom: `Client${i}`,
-        prenom: `Prenom${i}`,
-        adresse: `${i} Rue de la Paix`,
-        ville: villes[Math.floor(Math.random() * villes.length)],
-        code_postal: cps[Math.floor(Math.random() * cps.length)],
-        nom_mutuelle: mutuelles[Math.floor(Math.random() * mutuelles.length)],
-        prix_mutuelle: (Math.random() * 60 + 30).toFixed(2),
-        status: ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CLOSED"][
-          Math.floor(Math.random() * 5)
-        ],
-        notes: `Notes for client ${i}`,
-        assigned_to: i % 3 === 0 ? 2 : i % 3 === 1 ? 3 : null,
-        created_at: new Date(
-          Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
-    fs.writeFileSync(CLIENTS_FILE, JSON.stringify(clients, null, 2));
+    fs.writeFileSync(CLIENTS_FILE, JSON.stringify([], null, 2));
   }
 }
 
@@ -258,7 +178,7 @@ function verifyToken(req, res, next) {
 
 // Middleware: Check if admin
 function isAdmin(req, res, next) {
-  if (req.user.role !== "ADMIN") {
+  if (!["ADMIN", "SUPER_ADMIN"].includes(req.user.role)) {
     return res.status(403).json({ error: "Admin only" });
   }
   next();
@@ -442,8 +362,12 @@ function releaseExpiredAssignments() {
     const now = new Date();
     let modified = false;
 
-    clients.forEach(c => {
-      if (c.assigned_to && c.assignment_expires_at && new Date(c.assignment_expires_at) < now) {
+    clients.forEach((c) => {
+      if (
+        c.assigned_to &&
+        c.assignment_expires_at &&
+        new Date(c.assignment_expires_at) < now
+      ) {
         c.assigned_to = null;
         c.assigned_at = null;
         c.assignment_expires_at = null;
@@ -467,20 +391,20 @@ const MAIL_TEMPLATES = [
     id: "relance",
     name: "Relance Client",
     subject: "Des nouvelles de votre demande de mutuelle - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nNous avons tenté de vous joindre aujourd'hui au sujet de votre demande de comparatif de mutuelle.\n\nPourriez-vous nous indiquer vos disponibilités afin que nous puissions faire le point ensemble sur vos besoins ?\n\nCordialement,\nL'équipe SecurAssure"
+    body: "Bonjour [Nom] [Prenom],\n\nNous avons tenté de vous joindre aujourd'hui au sujet de votre demande de comparatif de mutuelle.\n\nPourriez-vous nous indiquer vos disponibilités afin que nous puissions faire le point ensemble sur vos besoins ?\n\nCordialement,\nL'équipe SecurAssure",
   },
   {
     id: "offre_senior",
     name: "Offre Mutuelle Senior",
     subject: "Des garanties renforcées pour votre mutuelle - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nDécouvrez nos nouvelles garanties spécifiquement conçues pour les seniors : prise en charge renforcée des frais d'optique, de dentaire et des médecines douces.\n\nNous sommes à votre disposition pour vous réaliser un devis gratuit et personnalisé.\n\nCordialement,\nL'équipe SecurAssure"
+    body: "Bonjour [Nom] [Prenom],\n\nDécouvrez nos nouvelles garanties spécifiquement conçues pour les seniors : prise en charge renforcée des frais d'optique, de dentaire et des médecines douces.\n\nNous sommes à votre disposition pour vous réaliser un devis gratuit et personnalisé.\n\nCordialement,\nL'équipe SecurAssure",
   },
   {
     id: "confirm_rdv",
     name: "Confirmation de Rendez-vous",
     subject: "Confirmation de votre rendez-vous - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nNous vous confirmons votre rendez-vous avec un de nos conseillers SecurAssure.\n\nNous vous recontacterons au numéro fourni.\n\nCordialement,\nL'équipe SecurAssure"
-  }
+    body: "Bonjour [Nom] [Prenom],\n\nNous vous confirmons votre rendez-vous avec un de nos conseillers SecurAssure.\n\nNous vous recontacterons au numéro fourni.\n\nCordialement,\nL'équipe SecurAssure",
+  },
 ];
 
 // Mail Routes
@@ -499,7 +423,9 @@ app.post("/api/mail/send", verifyToken, async (req, res) => {
   try {
     const transporter = await getTransporter();
     const mailOptions = {
-      from: process.env.SMTP_FROM || `"SecurAssure" <contact@jechangemamutuelle.online>`,
+      from:
+        process.env.SMTP_FROM ||
+        `"SecurAssure" <contact@jechangemamutuelle.online>`,
       to: recipientEmail,
       subject: subject,
       text: body,
@@ -514,22 +440,24 @@ app.post("/api/mail/send", verifyToken, async (req, res) => {
 
     const emails = readEmails();
     const newEmail = {
-      id: Math.max(...emails.map(e => e.id), 0) + 1,
+      id: Math.max(...emails.map((e) => e.id), 0) + 1,
       sender_id: senderId,
       sender_name: req.user.name,
       recipient_email: recipientEmail,
       recipient_name: recipientName,
       subject,
       body,
-      status: 'SENT',
-      created_at: new Date().toISOString()
+      status: "SENT",
+      created_at: new Date().toISOString(),
     };
 
     emails.push(newEmail);
     writeEmails(emails);
 
     res.json({
-      message: previewUrl ? "E-mail envoyé avec succès (simulation SMTP)" : "E-mail envoyé avec succès",
+      message: previewUrl
+        ? "E-mail envoyé avec succès (simulation SMTP)"
+        : "E-mail envoyé avec succès",
       mailId: newEmail.id,
       status: "SENT",
       created_at: newEmail.created_at,
@@ -537,7 +465,9 @@ app.post("/api/mail/send", verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error("Error sending mail in mutuelle server:", err);
-    res.status(500).json({ error: "Erreur lors de l'envoi de l'e-mail : " + err.message });
+    res
+      .status(500)
+      .json({ error: "Erreur lors de l'envoi de l'e-mail : " + err.message });
   }
 });
 
@@ -548,7 +478,7 @@ app.get("/api/mail/history", verifyToken, (req, res) => {
 
   let filtered = emails;
   if (userRole === "AGENT") {
-    filtered = emails.filter(e => e.sender_id === userId);
+    filtered = emails.filter((e) => e.sender_id === userId);
   }
 
   filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -753,7 +683,8 @@ app.put("/api/clients/:id/assign", verifyToken, isAdmin, (req, res) => {
       return res.status(404).json({ error: "Client not found" });
     }
 
-    client.assigned_to = parseInt(req.body.userId || req.body.user_id, 10) || null;
+    client.assigned_to =
+      parseInt(req.body.userId || req.body.user_id, 10) || null;
     client.updated_at = new Date().toISOString();
 
     writeClients(clients);
@@ -803,99 +734,107 @@ app.post("/api/clients/assign-random", verifyToken, isAdmin, (req, res) => {
 });
 
 // Routes: Import Excel
-app.post("/api/clients/import", verifyToken, isAdmin, upload.single("file"), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+app.post(
+  "/api/clients/import",
+  verifyToken,
+  isAdmin,
+  upload.single("file"),
+  (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
 
-    // Read Excel file
-    const workbook = XLSX.readFile(req.file.path);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(worksheet);
+      // Read Excel file
+      const workbook = XLSX.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
 
-    if (!data || data.length === 0) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ error: "Excel file is empty" });
-    }
+      if (!data || data.length === 0) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: "Excel file is empty" });
+      }
 
-    const clients = readClients();
-    const importedClients = [];
-    const errors = [];
-    let successCount = 0;
+      const clients = readClients();
+      const importedClients = [];
+      const errors = [];
+      let successCount = 0;
 
-    // Process each row
-    data.forEach((row, index) => {
-      try {
-        const clientData = {
-          nom: row.Nom || row.nom || "",
-          prenom: row.Prenom || row.prenom || "",
-          adresse: row.Adresse || row.adresse || "",
-          ville: row.Ville || row.ville || "",
-          code_postal: String(row["Code postal"] || row["code_postal"] || ""),
-          nom_mutuelle: row["Nom mutuelle"] || row["nom_mutuelle"] || "",
-          prix_mutuelle: parseFloat(row["Prix mutuelle"] || row["prix_mutuelle"] || 0) || 0,
-          status: row.Status || row.status || "NEW",
-        };
+      // Process each row
+      data.forEach((row, index) => {
+        try {
+          const clientData = {
+            nom: row.Nom || row.nom || "",
+            prenom: row.Prenom || row.prenom || "",
+            adresse: row.Adresse || row.adresse || "",
+            ville: row.Ville || row.ville || "",
+            code_postal: String(row["Code postal"] || row["code_postal"] || ""),
+            nom_mutuelle: row["Nom mutuelle"] || row["nom_mutuelle"] || "",
+            prix_mutuelle:
+              parseFloat(row["Prix mutuelle"] || row["prix_mutuelle"] || 0) ||
+              0,
+            status: row.Status || row.status || "NEW",
+          };
 
-        // Validate
-        const validation = validateClient(clientData);
-        if (!validation.isValid) {
+          // Validate
+          const validation = validateClient(clientData);
+          if (!validation.isValid) {
+            errors.push({
+              row: index + 2,
+              message: validation.errors.join("; "),
+            });
+            return;
+          }
+
+          // Create client
+          const newClient = {
+            id: Math.max(...clients.map((c) => c.id), 0) + 1,
+            ...clientData,
+            assigned_to: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          clients.push(newClient);
+          importedClients.push(newClient);
+          successCount++;
+        } catch (error) {
           errors.push({
             row: index + 2,
-            message: validation.errors.join("; "),
+            message: error.message,
           });
-          return;
         }
+      });
 
-        // Create client
-        const newClient = {
-          id: Math.max(...clients.map((c) => c.id), 0) + 1,
-          ...clientData,
-          assigned_to: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        clients.push(newClient);
-        importedClients.push(newClient);
-        successCount++;
-      } catch (error) {
-        errors.push({
-          row: index + 2,
-          message: error.message,
-        });
+      // Save updated clients
+      if (importedClients.length > 0) {
+        writeClients(clients);
       }
-    });
 
-    // Save updated clients
-    if (importedClients.length > 0) {
-      writeClients(clients);
-    }
-
-    // Delete uploaded file
-    fs.unlinkSync(req.file.path);
-
-    res.json({
-      message: `Import completed: ${successCount} clients imported`,
-      imported: successCount,
-      total: data.length,
-      errors: errors,
-      clients: importedClients,
-    });
-  } catch (error) {
-    // Clean up file
-    if (req.file && fs.existsSync(req.file.path)) {
+      // Delete uploaded file
       fs.unlinkSync(req.file.path);
-    }
 
-    res.status(500).json({
-      error: "Failed to import clients",
-      details: error.message,
-    });
-  }
-});
+      res.json({
+        message: `Import completed: ${successCount} clients imported`,
+        imported: successCount,
+        total: data.length,
+        errors: errors,
+        clients: importedClients,
+      });
+    } catch (error) {
+      // Clean up file
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+
+      res.status(500).json({
+        error: "Failed to import clients",
+        details: error.message,
+      });
+    }
+  },
+);
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -940,7 +879,9 @@ app.listen(PORT, () => {
   console.log("  Agent1: agent1@test.com / agent123");
   console.log("  Agent2: agent2@test.com / agent123");
   console.log("\n🔒 Security:");
-  console.log("  - Rate limiting: 5 login attempts per 15 min, 100 API calls per min");
+  console.log(
+    "  - Rate limiting: 5 login attempts per 15 min, 100 API calls per min",
+  );
   console.log("  - File upload: 5MB max, Excel only");
   console.log("  - Validation: Client-side + server-side");
 });

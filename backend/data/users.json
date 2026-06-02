@@ -1,29 +1,11 @@
-[
+﻿[
   {
     "id": 1,
     "email": "contact@jechangemamutuelle.online",
-    "name": "Admin User",
+    "name": "Super Admin",
     "password": "$2a$10$BX29kyORsa8IwVj3zN4nJu3BkOH8j5osSV95O7TyVHo0z6ccbzm2a",
-    "role": "ADMIN",
-    "created_at": "2026-05-30T11:27:48.145Z",
-    "updated_at": "2026-05-30T11:27:48.145Z"
-  },
-  {
-    "id": 2,
-    "email": "agent1@test.com",
-    "name": "Agent One",
-    "password": "$2a$10$ZsyjqAOq71j3n1F8wWkEuuWzA./HzApqa3YnaX86doIfz0iQ.nax.",
-    "role": "AGENT",
-    "created_at": "2026-05-30T11:27:48.200Z",
-    "updated_at": "2026-05-30T11:27:48.200Z"
-  },
-  {
-    "id": 3,
-    "email": "agent2@test.com",
-    "name": "Agent Two",
-    "password": "$2a$10$R4IkCbNHmo7iSK2VB/r6fer8TW.cFxOHUhvPbHM4AX5n9n5IwHVzq",
-    "role": "AGENT",
-    "created_at": "2026-05-30T11:27:48.255Z",
-    "updated_at": "2026-05-30T11:27:48.255Z"
+    "role": "SUPER_ADMIN",
+    "created_at": "2026-05-31T00:00:00.000Z",
+    "updated_at": "2026-05-31T00:00:00.000Z"
   }
 ]

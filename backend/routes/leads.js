@@ -1,6 +1,7 @@
 const express = require("express");
 const Lead = require("../models/Lead");
 const { verifyToken, isAdmin } = require("../middleware/auth");
+const pool = require("../config/db");
 const XLSX = require("xlsx");
 
 const router = express.Router();
@@ -18,8 +19,8 @@ router.get("/search", verifyToken, async (req, res) => {
     if (req.user.role === "ADMIN") {
       results = await Lead.searchLeads(q, parseInt(offset), parseInt(limit));
     } else {
-      // For agents, search only in their assigned leads
-      results = (await Lead.getUserLeads(req.user.id, 0, 999999))
+      // For agents, search only in their active (non-cancelled) assigned leads
+      results = (await Lead.getActiveUserLeads(req.user.id, 0, 999999))
         .filter(
           (lead) =>
             lead.name.toLowerCase().includes(q.toLowerCase()) ||
@@ -42,8 +43,8 @@ router.get("/me", verifyToken, async (req, res) => {
     const offset = parseInt(req.query.offset) || 0;
     const limit = parseInt(req.query.limit) || 100;
 
-    const leads = await Lead.getUserLeads(req.user.id, offset, limit);
-    const total = await Lead.getUserLeadsCount(req.user.id);
+    const leads = await Lead.getActiveUserLeads(req.user.id, offset, limit);
+    const total = await Lead.getActiveUserLeadsCount(req.user.id);
 
     res.json({
       leads,
@@ -191,6 +192,74 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
 
     const lead = await Lead.assignLead(req.params.id, userId);
     res.json(lead);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Cancel lead temporarily (agent or admin)
+router.put("/:id/cancel", verifyToken, async (req, res) => {
+  try {
+    const { durationHours } = req.body;
+
+    if (!durationHours || durationHours <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Valid durationHours required (> 0)" });
+    }
+
+    const lead = await Lead.getLeadById(req.params.id);
+
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+
+    // Check permissions: must be admin or assigned to this lead
+    if (req.user.role !== "ADMIN" && lead.assigned_to !== req.user.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const cancelledLead = await Lead.cancelLeadTemporarily(
+      req.params.id,
+      durationHours,
+    );
+
+    res.json({
+      message: `Lead cancelled for ${durationHours} hours`,
+      lead: cancelledLead,
+      cancellation_expiry: cancelledLead.cancellation_expiry,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Resume lead (remove cancellation)
+router.put("/:id/resume", verifyToken, async (req, res) => {
+  try {
+    const lead = await Lead.getLeadById(req.params.id);
+
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+
+    // Check permissions: must be admin or assigned to this lead
+    if (req.user.role !== "ADMIN" && lead.assigned_to !== req.user.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Clear the cancellation expiry
+    const result = await pool.query(
+      "UPDATE leads SET cancellation_expiry = NULL, updated_at = NOW() WHERE id = $1 RETURNING *",
+      [req.params.id],
+    );
+
+    res.json({
+      message: "Lead cancellation removed",
+      lead: result.rows[0],
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

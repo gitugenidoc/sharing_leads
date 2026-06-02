@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS leads (
   notes TEXT,
   center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL,
   assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  assigned_at TIMESTAMP,
+  cancellation_expiry TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

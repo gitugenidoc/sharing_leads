@@ -108,13 +108,55 @@ const bulkInsertLeads = async (leads) => {
   }
 };
 
-// Assign lead to user
+// Assign lead to user (with assigned_at timestamp)
 const assignLead = async (leadId, userId) => {
   const result = await pool.query(
-    "UPDATE leads SET assigned_to = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
+    "UPDATE leads SET assigned_to = $1, assigned_at = NOW(), cancellation_expiry = NULL, updated_at = NOW() WHERE id = $2 RETURNING *",
     [userId, leadId],
   );
   return result.rows[0];
+};
+
+// Cancel lead temporarily for a specified duration (in hours)
+const cancelLeadTemporarily = async (leadId, durationHours) => {
+  const expiryTime = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+  const result = await pool.query(
+    "UPDATE leads SET cancellation_expiry = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
+    [expiryTime, leadId],
+  );
+  return result.rows[0];
+};
+
+// Check if a lead is currently cancelled
+const isLeadCancelled = async (leadId) => {
+  const result = await pool.query(
+    "SELECT cancellation_expiry FROM leads WHERE id = $1",
+    [leadId],
+  );
+  if (!result.rows[0]) return false;
+
+  const { cancellation_expiry } = result.rows[0];
+  if (!cancellation_expiry) return false;
+
+  return new Date(cancellation_expiry) > new Date();
+};
+
+// Get user's active (non-cancelled) assigned leads
+const getActiveUserLeads = async (userId, offset = 0, limit = 100) => {
+  const result = await pool.query(
+    "SELECT * FROM leads WHERE assigned_to = $1 AND (cancellation_expiry IS NULL OR cancellation_expiry < NOW()) ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+    [userId, limit, offset],
+  );
+  return result.rows;
+};
+
+// Get user's active leads count
+const getActiveUserLeadsCount = async (userId) => {
+  const result = await pool.query(
+    "SELECT COUNT(*) FROM leads WHERE assigned_to = $1 AND (cancellation_expiry IS NULL OR cancellation_expiry < NOW())",
+    [userId],
+  );
+  return parseInt(result.rows[0].count);
 };
 
 // Search leads
@@ -138,4 +180,8 @@ module.exports = {
   bulkInsertLeads,
   assignLead,
   searchLeads,
+  cancelLeadTemporarily,
+  isLeadCancelled,
+  getActiveUserLeads,
+  getActiveUserLeadsCount,
 };
