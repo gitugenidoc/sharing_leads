@@ -1227,8 +1227,88 @@
                   </tbody>
                 </table>
               </div>
-            </section>
-          </div>
+
+              <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <section class="card overflow-hidden">
+                  <div class="border-b border-gray-200 px-5 py-4">
+                    <h4 class="font-semibold text-gray-900">Imports</h4>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full">
+                      <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Fichier</th>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Admin</th>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Resultat</th>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody id="import-logs-tbody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section class="card overflow-hidden">
+                  <div class="border-b border-gray-200 px-5 py-4">
+                    <h4 class="font-semibold text-gray-900">Actions</h4>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full">
+                      <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Action</th>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Utilisateur</th>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Cible</th>
+                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody id="audit-logs-tbody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <!-- MAILS TAB -->
+            <div id="mails-tab" class="tab-content" style="display: none">
+              <div class="mb-6 flex items-center justify-between gap-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Mails Envoyes</h3>
+                  <p class="text-sm text-gray-500">
+                    Historique de tous les mails envoyes aux clients
+                  </p>
+                </div>
+                <button
+                  onclick="loadMailHistory()"
+                  class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800"
+                >
+                  <span class="material-symbols-outlined">refresh</span>
+                  Actualiser
+                </button>
+              </div>
+
+              <section class="card overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Destinataire</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Sujet</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Client</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Template</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Status</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mail-history-tbody" class="divide-y divide-gray-100">
+                      <tr>
+                        <td colspan="6" class="px-5 py-8 text-center text-gray-500">Chargement...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
         </main>
         <!-- END: Dashboard Content -->
       </div>
