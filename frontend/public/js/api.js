@@ -283,11 +283,6 @@ const getAuditLogs = async (offset = 0, limit = 100) => {
   return data;
 };
 
-const getMailHistory = async () => {
-  const data = await apiCall("GET", `/mail/history`);
-  return data;
-};
-
 // File upload helper for Excel
 const uploadExcel = async (file, optionsData = {}) => {
   const formData = new FormData();
