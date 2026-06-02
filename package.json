@@ -12,6 +12,10 @@
     "dev:mock": "nodemon backend/server-mutuelle.js",
     "db:migrate": "node backend/db/migrate.js",
     "db:reset": "node backend/db/reset.js",
+    "db:fix-center": "node backend/db/migrate-runner.js fix-center-assignment.sql",
+    "db:seed": "node backend/db/migrate-runner.js seed.sql",
+    "db:seed:mutuelle": "node backend/db/migrate-runner.js seed-mutuelle.sql",
+    "db:schema": "node backend/db/migrate-runner.js schema.sql",
     "check": "node --check backend/server.js && node --check backend/db/migrate.js && node --check backend/models/User.js && node --check backend/models/Client.js && node --check backend/routes/auth.js && node --check backend/routes/clients.js && node --check backend/routes/users.js && node --check backend/routes/logs.js && node --check backend/routes/mail.js",
     "test": "node --test"
   },
