@@ -159,7 +159,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        background: rgba(15, 23, 42, .45);
+        background: rgba(15, 23, 42, 0.45);
         padding: 1rem;
       }
       .modal-panel {
@@ -169,10 +169,14 @@
         border-radius: 14px;
         border: 1px solid #e5e7eb;
         background: white;
-        box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
       }
-      .modal-panel-sm { width: min(520px, 100%); }
-      .modal-panel-md { width: min(760px, 100%); }
+      .modal-panel-sm {
+        width: min(520px, 100%);
+      }
+      .modal-panel-md {
+        width: min(760px, 100%);
+      }
       .modal-header {
         padding: 1rem 1.25rem;
         border-bottom: 1px solid #eef0f2;
@@ -186,41 +190,69 @@
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .04em;
+        letter-spacing: 0.04em;
       }
-      .modal-body { overflow-y: auto; padding: 1.25rem; }
-      .action-row { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
-      .btn-primary, .btn-secondary, .btn-danger {
+      .modal-body {
+        overflow-y: auto;
+        padding: 1.25rem;
+      }
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
+      }
+      .btn-primary,
+      .btn-secondary,
+      .btn-danger {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: .4rem;
+        gap: 0.4rem;
         min-height: 36px;
         border-radius: 8px;
-        padding: .5rem .8rem;
+        padding: 0.5rem 0.8rem;
         font-size: 13px;
         font-weight: 650;
-        transition: .18s ease;
+        transition: 0.18s ease;
       }
-      .btn-primary { background: #d62d5a; color: white; border: 1px solid #d62d5a; }
-      .btn-primary:hover { filter: brightness(.96); }
-      .btn-secondary { background: white; color: #334155; border: 1px solid #e5e7eb; }
-      .btn-secondary:hover { background: #f8fafc; }
-      .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+      .btn-primary {
+        background: #d62d5a;
+        color: white;
+        border: 1px solid #d62d5a;
+      }
+      .btn-primary:hover {
+        filter: brightness(0.96);
+      }
+      .btn-secondary {
+        background: white;
+        color: #334155;
+        border: 1px solid #e5e7eb;
+      }
+      .btn-secondary:hover {
+        background: #f8fafc;
+      }
+      .btn-danger {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+      }
       .detail-section {
         border: 1px solid #eef0f2;
         border-radius: 12px;
         background: #fff;
         overflow: hidden;
       }
-      .detail-section + .detail-section { margin-top: 1rem; }
+      .detail-section + .detail-section {
+        margin-top: 1rem;
+      }
       .detail-section-title {
         display: flex;
         align-items: center;
         justify-content: space-between;
         border-bottom: 1px solid #f1f5f9;
         background: #fbfcfd;
-        padding: .75rem 1rem;
+        padding: 0.75rem 1rem;
         font-size: 13px;
         font-weight: 700;
         color: #1e293b;
@@ -228,7 +260,7 @@
       .field-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: .75rem;
+        gap: 0.75rem;
         padding: 1rem;
       }
       .field-card {
@@ -236,43 +268,82 @@
         border: 1px solid #eef0f2;
         border-radius: 10px;
         background: #fafafa;
-        padding: .75rem;
+        padding: 0.75rem;
       }
       .field-label {
         display: block;
-        margin-bottom: .4rem;
+        margin-bottom: 0.4rem;
         color: #64748b;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .04em;
+        letter-spacing: 0.04em;
       }
       .field-control {
         width: 100%;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         background: white;
-        padding: .55rem .7rem;
+        padding: 0.55rem 0.7rem;
         color: #1e293b;
         font-size: 13px;
         outline: none;
       }
-      .field-control:focus { border-color: #d62d5a; box-shadow: 0 0 0 3px rgba(214, 45, 90, .10); }
-      .field-control.textarea { min-height: 92px; resize: vertical; line-height: 1.45; }
-      .field-card-wide { grid-column: span 2 / span 2; }
-      .field-card-full { grid-column: 1 / -1; }
-      .mail-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1rem; }
-      .mail-template-box { border: 1px solid #eef0f2; border-radius: 12px; background: #fbfcfd; padding: 1rem; }
-      .mail-help { margin-top: .75rem; color: #64748b; font-size: 12px; line-height: 1.45; }
-      .mail-message { min-height: 260px; font-family: Inter, system-ui, sans-serif; line-height: 1.55; }
+      .field-control:focus {
+        border-color: #d62d5a;
+        box-shadow: 0 0 0 3px rgba(214, 45, 90, 0.1);
+      }
+      .field-control.textarea {
+        min-height: 92px;
+        resize: vertical;
+        line-height: 1.45;
+      }
+      .field-card-wide {
+        grid-column: span 2 / span 2;
+      }
+      .field-card-full {
+        grid-column: 1 / -1;
+      }
+      .mail-layout {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr);
+        gap: 1rem;
+      }
+      .mail-template-box {
+        border: 1px solid #eef0f2;
+        border-radius: 12px;
+        background: #fbfcfd;
+        padding: 1rem;
+      }
+      .mail-help {
+        margin-top: 0.75rem;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .mail-message {
+        min-height: 260px;
+        font-family: Inter, system-ui, sans-serif;
+        line-height: 1.55;
+      }
       @media (max-width: 980px) {
-        .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .mail-layout { grid-template-columns: 1fr; }
+        .field-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .mail-layout {
+          grid-template-columns: 1fr;
+        }
       }
       @media (max-width: 640px) {
-        body { padding: .75rem; }
-        .field-grid { grid-template-columns: 1fr; }
-        .field-card-wide { grid-column: auto; }
+        body {
+          padding: 0.75rem;
+        }
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+        .field-card-wide {
+          grid-column: auto;
+        }
       }
       ::-webkit-scrollbar {
         width: 6px;
@@ -292,22 +363,79 @@
       <!-- BEGIN: Sidebar -->
       <nav class="sidebar bg-white">
         <!-- Logo Area -->
-        <div class="mb-8 w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white text-xl">
+        <div
+          class="mb-8 w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white text-xl"
+        >
           <i class="fa-solid fa-envelope-open-text"></i>
         </div>
         <!-- Main Nav -->
         <div class="flex flex-col gap-6 w-full items-center flex-1">
-          <button onclick="switchTab('dashboard', event)" class="sidebar-link active text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Dashboard"><i class="fa-solid fa-border-all text-lg"></i></button>
-          <button onclick="switchTab('leads', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Clients"><i class="fa-regular fa-envelope text-lg"></i></button>
-          <button onclick="switchTab('users', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Utilisateurs"><i class="fa-regular fa-user text-lg"></i></button>
-          <button onclick="switchTab('import', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Importer"><i class="fa-solid fa-wand-magic-sparkles text-lg"></i></button>
-          <button onclick="switchTab('logs', event)" class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1" title="Journal"><i class="fa-solid fa-bullhorn text-lg"></i></button>
+          <button
+            onclick="switchTab('dashboard', event)"
+            class="sidebar-link active text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Dashboard"
+          >
+            <i class="fa-solid fa-border-all text-lg"></i>
+          </button>
+          <button
+            onclick="switchTab('leads', event)"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Clients"
+          >
+            <i class="fa-regular fa-envelope text-lg"></i>
+          </button>
+          <button
+            onclick="switchTab('users', event)"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Utilisateurs"
+          >
+            <i class="fa-regular fa-user text-lg"></i>
+          </button>
+          <button
+            onclick="switchTab('import', event)"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Importer"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+          </button>
+          <button
+            onclick="switchTab('logs', event)"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Journal"
+          >
+            <i class="fa-solid fa-bullhorn text-lg"></i>
+          </button>
+          <button
+            onclick="switchTab('mails', event)"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Mails Envoyés"
+          >
+            <i class="fa-solid fa-envelope text-lg"></i>
+          </button>
         </div>
         <!-- Bottom Nav -->
         <div class="flex flex-col gap-6 w-full items-center mt-auto">
-          <button onclick="alert('Aucune nouvelle notification.')" class="text-textMuted hover:text-primary transition-colors" title="Notifications"><i class="fa-regular fa-circle-question text-lg"></i></button>
-          <button onclick="alert('Les parametres seront disponibles prochainement.')" class="text-textMuted hover:text-primary transition-colors" title="Parametres"><i class="fa-solid fa-gear text-lg"></i></button>
-          <button onclick="handleLogout()" class="text-textMuted hover:text-primary transition-colors" title="Deconnexion"><i class="fa-solid fa-rocket text-lg"></i></button>
+          <button
+            onclick="alert('Aucune nouvelle notification.')"
+            class="text-textMuted hover:text-primary transition-colors"
+            title="Notifications"
+          >
+            <i class="fa-regular fa-circle-question text-lg"></i>
+          </button>
+          <button
+            onclick="alert('Les parametres seront disponibles prochainement.')"
+            class="text-textMuted hover:text-primary transition-colors"
+            title="Parametres"
+          >
+            <i class="fa-solid fa-gear text-lg"></i>
+          </button>
+          <button
+            onclick="handleLogout()"
+            class="text-textMuted hover:text-primary transition-colors"
+            title="Deconnexion"
+          >
+            <i class="fa-solid fa-rocket text-lg"></i>
+          </button>
         </div>
       </nav>
       <!-- END: Sidebar -->
@@ -318,22 +446,42 @@
         <header class="topbar">
           <!-- Search -->
           <div class="relative w-96">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-            <input id="search-input" onkeyup="performSearch()" class="w-full pl-9 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Rechercher client, mutuelle ou ville" type="text" />
-            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 text-gray-400 text-xs">
+            <i
+              class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"
+            ></i>
+            <input
+              id="search-input"
+              onkeyup="performSearch()"
+              class="w-full pl-9 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              placeholder="Rechercher client, mutuelle ou ville"
+              type="text"
+            />
+            <div
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 text-gray-400 text-xs"
+            >
               <i class="fa-brands fa-apple"></i>
               <span>S</span>
             </div>
           </div>
           <!-- Right Actions -->
           <div class="flex items-center gap-4">
-            <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 flex items-center justify-center text-xs font-semibold text-textMain">
+            <div
+              class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 flex items-center justify-center text-xs font-semibold text-textMain"
+            >
               <span id="user-avatar">A</span>
             </div>
-            <button onclick="showLeadModal()" class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-opacity-90 transition" title="Nouveau client">
+            <button
+              onclick="showLeadModal()"
+              class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-opacity-90 transition"
+              title="Nouveau client"
+            >
               <i class="fa-solid fa-plus"></i>
             </button>
-            <button onclick="alert('Aucune nouvelle notification.')" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition relative" title="Notifications">
+            <button
+              onclick="alert('Aucune nouvelle notification.')"
+              class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition relative"
+              title="Notifications"
+            >
               <i class="fa-regular fa-bell"></i>
             </button>
           </div>
@@ -342,430 +490,745 @@
         <!-- BEGIN: Dashboard Content -->
         <main class="content-area">
           <!-- DASHBOARD TAB -->
-            <div id="dashboard-tab" class="tab-content">
-              <!-- BEGIN: KPI Cards -->
-              <div class="grid grid-cols-4 gap-4 mb-4">
-                <div class="card flex flex-col justify-between">
-                  <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-sm font-medium text-textMain">Total Clients</h3>
-                    <i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i>
-                  </div>
-                  <div class="flex justify-between items-end mb-4">
-                    <div>
-                      <div class="text-3xl font-semibold text-textMain" id="dash-total">0</div>
-                      <div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> portefeuille global</div>
-                    </div>
-                    <div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-6 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-5 active"></div></div>
-                  </div>
-                  <button onclick="switchTab('leads', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
-                </div>
-                <div class="card flex flex-col justify-between">
-                  <div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Clients Assignes</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
-                  <div class="flex justify-between items-end mb-4">
-                    <div><div class="text-3xl font-semibold text-textMain" id="dash-assigned">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> distribues aux agents</div></div>
-                    <div class="flex items-end h-8"><div class="mini-bar h-3"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-2 active"></div></div>
-                  </div>
-                  <button onclick="switchTab('users', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
-                </div>
-                <div class="card flex flex-col justify-between">
-                  <div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Utilisateurs</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
-                  <div class="flex justify-between items-end mb-4">
-                    <div><div class="text-3xl font-semibold text-textMain" id="dash-users">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> admins et agents</div></div>
-                    <div class="flex items-end h-8"><div class="mini-bar h-5"></div><div class="mini-bar h-7 active"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-6 active"></div></div>
-                  </div>
-                  <button onclick="switchTab('users', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
-                </div>
-                <div class="card flex flex-col justify-between">
-                  <div class="flex justify-between items-start mb-2"><h3 class="text-sm font-medium text-textMain">Conversion</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
-                  <div class="flex justify-between items-end mb-4">
-                    <div><div class="text-3xl font-semibold text-textMain" id="dash-conversion">0%</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> clients fermes</div></div>
-                    <div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-6 active"></div></div>
-                  </div>
-                  <button onclick="switchTab('leads', event)" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">View</button>
-                </div>
-              </div>
-              <!-- END: KPI Cards -->
-
-              <!-- BEGIN: Charts Section -->
-              <div class="grid grid-cols-3 gap-4 mb-4">
-                <div class="card col-span-2 relative">
-                  <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-base font-semibold text-textMain">Activite Clients</h3>
-                    <div class="flex items-center gap-4 text-xs">
-                      <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> Nouveaux</div>
-                      <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-200"></span> Assignes</div>
-                      <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-white border border-gray-200"></span> Fermes</div>
-                    </div>
-                    <div class="border border-gray-200 rounded px-3 py-1.5 text-xs text-textMain flex items-center gap-2 cursor-pointer bg-white"><i class="fa-regular fa-calendar"></i> Donnees reelles</div>
-                  </div>
-                  <div class="h-64"><canvas id="engagementChart"></canvas></div>
-                  <div class="absolute top-1/3 left-1/3 bg-white border border-gray-100 shadow-lg rounded-lg p-3 text-xs w-40 pointer-events-none" style="transform: translate(20px, -20px);">
-                    <div class="font-semibold mb-2 border-b border-gray-100 pb-1">Synthese</div>
-                    <div class="flex justify-between py-1"><span>Total</span><span id="chart-total">0</span></div>
-                    <div class="flex justify-between py-1"><span>Assignes</span><span id="chart-assigned">0</span></div>
-                    <div class="flex justify-between py-1"><span>Fermes</span><span id="chart-closed">0</span></div>
-                  </div>
-                </div>
-                <div class="card">
-                  <div class="flex justify-between items-start mb-2"><h3 class="text-base font-semibold text-textMain">Statuts Clients</h3><i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i></div>
-                  <div class="mb-4"><div class="text-3xl font-semibold text-textMain" id="status-total">0</div><div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> repartition actuelle</div></div>
-                  <div class="relative h-48 flex justify-center items-center"><canvas id="donutChart"></canvas></div>
-                  <div class="flex justify-between text-xs mt-4"><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-primary"></span> Nouveau</div><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-gray-100"></span> Interesse</div><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-gray-50 border border-gray-200"></span> Ferme</div></div>
-                </div>
-              </div>
-              <!-- END: Charts Section -->
-
-              <!-- BEGIN: Table Section -->
-              <div class="card">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-base font-semibold text-textMain">Derniers Clients</h3>
-                  <div class="flex gap-2"><button onclick="switchTab('leads', event)" class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-1">Voir tous <i class="fa-regular fa-eye"></i></button></div>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-500 bg-gray-50/50 uppercase"><tr><th class="px-4 py-3 font-medium rounded-tl-lg">Status</th><th class="px-4 py-3 font-medium">Client</th><th class="px-4 py-3 font-medium">Ville</th><th class="px-4 py-3 font-medium">Mutuelle</th><th class="px-4 py-3 font-medium">Agent</th><th class="px-4 py-3 font-medium text-right rounded-tr-lg">Operation</th></tr></thead>
-                    <tbody id="dashboard-clients-tbody"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Chargement...</td></tr></tbody>
-                  </table>
-                </div>
-              </div>
-              <!-- END: Table Section -->
-            </div>
-
-            <!-- LEADS TAB -->
-            <div id="leads-tab" class="tab-content" style="display: none">
-              <div class="mb-6 flex justify-between items-center">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900">
-                    Tous les Clients
+          <div id="dashboard-tab" class="tab-content">
+            <!-- BEGIN: KPI Cards -->
+            <div class="grid grid-cols-4 gap-4 mb-4">
+              <div class="card flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-sm font-medium text-textMain">
+                    Total Clients
                   </h3>
-                  <p class="text-sm text-gray-500" id="leads-count">0 clients</p>
+                  <i
+                    class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"
+                  ></i>
                 </div>
-                <div class="flex items-center gap-3">
-                  <select
-                    id="random-agent"
-                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                <div class="flex justify-between items-end mb-4">
+                  <div>
+                    <div
+                      class="text-3xl font-semibold text-textMain"
+                      id="dash-total"
+                    >
+                      0
+                    </div>
+                    <div
+                      class="text-xs text-green-600 mt-1 flex items-center gap-1"
+                    >
+                      <i class="fa-solid fa-arrow-trend-up"></i> portefeuille
+                      global
+                    </div>
+                  </div>
+                  <div class="flex items-end h-8">
+                    <div class="mini-bar h-4"></div>
+                    <div class="mini-bar h-6 active"></div>
+                    <div class="mini-bar h-8 active"></div>
+                    <div class="mini-bar h-5 active"></div>
+                  </div>
+                </div>
+                <button
+                  onclick="switchTab('leads', event)"
+                  class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition"
+                >
+                  View
+                </button>
+              </div>
+              <div class="card flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-sm font-medium text-textMain">
+                    Clients Assignes
+                  </h3>
+                  <i
+                    class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"
+                  ></i>
+                </div>
+                <div class="flex justify-between items-end mb-4">
+                  <div>
+                    <div
+                      class="text-3xl font-semibold text-textMain"
+                      id="dash-assigned"
+                    >
+                      0
+                    </div>
+                    <div
+                      class="text-xs text-green-600 mt-1 flex items-center gap-1"
+                    >
+                      <i class="fa-solid fa-arrow-trend-up"></i> distribues aux
+                      agents
+                    </div>
+                  </div>
+                  <div class="flex items-end h-8">
+                    <div class="mini-bar h-3"></div>
+                    <div class="mini-bar h-4 active"></div>
+                    <div class="mini-bar h-8 active"></div>
+                    <div class="mini-bar h-2 active"></div>
+                  </div>
+                </div>
+                <button
+                  onclick="switchTab('users', event)"
+                  class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition"
+                >
+                  View
+                </button>
+              </div>
+              <div class="card flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-sm font-medium text-textMain">
+                    Utilisateurs
+                  </h3>
+                  <i
+                    class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"
+                  ></i>
+                </div>
+                <div class="flex justify-between items-end mb-4">
+                  <div>
+                    <div
+                      class="text-3xl font-semibold text-textMain"
+                      id="dash-users"
+                    >
+                      0
+                    </div>
+                    <div
+                      class="text-xs text-green-600 mt-1 flex items-center gap-1"
+                    >
+                      <i class="fa-solid fa-arrow-trend-up"></i> admins et
+                      agents
+                    </div>
+                  </div>
+                  <div class="flex items-end h-8">
+                    <div class="mini-bar h-5"></div>
+                    <div class="mini-bar h-7 active"></div>
+                    <div class="mini-bar h-4 active"></div>
+                    <div class="mini-bar h-6 active"></div>
+                  </div>
+                </div>
+                <button
+                  onclick="switchTab('users', event)"
+                  class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition"
+                >
+                  View
+                </button>
+              </div>
+              <div class="card flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-sm font-medium text-textMain">Conversion</h3>
+                  <i
+                    class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"
+                  ></i>
+                </div>
+                <div class="flex justify-between items-end mb-4">
+                  <div>
+                    <div
+                      class="text-3xl font-semibold text-textMain"
+                      id="dash-conversion"
+                    >
+                      0%
+                    </div>
+                    <div
+                      class="text-xs text-green-600 mt-1 flex items-center gap-1"
+                    >
+                      <i class="fa-solid fa-arrow-trend-up"></i> clients fermes
+                    </div>
+                  </div>
+                  <div class="flex items-end h-8">
+                    <div class="mini-bar h-4"></div>
+                    <div class="mini-bar h-5 active"></div>
+                    <div class="mini-bar h-8 active"></div>
+                    <div class="mini-bar h-6 active"></div>
+                  </div>
+                </div>
+                <button
+                  onclick="switchTab('leads', event)"
+                  class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition"
+                >
+                  View
+                </button>
+              </div>
+            </div>
+            <!-- END: KPI Cards -->
+
+            <!-- BEGIN: Charts Section -->
+            <div class="grid grid-cols-3 gap-4 mb-4">
+              <div class="card col-span-2 relative">
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="text-base font-semibold text-textMain">
+                    Activite Clients
+                  </h3>
+                  <div class="flex items-center gap-4 text-xs">
+                    <div class="flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-primary"></span>
+                      Nouveaux
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-gray-200"></span>
+                      Assignes
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span
+                        class="w-2 h-2 rounded-full bg-white border border-gray-200"
+                      ></span>
+                      Fermes
+                    </div>
+                  </div>
+                  <div
+                    class="border border-gray-200 rounded px-3 py-1.5 text-xs text-textMain flex items-center gap-2 cursor-pointer bg-white"
                   >
-                    <option value="">Agent...</option>
-                  </select>
-                  <input
-                    id="random-count"
-                    type="number"
-                    min="1"
-                    value="10"
-                    class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                  <button
-                    onclick="assignRandomClients()"
-                    class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2 font-medium"
-                  >
-                    <span class="material-symbols-outlined">shuffle</span>
-                    Assigner
-                  </button>
-                  <button
-                    onclick="showLeadModal()"
-                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition flex items-center gap-2 font-medium"
-                  >
-                    <span class="material-symbols-outlined">add</span>
-                    Nouveau Client
-                  </button>
+                    <i class="fa-regular fa-calendar"></i> Donnees reelles
+                  </div>
+                </div>
+                <div class="h-64"><canvas id="engagementChart"></canvas></div>
+                <div
+                  class="absolute top-1/3 left-1/3 bg-white border border-gray-100 shadow-lg rounded-lg p-3 text-xs w-40 pointer-events-none"
+                  style="transform: translate(20px, -20px)"
+                >
+                  <div class="font-semibold mb-2 border-b border-gray-100 pb-1">
+                    Synthese
+                  </div>
+                  <div class="flex justify-between py-1">
+                    <span>Total</span><span id="chart-total">0</span>
+                  </div>
+                  <div class="flex justify-between py-1">
+                    <span>Assignes</span><span id="chart-assigned">0</span>
+                  </div>
+                  <div class="flex justify-between py-1">
+                    <span>Fermes</span><span id="chart-closed">0</span>
+                  </div>
                 </div>
               </div>
-
-              <div
-                class="card overflow-hidden"
-              >
-                <div class="overflow-x-auto">
-                  <table class="w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Nom
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Prenom
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Ville
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Statut
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Agent
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Mutuelle
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Prix
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Commentaire
-                        </th>
-                        <th
-                          class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody id="leads-tbody" class="divide-y divide-gray-200">
-                      <tr>
-                        <td
-                          colspan="9"
-                          class="px-6 py-8 text-center text-gray-500"
-                        >
-                          Chargement...
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+              <div class="card">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-base font-semibold text-textMain">
+                    Statuts Clients
+                  </h3>
+                  <i
+                    class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"
+                  ></i>
+                </div>
+                <div class="mb-4">
+                  <div
+                    class="text-3xl font-semibold text-textMain"
+                    id="status-total"
+                  >
+                    0
+                  </div>
+                  <div
+                    class="text-xs text-green-600 mt-1 flex items-center gap-1"
+                  >
+                    <i class="fa-solid fa-arrow-trend-up"></i> repartition
+                    actuelle
+                  </div>
+                </div>
+                <div class="relative h-48 flex justify-center items-center">
+                  <canvas id="donutChart"></canvas>
+                </div>
+                <div class="flex justify-between text-xs mt-4">
+                  <div class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-sm bg-primary"></span> Nouveau
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-sm bg-gray-100"></span>
+                    Interesse
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span
+                      class="w-2 h-2 rounded-sm bg-gray-50 border border-gray-200"
+                    ></span>
+                    Ferme
+                  </div>
                 </div>
               </div>
             </div>
+            <!-- END: Charts Section -->
 
-            <!-- USERS TAB -->
-            <div id="users-tab" class="tab-content" style="display: none">
-              <div class="mb-6 flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900">
-                  Utilisateurs
+            <!-- BEGIN: Table Section -->
+            <div class="card">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-semibold text-textMain">
+                  Derniers Clients
                 </h3>
+                <div class="flex gap-2">
+                  <button
+                    onclick="switchTab('leads', event)"
+                    class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-1"
+                  >
+                    Voir tous <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="text-xs text-gray-500 bg-gray-50/50 uppercase">
+                    <tr>
+                      <th class="px-4 py-3 font-medium rounded-tl-lg">
+                        Status
+                      </th>
+                      <th class="px-4 py-3 font-medium">Client</th>
+                      <th class="px-4 py-3 font-medium">Ville</th>
+                      <th class="px-4 py-3 font-medium">Mutuelle</th>
+                      <th class="px-4 py-3 font-medium">Agent</th>
+                      <th
+                        class="px-4 py-3 font-medium text-right rounded-tr-lg"
+                      >
+                        Operation
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-clients-tbody">
+                    <tr>
+                      <td
+                        colspan="6"
+                        class="px-4 py-8 text-center text-gray-500"
+                      >
+                        Chargement...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <!-- END: Table Section -->
+          </div>
+
+          <!-- LEADS TAB -->
+          <div id="leads-tab" class="tab-content" style="display: none">
+            <div class="mb-6 flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">
+                  Tous les Clients
+                </h3>
+                <p class="text-sm text-gray-500" id="leads-count">0 clients</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <select
+                  id="random-agent"
+                  class="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">Agent...</option>
+                </select>
+                <input
+                  id="random-count"
+                  type="number"
+                  min="1"
+                  value="10"
+                  class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
                 <button
-                  onclick="showUserModal()"
+                  onclick="assignRandomClients()"
+                  class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2 font-medium"
+                >
+                  <span class="material-symbols-outlined">shuffle</span>
+                  Assigner
+                </button>
+                <button
+                  onclick="showLeadModal()"
                   class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition flex items-center gap-2 font-medium"
                 >
                   <span class="material-symbols-outlined">add</span>
-                  Nouvel Utilisateur
+                  Nouveau Client
                 </button>
+              </div>
+            </div>
+
+            <div class="card overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Nom
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Prenom
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Ville
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Statut
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Agent
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Mutuelle
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Prix
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Commentaire
+                      </th>
+                      <th
+                        class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="leads-tbody" class="divide-y divide-gray-200">
+                    <tr>
+                      <td
+                        colspan="9"
+                        class="px-6 py-8 text-center text-gray-500"
+                      >
+                        Chargement...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- USERS TAB -->
+          <div id="users-tab" class="tab-content" style="display: none">
+            <div class="mb-6 flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-900">Utilisateurs</h3>
+              <button
+                onclick="showUserModal()"
+                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition flex items-center gap-2 font-medium"
+              >
+                <span class="material-symbols-outlined">add</span>
+                Nouvel Utilisateur
+              </button>
+            </div>
+
+            <div class="card overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Nom
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Email
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Centre
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Rôle
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Clients
+                      </th>
+                      <th
+                        class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-tbody" class="divide-y divide-gray-200">
+                    <tr>
+                      <td
+                        colspan="6"
+                        class="px-6 py-8 text-center text-gray-500"
+                      >
+                        Chargement...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- IMPORT TAB -->
+          <div id="import-tab" class="tab-content" style="display: none">
+            <div class="max-w-2xl">
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                Importer des Clients
+              </h3>
+              <p class="text-gray-600 text-sm mb-6">
+                Déposez un fichier Excel ou cliquez pour sélectionner
+              </p>
+
+              <div
+                id="import-center-wrapper"
+                class="mb-4"
+                style="display: none"
+              >
+                <label class="mb-1 block text-sm font-medium text-gray-700">
+                  Centre d'import
+                </label>
+                <select
+                  id="import-center"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                ></select>
               </div>
 
               <div
-                class="card overflow-hidden"
+                class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-primary hover:bg-gray-50 transition cursor-pointer"
+                ondrop="handleDrop(event)"
+                ondragover="event.preventDefault()"
               >
+                <span
+                  class="material-symbols-outlined text-5xl text-gray-400 block mb-4"
+                  >cloud_upload</span
+                >
+                <p class="font-semibold text-gray-900 mb-2">
+                  Déposer le fichier ici
+                </p>
+                <p class="text-gray-600 text-sm mb-4">
+                  ou
+                  <span
+                    class="text-primary font-semibold cursor-pointer"
+                    onclick="document.getElementById('file-input').click()"
+                    >parcourir</span
+                  >
+                </p>
+                <input
+                  type="file"
+                  id="file-input"
+                  accept=".xlsx,.xls,.csv"
+                  style="display: none"
+                  onchange="handleFileSelect(event)"
+                />
+                <p class="text-xs text-gray-500">
+                  Colonnes reconnues automatiquement: nom/lastname,
+                  prenom/firstname, zipcode/code postal, portable, email,
+                  statut/status et autres colonnes de fiche.
+                </p>
+              </div>
+              <div id="import-message" class="mt-6" style="display: none"></div>
+              <div
+                id="import-preview-panel"
+                class="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+                style="display: none"
+              ></div>
+
+              <div
+                id="import-assignment-panel"
+                class="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+                style="display: none"
+              >
+                <div class="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <h4 class="font-semibold text-gray-900">
+                      Assigner aux agents
+                    </h4>
+                    <p class="text-sm text-gray-500">
+                      Indiquez le nombre de clients à distribuer à chaque agent.
+                    </p>
+                  </div>
+                  <span
+                    id="unassigned-count"
+                    class="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700"
+                  >
+                    0 non assignés
+                  </span>
+                </div>
+
+                <div id="import-agent-list" class="space-y-3"></div>
+
+                <button
+                  onclick="assignImportedClients()"
+                  class="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800"
+                >
+                  <span class="material-symbols-outlined">group_add</span>
+                  Assigner les quantités
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LOGS TAB -->
+          <div id="logs-tab" class="tab-content" style="display: none">
+            <div class="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Journal</h3>
+                <p class="text-sm text-gray-500">
+                  Imports et actions recentes des administrateurs
+                </p>
+              </div>
+              <button
+                onclick="loadLogs()"
+                class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800"
+              >
+                <span class="material-symbols-outlined">refresh</span>
+                Actualiser
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <section class="card overflow-hidden">
+                <div class="border-b border-gray-200 px-5 py-4">
+                  <h4 class="font-semibold text-gray-900">Imports</h4>
+                </div>
                 <div class="overflow-x-auto">
                   <table class="w-full">
                     <thead class="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
                         >
-                          Nom
+                          Fichier
                         </th>
                         <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
                         >
-                          Email
+                          Admin
                         </th>
                         <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
                         >
-                          Centre
+                          Resultat
                         </th>
                         <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
                         >
-                          Rôle
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Clients
-                        </th>
-                        <th
-                          class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase"
-                        >
-                          Actions
+                          Date
                         </th>
                       </tr>
                     </thead>
-                    <tbody id="users-tbody" class="divide-y divide-gray-200">
-                      <tr>
-                        <td
-                          colspan="6"
-                          class="px-6 py-8 text-center text-gray-500"
-                        >
-                          Chargement...
-                        </td>
-                      </tr>
-                    </tbody>
+                    <tbody
+                      id="import-logs-tbody"
+                      class="divide-y divide-gray-100"
+                    ></tbody>
                   </table>
                 </div>
-              </div>
-            </div>
+              </section>
 
-            <!-- IMPORT TAB -->
-            <div id="import-tab" class="tab-content" style="display: none">
-              <div class="max-w-2xl">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                  Importer des Clients
+              <section class="card overflow-hidden">
+                <div class="border-b border-gray-200 px-5 py-4">
+                  <h4 class="font-semibold text-gray-900">Actions</h4>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                        >
+                          Action
+                        </th>
+                        <th
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                        >
+                          Utilisateur
+                        </th>
+                        <th
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                        >
+                          Cible
+                        </th>
+                        <th
+                          class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                        >
+                          Date
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody
+                      id="audit-logs-tbody"
+                      class="divide-y divide-gray-100"
+                    ></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <!-- MAILS TAB -->
+          <div id="mails-tab" class="tab-content" style="display: none">
+            <div class="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">
+                  Mails Envoyés
                 </h3>
-                <p class="text-gray-600 text-sm mb-6">
-                  Déposez un fichier Excel ou cliquez pour sélectionner
+                <p class="text-sm text-gray-500">
+                  Historique de tous les mails envoyés aux clients
                 </p>
-
-                <div id="import-center-wrapper" class="mb-4" style="display: none">
-                  <label class="mb-1 block text-sm font-medium text-gray-700">
-                    Centre d'import
-                  </label>
-                  <select
-                    id="import-center"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  ></select>
-                </div>
-
-                <div
-                  class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-primary hover:bg-gray-50 transition cursor-pointer"
-                  ondrop="handleDrop(event)"
-                  ondragover="event.preventDefault()"
-                >
-                  <span
-                    class="material-symbols-outlined text-5xl text-gray-400 block mb-4"
-                    >cloud_upload</span
-                  >
-                  <p class="font-semibold text-gray-900 mb-2">
-                    Déposer le fichier ici
-                  </p>
-                  <p class="text-gray-600 text-sm mb-4">
-                    ou
-                    <span
-                      class="text-primary font-semibold cursor-pointer"
-                      onclick="document.getElementById('file-input').click()"
-                      >parcourir</span
-                    >
-                  </p>
-                  <input
-                    type="file"
-                    id="file-input"
-                    accept=".xlsx,.xls,.csv"
-                    style="display: none"
-                    onchange="handleFileSelect(event)"
-                  />
-                  <p class="text-xs text-gray-500">
-                    Colonnes reconnues automatiquement: nom/lastname,
-                    prenom/firstname, zipcode/code postal, portable, email,
-                    statut/status et autres colonnes de fiche.
-                  </p>
-                </div>
-                <div
-                  id="import-message"
-                  class="mt-6"
-                  style="display: none"
-                ></div>
-                <div
-                  id="import-preview-panel"
-                  class="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-                  style="display: none"
-                ></div>
-
-                <div
-                  id="import-assignment-panel"
-                  class="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-                  style="display: none"
-                >
-                  <div class="mb-4 flex items-start justify-between gap-4">
-                    <div>
-                      <h4 class="font-semibold text-gray-900">
-                        Assigner aux agents
-                      </h4>
-                      <p class="text-sm text-gray-500">
-                        Indiquez le nombre de clients à distribuer à chaque agent.
-                      </p>
-                    </div>
-                    <span
-                      id="unassigned-count"
-                      class="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700"
-                    >
-                      0 non assignés
-                    </span>
-                  </div>
-
-                  <div id="import-agent-list" class="space-y-3"></div>
-
-                  <button
-                    onclick="assignImportedClients()"
-                    class="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800"
-                  >
-                    <span class="material-symbols-outlined">group_add</span>
-                    Assigner les quantités
-                  </button>
-                </div>
               </div>
+              <button
+                onclick="loadMailHistory()"
+                class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800"
+              >
+                <span class="material-symbols-outlined">refresh</span>
+                Actualiser
+              </button>
             </div>
 
-            <!-- LOGS TAB -->
-            <div id="logs-tab" class="tab-content" style="display: none">
-              <div class="mb-6 flex items-center justify-between gap-4">
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900">Journal</h3>
-                  <p class="text-sm text-gray-500">
-                    Imports et actions recentes des administrateurs
-                  </p>
-                </div>
-                <button
-                  onclick="loadLogs()"
-                  class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition hover:bg-gray-800"
-                >
-                  <span class="material-symbols-outlined">refresh</span>
-                  Actualiser
-                </button>
+            <section class="card overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th
+                        class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                      >
+                        Destinataire
+                      </th>
+                      <th
+                        class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                      >
+                        Sujet
+                      </th>
+                      <th
+                        class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                      >
+                        Client
+                      </th>
+                      <th
+                        class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                      >
+                        Template
+                      </th>
+                      <th
+                        class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                      >
+                        Status
+                      </th>
+                      <th
+                        class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600"
+                      >
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="mail-history-tbody"
+                    class="divide-y divide-gray-100"
+                  >
+                    <tr>
+                      <td
+                        colspan="6"
+                        class="px-5 py-8 text-center text-gray-500"
+                      >
+                        Chargement...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-
-              <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <section class="card overflow-hidden">
-                  <div class="border-b border-gray-200 px-5 py-4">
-                    <h4 class="font-semibold text-gray-900">Imports</h4>
-                  </div>
-                  <div class="overflow-x-auto">
-                    <table class="w-full">
-                      <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Fichier</th>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Admin</th>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Resultat</th>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody id="import-logs-tbody" class="divide-y divide-gray-100"></tbody>
-                    </table>
-                  </div>
-                </section>
-
-                <section class="card overflow-hidden">
-                  <div class="border-b border-gray-200 px-5 py-4">
-                    <h4 class="font-semibold text-gray-900">Actions</h4>
-                  </div>
-                  <div class="overflow-x-auto">
-                    <table class="w-full">
-                      <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Action</th>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Utilisateur</th>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Cible</th>
-                          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody id="audit-logs-tbody" class="divide-y divide-gray-100"></tbody>
-                    </table>
-                  </div>
-                </section>
-              </div>
-            </div>
+            </section>
+          </div>
         </main>
         <!-- END: Dashboard Content -->
       </div>
@@ -773,42 +1236,118 @@
     </div>
 
     <!-- CLIENT MODAL -->
-    <div
-      id="lead-modal"
-      class="modal-backdrop"
-      style="display: none"
-    >
+    <div id="lead-modal" class="modal-backdrop" style="display: none">
       <div class="modal-panel modal-panel-md">
         <div class="modal-header">
           <div>
             <div class="modal-kicker">Creation client</div>
             <h3 class="text-lg font-bold text-gray-900">Nouveau client</h3>
-            <p class="text-sm text-textMuted">Ajoutez une fiche propre avec les informations utiles au suivi mutuelle.</p>
+            <p class="text-sm text-textMuted">
+              Ajoutez une fiche propre avec les informations utiles au suivi
+              mutuelle.
+            </p>
           </div>
         </div>
         <form onsubmit="saveLead(event)" class="modal-body">
           <div class="field-grid">
-            <div id="lead-center-wrapper" class="field-card field-card-full" style="display: none"><label class="field-label">Centre *</label><select id="lead-center" class="field-control"></select></div>
-            <div class="field-card"><label class="field-label">Nom *</label><input type="text" id="lead-nom" required class="field-control" /></div>
-            <div class="field-card"><label class="field-label">Prenom *</label><input type="text" id="lead-prenom" required class="field-control" /></div>
-            <div class="field-card"><label class="field-label">Code postal *</label><input type="text" id="lead-code-postal" maxlength="5" required class="field-control" /></div>
-            <div class="field-card field-card-full"><label class="field-label">Adresse *</label><input type="text" id="lead-adresse" required class="field-control" /></div>
-            <div class="field-card"><label class="field-label">Ville *</label><input type="text" id="lead-ville" required class="field-control" /></div>
-            <div class="field-card"><label class="field-label">Nom mutuelle *</label><input type="text" id="lead-mutuelle" class="field-control" /></div>
-            <div class="field-card"><label class="field-label">Prix mutuelle *</label><input type="number" id="lead-prix" min="0" step="0.01" class="field-control" /></div>
-            <div class="field-card field-card-full action-row"><button type="button" onclick="closeLeadModal()" class="btn-secondary flex-1">Annuler</button><button type="submit" class="btn-primary flex-1">Creer</button></div>
+            <div
+              id="lead-center-wrapper"
+              class="field-card field-card-full"
+              style="display: none"
+            >
+              <label class="field-label">Centre *</label
+              ><select id="lead-center" class="field-control"></select>
+            </div>
+            <div class="field-card">
+              <label class="field-label">Nom *</label
+              ><input
+                type="text"
+                id="lead-nom"
+                required
+                class="field-control"
+              />
+            </div>
+            <div class="field-card">
+              <label class="field-label">Prenom *</label
+              ><input
+                type="text"
+                id="lead-prenom"
+                required
+                class="field-control"
+              />
+            </div>
+            <div class="field-card">
+              <label class="field-label">Code postal *</label
+              ><input
+                type="text"
+                id="lead-code-postal"
+                maxlength="5"
+                required
+                class="field-control"
+              />
+            </div>
+            <div class="field-card field-card-full">
+              <label class="field-label">Adresse *</label
+              ><input
+                type="text"
+                id="lead-adresse"
+                required
+                class="field-control"
+              />
+            </div>
+            <div class="field-card">
+              <label class="field-label">Ville *</label
+              ><input
+                type="text"
+                id="lead-ville"
+                required
+                class="field-control"
+              />
+            </div>
+            <div class="field-card">
+              <label class="field-label">Nom mutuelle *</label
+              ><input type="text" id="lead-mutuelle" class="field-control" />
+            </div>
+            <div class="field-card">
+              <label class="field-label">Prix mutuelle *</label
+              ><input
+                type="number"
+                id="lead-prix"
+                min="0"
+                step="0.01"
+                class="field-control"
+              />
+            </div>
+            <div class="field-card field-card-full action-row">
+              <button
+                type="button"
+                onclick="closeLeadModal()"
+                class="btn-secondary flex-1"
+              >
+                Annuler</button
+              ><button type="submit" class="btn-primary flex-1">Creer</button>
+            </div>
           </div>
         </form>
       </div>
     </div>
     <!-- USER MODAL -->
-    <div
-      id="client-detail-modal"
-      class="modal-backdrop"
-      style="display: none"
-    >
+    <div id="client-detail-modal" class="modal-backdrop" style="display: none">
       <div class="modal-panel">
-        <div class="modal-header"><div><div class="modal-kicker">Fiche mutuelle</div><h3 id="client-detail-title" class="text-lg font-bold text-gray-900">Fiche client</h3><p class="text-sm text-textMuted">Modifiez les donnees importees et les informations de suivi.</p></div><div class="action-row">
+        <div class="modal-header">
+          <div>
+            <div class="modal-kicker">Fiche mutuelle</div>
+            <h3
+              id="client-detail-title"
+              class="text-lg font-bold text-gray-900"
+            >
+              Fiche client
+            </h3>
+            <p class="text-sm text-textMuted">
+              Modifiez les donnees importees et les informations de suivi.
+            </p>
+          </div>
+          <div class="action-row">
             <button
               id="client-detail-mail-btn"
               type="button"
@@ -837,92 +1376,119 @@
     </div>
 
     <!-- EMAIL MODAL -->
-    <div
-      id="email-modal"
-      class="modal-backdrop"
-      style="display: none"
-    >
+    <div id="email-modal" class="modal-backdrop" style="display: none">
       <div class="modal-panel modal-panel-md">
-        <div class="modal-header"><div><div class="modal-kicker">Communication client</div><h3 class="text-lg font-bold text-gray-900">Envoyer un e-mail</h3><p class="text-sm text-textMuted">Choisissez le contexte puis ajustez le message avant envoi.</p></div></div><form onsubmit="handleSendMail(event)" class="modal-body space-y-4">
-          <div class="mail-layout"><div class="mail-template-box"><label class="field-label">Destinataire</label>
-            <input
-              type="email"
-              id="email-recipient"
-              required
-              readonly
-              class="field-control bg-gray-50 text-gray-600"
-            />
-          </div>
-          <div class="mt-4"><label class="field-label">Template conseille</label><select id="email-template" onchange="applySelectedMailTemplate()" class="field-control"></select><p id="email-template-help" class="mail-help">Le contenu est adapte automatiquement avec les donnees de la fiche.</p></div></div><div>
+        <div class="modal-header">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Sujet *</label>
-            <input
-              type="text"
-              id="email-subject"
-              required
-              class="field-control"
-            />
+            <div class="modal-kicker">Communication client</div>
+            <h3 class="text-lg font-bold text-gray-900">Envoyer un e-mail</h3>
+            <p class="text-sm text-textMuted">
+              Choisissez le contexte puis ajustez le message avant envoi.
+            </p>
+          </div>
+        </div>
+        <form onsubmit="handleSendMail(event)" class="modal-body space-y-4">
+          <div class="mail-layout">
+            <div class="mail-template-box">
+              <label class="field-label">Destinataire</label>
+              <input
+                type="email"
+                id="email-recipient"
+                required
+                readonly
+                class="field-control bg-gray-50 text-gray-600"
+              />
+            </div>
+            <div class="mt-4">
+              <label class="field-label">Template conseille</label
+              ><select
+                id="email-template"
+                onchange="applySelectedMailTemplate()"
+                class="field-control"
+              ></select>
+              <p id="email-template-help" class="mail-help">
+                Le contenu est adapte automatiquement avec les donnees de la
+                fiche.
+              </p>
+            </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-            <textarea
-              id="email-body"
-              rows="12"
-              required
-              class="field-control textarea mail-message"
-            ></textarea>
-          </div>
-          
-          <!-- Ethereal Preview Box -->
-          <div id="email-preview-box" class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800" style="display: none">
-            <span class="font-semibold">Apercu SMTP : </span>
-            <a id="email-preview-link" href="#" target="_blank" class="underline font-medium hover:text-blue-900">Cliquez ici pour voir l'e-mail envoye</a>.
-          </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Sujet *</label
+              >
+              <input
+                type="text"
+                id="email-subject"
+                required
+                class="field-control"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Message *</label
+              >
+              <textarea
+                id="email-body"
+                rows="12"
+                required
+                class="field-control textarea mail-message"
+              ></textarea>
+            </div>
 
-          <div class="action-row pt-2">
-            <button
-              type="button"
-              onclick="closeEmailModal()"
-              class="btn-secondary flex-1"
+            <!-- Ethereal Preview Box -->
+            <div
+              id="email-preview-box"
+              class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800"
+              style="display: none"
             >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              id="email-submit-btn"
-              class="btn-primary flex-1"
-            >
-              Envoyer
-            </button>
-          </div>
+              <span class="font-semibold">Apercu SMTP : </span>
+              <a
+                id="email-preview-link"
+                href="#"
+                target="_blank"
+                class="underline font-medium hover:text-blue-900"
+                >Cliquez ici pour voir l'e-mail envoye</a
+              >.
+            </div>
+
+            <div class="action-row pt-2">
+              <button
+                type="button"
+                onclick="closeEmailModal()"
+                class="btn-secondary flex-1"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                id="email-submit-btn"
+                class="btn-primary flex-1"
+              >
+                Envoyer
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
 
     <!-- USER MODAL -->
-    <div
-      id="user-modal"
-      class="modal-backdrop"
-      style="display: none"
-    >
+    <div id="user-modal" class="modal-backdrop" style="display: none">
       <div class="modal-panel modal-panel-sm">
         <div class="modal-header">
           <div>
             <div class="modal-kicker">Equipe centre</div>
             <h3 class="text-lg font-bold text-gray-900">Nouvel utilisateur</h3>
-            <p class="text-sm text-textMuted">Creez un admin de centre ou un agent rattache au centre.</p>
+            <p class="text-sm text-textMuted">
+              Creez un admin de centre ou un agent rattache au centre.
+            </p>
           </div>
         </div>
         <form onsubmit="saveUser(event)" class="modal-body space-y-4">
           <div class="field-card">
             <label class="field-label">Nom *</label>
-            <input
-              type="text"
-              id="user-name"
-              required
-              class="field-control"
-            />
+            <input type="text" id="user-name" required class="field-control" />
           </div>
           <div class="field-card">
             <label class="field-label">Email *</label>
@@ -953,7 +1519,11 @@
               <option value="ADMIN">Admin de centre</option>
             </select>
           </div>
-          <div id="user-center-wrapper" class="field-card" style="display: none">
+          <div
+            id="user-center-wrapper"
+            class="field-card"
+            style="display: none"
+          >
             <label class="field-label">Centre *</label>
             <input
               type="text"
@@ -972,12 +1542,7 @@
             >
               Annuler
             </button>
-            <button
-              type="submit"
-              class="btn-primary flex-1"
-            >
-              Creer
-            </button>
+            <button type="submit" class="btn-primary flex-1">Creer</button>
           </div>
         </form>
       </div>
@@ -1012,7 +1577,10 @@
       ];
 
       function statusLabel(status) {
-        return (CLIENT_STATUSES.find(([value]) => value === status) || [status, status || "-"])[1];
+        return (CLIENT_STATUSES.find(([value]) => value === status) || [
+          status,
+          status || "-",
+        ])[1];
       }
 
       function renderStatusOptions(selected) {
@@ -1086,6 +1654,9 @@
         if (btn) btn.classList.add("active");
         if (tab === "logs") {
           loadLogs();
+        }
+        if (tab === "mails") {
+          loadMailHistory();
         }
       }
 
@@ -1194,22 +1765,42 @@
           ["E-mail", "email", lead.email],
           ["Tel professionnel", "tel_professionnel", lead.tel_professionnel],
           ["Date de naissance", "date_naissance", lead.date_naissance],
-          ["Naissance conjoint", "date_naissance_conjoint", lead.date_naissance_conjoint],
+          [
+            "Naissance conjoint",
+            "date_naissance_conjoint",
+            lead.date_naissance_conjoint,
+          ],
           ["Naissance enfant 1", "naissance_enfant_1", lead.naissance_enfant_1],
           ["Naissance enfant 2", "naissance_enfant_2", lead.naissance_enfant_2],
           ["Naissance enfant 3", "naissance_enfant_3", lead.naissance_enfant_3],
           ["Affilie TNS", "regime_tns", lead.regime_tns],
           ["Regime", "regime", lead.regime],
           ["Regime conjoint", "regime_conjoint", lead.regime_conjoint],
-          ["Remboursement frais", "remboursement_frais", lead.remboursement_frais],
-          ["Besoins specifiques", "besoins_specifiques", lead.besoins_specifiques],
+          [
+            "Remboursement frais",
+            "remboursement_frais",
+            lead.remboursement_frais,
+          ],
+          [
+            "Besoins specifiques",
+            "besoins_specifiques",
+            lead.besoins_specifiques,
+          ],
           ["Date assurance", "assurance_date", lead.assurance_date],
-          ["Mutuelle actuelle", "deja_mutuelle", lead.deja_mutuelle || lead.nom_mutuelle],
+          [
+            "Mutuelle actuelle",
+            "deja_mutuelle",
+            lead.deja_mutuelle || lead.nom_mutuelle,
+          ],
           ["Nom mutuelle", "nom_mutuelle", lead.nom_mutuelle],
           ["Prix mutuelle", "prix_mutuelle", lead.prix_mutuelle],
           ["Statut", "status", lead.status],
           ["Rappel prevu", "reminder_at", lead.reminder_at],
-          ["Priorite rappel", "reminder_priority", lead.reminder_priority || "NORMAL"],
+          [
+            "Priorite rappel",
+            "reminder_priority",
+            lead.reminder_priority || "NORMAL",
+          ],
           ["Commentaire rappel", "reminder_comment", lead.reminder_comment],
           ["Score NLP", "nlp_score", lead.nlp_score || 0],
           ["Qualification NLP", "nlp_label", lead.nlp_label || "INCOMPLET"],
@@ -1226,13 +1817,21 @@
           extraData = {};
         }
         const extraFields = Object.entries(extraData)
-          .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+          .filter(
+            ([, value]) =>
+              value !== undefined &&
+              value !== null &&
+              String(value).trim() !== "",
+          )
           .slice(0, 40);
 
         document.getElementById("client-detail-body").innerHTML =
           renderDetailFields(fields) +
           (extraFields.length
-            ? renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true)
+            ? renderDetailFields(
+                extraFields.map(([key, value]) => [key, key, value]),
+                true,
+              )
             : "") +
           `<section class="detail-section"><div class="detail-section-title"><span>Historique fiche</span><span id="history-count">0</span></div><div id="client-history-list" class="space-y-2 p-4 text-sm text-gray-600">Chargement...</div></section>`;
         renderClientHistory(lead.id);
@@ -1248,14 +1847,47 @@
       function renderDetailFields(fields, isExtra = false) {
         const groups = {};
         fields.forEach(([label, field, value]) => {
-          if (isExtra && (value === undefined || value === null || String(value).trim() === "")) return;
+          if (
+            isExtra &&
+            (value === undefined ||
+              value === null ||
+              String(value).trim() === "")
+          )
+            return;
           const category = isExtra
             ? "Colonnes importees"
-            : ["status", "notes", "reminder_at", "reminder_priority", "reminder_comment", "nlp_score", "nlp_label"].includes(field)
+            : [
+                  "status",
+                  "notes",
+                  "reminder_at",
+                  "reminder_priority",
+                  "reminder_comment",
+                  "nlp_score",
+                  "nlp_label",
+                ].includes(field)
               ? "Suivi commercial"
-              : ["email", "tel_gsm", "tel_fixe", "tel_professionnel", "adresse", "adresse2", "ville", "code_postal"].includes(field)
+              : [
+                    "email",
+                    "tel_gsm",
+                    "tel_fixe",
+                    "tel_professionnel",
+                    "adresse",
+                    "adresse2",
+                    "ville",
+                    "code_postal",
+                  ].includes(field)
                 ? "Coordonnees"
-                : ["deja_mutuelle", "nom_mutuelle", "prix_mutuelle", "regime", "regime_tns", "regime_conjoint", "remboursement_frais", "besoins_specifiques", "assurance_date"].includes(field)
+                : [
+                      "deja_mutuelle",
+                      "nom_mutuelle",
+                      "prix_mutuelle",
+                      "regime",
+                      "regime_tns",
+                      "regime_conjoint",
+                      "remboursement_frais",
+                      "besoins_specifiques",
+                      "assurance_date",
+                    ].includes(field)
                   ? "Mutuelle"
                   : "Identite";
           groups[category] = groups[category] || [];
@@ -1263,14 +1895,16 @@
         });
 
         return Object.entries(groups)
-          .map(([title, groupFields]) => `
+          .map(
+            ([title, groupFields]) => `
             <section class="detail-section">
               <div class="detail-section-title"><span>${escapeHtml(title)}</span><span>${groupFields.length}</span></div>
               <div class="field-grid">
                 ${groupFields.map(([label, field, value]) => renderDetailField(label, field, value, isExtra)).join("")}
               </div>
             </section>
-          `)
+          `,
+          )
           .join("");
       }
 
@@ -1286,7 +1920,8 @@
           }
           list.innerHTML = history
             .slice(0, 12)
-            .map((item) => `
+            .map(
+              (item) => `
               <div class="rounded-lg border border-gray-100 bg-white p-3">
                 <div class="flex items-center justify-between gap-3">
                   <strong class="text-gray-900">${escapeHtml(item.action)}</strong>
@@ -1295,7 +1930,8 @@
                 <div class="mt-1 text-xs text-gray-500">${escapeHtml(item.user_name || item.user_email || "Systeme")}</div>
                 ${item.note ? `<div class="mt-2">${escapeHtml(item.note)}</div>` : ""}
               </div>
-            `)
+            `,
+            )
             .join("");
         } catch (err) {
           list.innerHTML = "Historique indisponible.";
@@ -1314,7 +1950,14 @@
           control = `<select ${fieldAttr} class="field-control">${renderPriorityOptions(value || "NORMAL")}</select>`;
         } else if (field === "reminder_at") {
           control = `<input ${fieldAttr} type="datetime-local" value="${toDateInputValue(value)}" class="field-control" />`;
-        } else if (["notes", "remboursement_frais", "besoins_specifiques", "reminder_comment"].includes(field)) {
+        } else if (
+          [
+            "notes",
+            "remboursement_frais",
+            "besoins_specifiques",
+            "reminder_comment",
+          ].includes(field)
+        ) {
           control = `<textarea ${fieldAttr} rows="3" class="field-control textarea">${escapedValue}</textarea>`;
         } else if (field === "prix_mutuelle") {
           control = `<input ${fieldAttr} type="number" min="0" step="0.01" value="${escapedValue}" class="field-control" />`;
@@ -1323,7 +1966,14 @@
         } else {
           control = `<input ${fieldAttr} value="${escapedValue}" class="field-control" />`;
         }
-        const wide = ["notes", "remboursement_frais", "besoins_specifiques", "reminder_comment"].includes(field) ? "field-card-wide" : "";
+        const wide = [
+          "notes",
+          "remboursement_frais",
+          "besoins_specifiques",
+          "reminder_comment",
+        ].includes(field)
+          ? "field-card-wide"
+          : "";
         return `<div class="field-card ${wide}"><label class="field-label">${escapeHtml(label)}</label>${control}</div>`;
       }
 
@@ -1371,9 +2021,25 @@
           mailTemplates = await getMailTemplates();
         } catch (err) {
           mailTemplates = [
-            { id: "relance_contact", name: "Relance contact", subject: "Des nouvelles de votre demande de mutuelle - SecurAssure", body: "Bonjour [Civilite] [Nom],\n\nNous avons tente de vous joindre au sujet de votre demande de comparatif mutuelle.\n\nCordialement,\nL'equipe SecurAssure" },
-            { id: "proposition_devis", name: "Proposition devis", subject: "Votre devis mutuelle personnalise - SecurAssure", body: "Bonjour [Civilite] [Nom],\n\nNous pouvons vous proposer une comparaison personnalisee adaptee a vos besoins : [Besoins].\n\nCordialement,\nL'equipe SecurAssure" },
-            { id: "confirmation_rdv", name: "Confirmation rendez-vous", subject: "Confirmation de votre rendez-vous - SecurAssure", body: "Bonjour [Civilite] [Nom],\n\nNous vous confirmons votre rendez-vous avec un conseiller SecurAssure.\n\nCordialement,\nL'equipe SecurAssure" },
+            {
+              id: "relance_contact",
+              name: "Relance contact",
+              subject:
+                "Des nouvelles de votre demande de mutuelle - SecurAssure",
+              body: "Bonjour [Civilite] [Nom],\n\nNous avons tente de vous joindre au sujet de votre demande de comparatif mutuelle.\n\nCordialement,\nL'equipe SecurAssure",
+            },
+            {
+              id: "proposition_devis",
+              name: "Proposition devis",
+              subject: "Votre devis mutuelle personnalise - SecurAssure",
+              body: "Bonjour [Civilite] [Nom],\n\nNous pouvons vous proposer une comparaison personnalisee adaptee a vos besoins : [Besoins].\n\nCordialement,\nL'equipe SecurAssure",
+            },
+            {
+              id: "confirmation_rdv",
+              name: "Confirmation rendez-vous",
+              subject: "Confirmation de votre rendez-vous - SecurAssure",
+              body: "Bonjour [Civilite] [Nom],\n\nNous vous confirmons votre rendez-vous avec un conseiller SecurAssure.\n\nCordialement,\nL'equipe SecurAssure",
+            },
           ];
         }
         return mailTemplates;
@@ -1386,19 +2052,33 @@
           Prenom: lead.prenom || "",
           Ville: lead.ville || "",
           Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "Non renseignee",
-          PrixMutuelle: lead.prix_mutuelle ? Number(lead.prix_mutuelle).toFixed(2) + " EUR" : "Non renseigne",
-          Besoins: lead.besoins_specifiques || "Aucun besoin particulier specifie",
+          PrixMutuelle: lead.prix_mutuelle
+            ? Number(lead.prix_mutuelle).toFixed(2) + " EUR"
+            : "Non renseigne",
+          Besoins:
+            lead.besoins_specifiques || "Aucun besoin particulier specifie",
         };
-        return template.replace(/\[(Civilite|Nom|Prenom|Ville|Mutuelle|PrixMutuelle|Besoins)\]/g, (_, key) => values[key]);
+        return template.replace(
+          /\[(Civilite|Nom|Prenom|Ville|Mutuelle|PrixMutuelle|Besoins)\]/g,
+          (_, key) => values[key],
+        );
       }
 
       function applySelectedMailTemplate() {
         if (!selectedLeadForMail) return;
         const select = document.getElementById("email-template");
-        const template = mailTemplates.find((item) => item.id === select.value) || mailTemplates[0];
+        const template =
+          mailTemplates.find((item) => item.id === select.value) ||
+          mailTemplates[0];
         if (!template) return;
-        document.getElementById("email-subject").value = fillTemplate(template.subject, selectedLeadForMail);
-        document.getElementById("email-body").value = fillTemplate(template.body, selectedLeadForMail);
+        document.getElementById("email-subject").value = fillTemplate(
+          template.subject,
+          selectedLeadForMail,
+        );
+        document.getElementById("email-body").value = fillTemplate(
+          template.body,
+          selectedLeadForMail,
+        );
         const help = document.getElementById("email-template-help");
         if (help) {
           help.textContent = `Variables disponibles: ${(template.variables || ["Civilite", "Nom", "Prenom", "Ville", "Mutuelle", "PrixMutuelle", "Besoins"]).join(", ")}.`;
@@ -1420,7 +2100,10 @@
         const templates = await ensureMailTemplates();
         const select = document.getElementById("email-template");
         select.innerHTML = templates
-          .map((template) => `<option value="${template.id}">${escapeHtml(template.name)}</option>`)
+          .map(
+            (template) =>
+              `<option value="${template.id}">${escapeHtml(template.name)}</option>`,
+          )
           .join("");
         select.value = templates[0]?.id || "";
         applySelectedMailTemplate();
@@ -1445,7 +2128,9 @@
           const templateId = document.getElementById("email-template").value;
           const result = await sendMail(
             recipient,
-            selectedLeadForMail ? `${selectedLeadForMail.nom || ""} ${selectedLeadForMail.prenom || ""}`.trim() : "",
+            selectedLeadForMail
+              ? `${selectedLeadForMail.nom || ""} ${selectedLeadForMail.prenom || ""}`.trim()
+              : "",
             subject,
             body,
             selectedLeadForMail?.id || null,
@@ -1453,7 +2138,7 @@
           );
 
           alert("E-mail envoyé avec succès !");
-          
+
           if (result && result.previewUrl) {
             const previewBox = document.getElementById("email-preview-box");
             const previewLink = document.getElementById("email-preview-link");
@@ -1558,9 +2243,47 @@
           .join("");
       }
 
+      async function loadMailHistory() {
+        try {
+          const mails = await getMailHistory();
+          renderMailHistory(mails || []);
+        } catch (err) {
+          console.error(err);
+          document.getElementById("mail-history-tbody").innerHTML =
+            '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Erreur lors du chargement</td></tr>';
+        }
+      }
+
+      function renderMailHistory(mails) {
+        const tbody = document.getElementById("mail-history-tbody");
+        if (!tbody) return;
+        if (!mails.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Aucun mail envoyé</td></tr>';
+          return;
+        }
+        tbody.innerHTML = mails
+          .map(
+            (mail) => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-5 py-4 font-medium text-gray-900">${escapeHtml(mail.recipient_email || "-")}</td>
+          <td class="px-5 py-4 text-gray-600 max-w-xs truncate" title="${escapeHtml(mail.subject || "")}">${escapeHtml(mail.subject || "-")}</td>
+          <td class="px-5 py-4 text-gray-600">${escapeHtml(mail.client_name || "-")}</td>
+          <td class="px-5 py-4 text-gray-600">${escapeHtml(mail.template_id || "-")}</td>
+          <td class="px-5 py-4"><span class="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">Envoyé</span></td>
+          <td class="px-5 py-4 text-gray-600">${formatDate(mail.created_at)}</td>
+        </tr>
+      `,
+          )
+          .join("");
+      }
+
       async function assignRandomClients() {
         const userId = document.getElementById("random-agent").value;
-        const count = parseInt(document.getElementById("random-count").value, 10);
+        const count = parseInt(
+          document.getElementById("random-count").value,
+          10,
+        );
         if (!userId || !count || count < 1) {
           alert("Choisissez un agent et un nombre positif.");
           return;
@@ -1619,7 +2342,8 @@
           ville: document.getElementById("lead-ville").value,
           code_postal: document.getElementById("lead-code-postal").value,
           nom_mutuelle: document.getElementById("lead-mutuelle").value,
-          prix_mutuelle: parseFloat(document.getElementById("lead-prix").value) || 0,
+          prix_mutuelle:
+            parseFloat(document.getElementById("lead-prix").value) || 0,
           status: "NEW",
         };
         if (currentUser?.role === "SUPER_ADMIN") {
@@ -1662,7 +2386,10 @@
 
       function renderCenterOptions() {
         const options = allCenters
-          .map((center) => `<option value="${center.id}">${escapeHtml(center.name)}</option>`)
+          .map(
+            (center) =>
+              `<option value="${center.id}">${escapeHtml(center.name)}</option>`,
+          )
           .join("");
 
         const importWrapper = document.getElementById("import-center-wrapper");
@@ -1685,7 +2412,10 @@
         }
         if (centerList) {
           centerList.innerHTML = allCenters
-            .map((center) => `<option value="${escapeHtml(center.name)}"></option>`)
+            .map(
+              (center) =>
+                `<option value="${escapeHtml(center.name)}"></option>`,
+            )
             .join("");
         }
       }
@@ -1742,7 +2472,9 @@
       }
 
       async function assignImportedClients() {
-        const inputs = Array.from(document.querySelectorAll(".assignment-count"));
+        const inputs = Array.from(
+          document.querySelectorAll(".assignment-count"),
+        );
         const assignments = inputs
           .map((input) => ({
             userId: input.dataset.agentId,
@@ -1927,7 +2659,8 @@
           }
           const preview = await previewExcelImport(file, options);
           renderImportPreview(preview);
-          msg.textContent = "Prevalidation terminee. Verifiez le resume puis confirmez l'import.";
+          msg.textContent =
+            "Prevalidation terminee. Verifiez le resume puis confirmez l'import.";
           msg.className = "p-4 rounded-lg bg-blue-50 text-blue-800";
         } catch (err) {
           msg.textContent = "Erreur: " + (err.message || "Import impossible");
@@ -1957,7 +2690,17 @@
           <div class="grid grid-cols-3 gap-3 text-sm">
             <div class="rounded-lg bg-green-50 p-3"><strong>Colonnes reconnues</strong><p class="mt-2 text-xs text-green-800">${recognized.map((item) => `${escapeHtml(item.source)} -> ${escapeHtml(item.mappedTo)}`).join("<br>") || "-"}</p></div>
             <div class="rounded-lg bg-yellow-50 p-3"><strong>Colonnes inconnues</strong><p class="mt-2 text-xs text-yellow-800">${unknown.map(escapeHtml).join("<br>") || "-"}</p></div>
-            <div class="rounded-lg bg-red-50 p-3"><strong>Alertes</strong><p class="mt-2 text-xs text-red-800">${errors.slice(0, 5).map((item) => `Ligne ${item.row}: ${escapeHtml(item.message)}`).join("<br>") || duplicates.slice(0, 5).map((item) => `Ligne ${item.row}: doublon probable`).join("<br>") || "-"}</p></div>
+            <div class="rounded-lg bg-red-50 p-3"><strong>Alertes</strong><p class="mt-2 text-xs text-red-800">${
+              errors
+                .slice(0, 5)
+                .map((item) => `Ligne ${item.row}: ${escapeHtml(item.message)}`)
+                .join("<br>") ||
+              duplicates
+                .slice(0, 5)
+                .map((item) => `Ligne ${item.row}: doublon probable`)
+                .join("<br>") ||
+              "-"
+            }</p></div>
           </div>
           <div class="mt-4 overflow-x-auto rounded-lg border border-gray-100">
             <table class="w-full text-left text-xs">
@@ -1984,12 +2727,22 @@
             options.center_id = document.getElementById("import-center").value;
           }
           const result = await uploadExcel(currentImportFile, options);
-          const errorText = result.errors?.length ? ` ${result.errors.length} ligne(s) ignoree(s).` : "";
-          const duplicateText = result.skippedDuplicates ? ` ${result.skippedDuplicates} doublon(s) ignore(s).` : "";
-          const mergedText = result.mergedDuplicates ? ` ${result.mergedDuplicates} doublon(s) fusionne(s).` : "";
+          const errorText = result.errors?.length
+            ? ` ${result.errors.length} ligne(s) ignoree(s).`
+            : "";
+          const duplicateText = result.skippedDuplicates
+            ? ` ${result.skippedDuplicates} doublon(s) ignore(s).`
+            : "";
+          const mergedText = result.mergedDuplicates
+            ? ` ${result.mergedDuplicates} doublon(s) fusionne(s).`
+            : "";
           msg.textContent = `${result.imported || 0}/${result.total || 0} client(s) importe(s).${errorText}${duplicateText}${mergedText}`;
-          msg.className = (result.imported || 0) > 0 ? "p-4 rounded-lg bg-green-100 text-green-800" : "p-4 rounded-lg bg-yellow-100 text-yellow-800";
-          document.getElementById("import-preview-panel").style.display = "none";
+          msg.className =
+            (result.imported || 0) > 0
+              ? "p-4 rounded-lg bg-green-100 text-green-800"
+              : "p-4 rounded-lg bg-yellow-100 text-yellow-800";
+          document.getElementById("import-preview-panel").style.display =
+            "none";
           await loadLeads();
           renderImportAgentAssignments(true);
           document.getElementById("file-input").value = "";
@@ -2000,7 +2753,6 @@
         }
       }
 
-
       let engagementChart = null;
       let donutChart = null;
 
@@ -2009,7 +2761,8 @@
         if (!tbody) return;
         const latest = allLeads.slice(0, 4);
         if (!latest.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun client</td></tr>';
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun client</td></tr>';
           return;
         }
         tbody.innerHTML = latest
@@ -2033,9 +2786,15 @@
         if (!window.Chart) return;
         const total = allLeads.length;
         const assigned = allLeads.filter((lead) => lead.assigned_to).length;
-        const closed = allLeads.filter((lead) => ["SIGNED", "CLOSED"].includes(lead.status)).length;
-        const interested = allLeads.filter((lead) => lead.status === "INTERESTED").length;
-        const newClients = allLeads.filter((lead) => lead.status === "NEW").length;
+        const closed = allLeads.filter((lead) =>
+          ["SIGNED", "CLOSED"].includes(lead.status),
+        ).length;
+        const interested = allLeads.filter(
+          (lead) => lead.status === "INTERESTED",
+        ).length;
+        const newClients = allLeads.filter(
+          (lead) => lead.status === "NEW",
+        ).length;
         document.getElementById("chart-total").textContent = total;
         document.getElementById("chart-assigned").textContent = assigned;
         document.getElementById("chart-closed").textContent = closed;
@@ -2053,7 +2812,8 @@
                 {
                   label: "Clients",
                   data: [total, assigned, newClients, interested, closed],
-                  backgroundColor: (context) => (context.dataIndex === 1 ? "#d62d5a" : "#f1f5f9"),
+                  backgroundColor: (context) =>
+                    context.dataIndex === 1 ? "#d62d5a" : "#f1f5f9",
                   borderRadius: 4,
                   barPercentage: 0.5,
                   categoryPercentage: 0.8,
@@ -2063,8 +2823,21 @@
             options: {
               responsive: true,
               maintainAspectRatio: false,
-              scales: { x: { grid: { display: false }, ticks: { color: "#94a3b8", font: { size: 11 } } }, y: { grid: { color: "#f1f5f9" }, ticks: { color: "#94a3b8", font: { size: 11 } }, beginAtZero: true } },
-              plugins: { legend: { display: false }, tooltip: { enabled: false } },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { color: "#94a3b8", font: { size: 11 } },
+                },
+                y: {
+                  grid: { color: "#f1f5f9" },
+                  ticks: { color: "#94a3b8", font: { size: 11 } },
+                  beginAtZero: true,
+                },
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false },
+              },
             },
           });
         }
@@ -2072,8 +2845,25 @@
           if (donutChart) donutChart.destroy();
           donutChart = new Chart(donutCtx.getContext("2d"), {
             type: "doughnut",
-            data: { labels: ["Nouveau", "Interesse", "Signe"], datasets: [{ data: [newClients, interested, closed], backgroundColor: ["#d62d5a", "#f1f5f9", "#f8fafc"], borderWidth: 0, cutout: "75%" }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+            data: {
+              labels: ["Nouveau", "Interesse", "Signe"],
+              datasets: [
+                {
+                  data: [newClients, interested, closed],
+                  backgroundColor: ["#d62d5a", "#f1f5f9", "#f8fafc"],
+                  borderWidth: 0,
+                  cutout: "75%",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false },
+              },
+            },
           });
         }
       }
@@ -2081,9 +2871,13 @@
       function updateDashboard() {
         const total = allLeads.length;
         const assigned = allLeads.filter((l) => l.assigned_to).length;
-        const closed = allLeads.filter((l) => ["SIGNED", "CLOSED"].includes(l.status)).length;
+        const closed = allLeads.filter((l) =>
+          ["SIGNED", "CLOSED"].includes(l.status),
+        ).length;
         const activeAgents = allUsers.filter((u) => u.role === "AGENT").length;
-        const treated = allLeads.filter((l) => !["NEW", "TO_CALL"].includes(l.status)).length;
+        const treated = allLeads.filter(
+          (l) => !["NEW", "TO_CALL"].includes(l.status),
+        ).length;
         const overdue = allLeads.filter(isReminderOverdue).length;
         const stale = allLeads.filter((l) => daysSinceAction(l) >= 7).length;
         const conversionRate = total ? Math.round((closed / total) * 100) : 0;
@@ -2093,7 +2887,10 @@
         document.getElementById("dash-users").textContent = activeAgents;
         document.getElementById("dash-conversion").textContent =
           conversionRate + "%";
-        const previewTitle = document.querySelector("#dashboard-clients-tbody")?.closest(".card")?.querySelector("h3");
+        const previewTitle = document
+          .querySelector("#dashboard-clients-tbody")
+          ?.closest(".card")
+          ?.querySelector("h3");
         if (previewTitle) {
           previewTitle.textContent = `Derniers Clients | ${treated} traites | ${stale} sans suivi 7j | ${overdue} rappels en retard`;
         }

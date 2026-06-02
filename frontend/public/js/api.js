@@ -268,12 +268,23 @@ const searchLeads = async (query, offset = 0, limit = 100) => {
 };
 
 const getImportLogs = async (offset = 0, limit = 100) => {
-  const data = await apiCall("GET", `/logs/imports?offset=${offset}&limit=${limit}`);
+  const data = await apiCall(
+    "GET",
+    `/logs/imports?offset=${offset}&limit=${limit}`,
+  );
   return data;
 };
 
 const getAuditLogs = async (offset = 0, limit = 100) => {
-  const data = await apiCall("GET", `/logs/audit?offset=${offset}&limit=${limit}`);
+  const data = await apiCall(
+    "GET",
+    `/logs/audit?offset=${offset}&limit=${limit}`,
+  );
+  return data;
+};
+
+const getMailHistory = async () => {
+  const data = await apiCall("GET", `/mail/history`);
   return data;
 };
 
@@ -352,7 +363,9 @@ const getMailTemplates = async () => {
 };
 
 const getMailHistory = async (clientId = null) => {
-  const endpoint = clientId ? `/mail/history?clientId=${clientId}` : "/mail/history";
+  const endpoint = clientId
+    ? `/mail/history?clientId=${clientId}`
+    : "/mail/history";
   const data = await apiCall("GET", endpoint);
   return data;
 };
