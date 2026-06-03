@@ -169,6 +169,12 @@ const serializeFieldValue = (field, value) => {
   if (field === "extra_data") {
     return JSON.stringify(value || {});
   }
+  if (
+    ["assigned_at", "assignment_expires_at", "reminder_at", "last_contacted_at", "last_action_at"].includes(field) &&
+    (value === "" || value === undefined)
+  ) {
+    return null;
+  }
   return value === undefined ? null : value;
 };
 
