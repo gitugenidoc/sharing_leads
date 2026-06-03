@@ -80,11 +80,6 @@ const bulkInsertLeads = async (leads) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const result = await client.query(
-      "INSERT INTO leads (name, email, phone, status, source, amount, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id",
-      [],
-    );
-
     for (const lead of leads) {
       await client.query(
         "INSERT INTO leads (name, email, phone, status, source, amount, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())",
@@ -109,10 +104,14 @@ const bulkInsertLeads = async (leads) => {
 };
 
 // Assign lead to user (with assigned_at timestamp)
-const assignLead = async (leadId, userId) => {
+const assignLead = async (leadId, userId, { forceReassign = false } = {}) => {
   const result = await pool.query(
-    "UPDATE leads SET assigned_to = $1, assigned_at = NOW(), cancellation_expiry = NULL, updated_at = NOW() WHERE id = $2 RETURNING *",
-    [userId, leadId],
+    `UPDATE leads
+     SET assigned_to = $1, assigned_at = NOW(), cancellation_expiry = NULL, updated_at = NOW()
+     WHERE id = $2
+       AND (assigned_to IS NULL OR assigned_to = $1 OR $3 = TRUE)
+     RETURNING *`,
+    [userId, leadId, forceReassign],
   );
   return result.rows[0];
 };

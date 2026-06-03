@@ -162,7 +162,12 @@ router.put("/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const updatedLead = await Lead.updateLead(req.params.id, req.body);
+    const updates = { ...req.body };
+    if (req.user.role !== "ADMIN") {
+      delete updates.assigned_to;
+      delete updates.assignedTo;
+    }
+    const updatedLead = await Lead.updateLead(req.params.id, updates);
     res.json(updatedLead);
   } catch (err) {
     console.error(err);
@@ -190,7 +195,18 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: "User ID required" });
     }
 
-    const lead = await Lead.assignLead(req.params.id, userId);
+    const existingLead = await Lead.getLeadById(req.params.id);
+    if (!existingLead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+    const forceReassign =
+      req.body.forceReassign === true || req.body.forceReassign === "true";
+    const lead = await Lead.assignLead(req.params.id, userId, { forceReassign });
+    if (!lead) {
+      return res.status(409).json({
+        error: "This lead is already assigned. Use forceReassign to reassign explicitly.",
+      });
+    }
     res.json(lead);
   } catch (err) {
     console.error(err);

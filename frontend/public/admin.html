@@ -1587,7 +1587,7 @@
         <div class="modal-header">
           <div>
             <div class="modal-kicker">Equipe centre</div>
-            <h3 class="text-lg font-bold text-gray-900">Nouvel utilisateur</h3>
+            <h3 id="user-modal-title" class="text-lg font-bold text-gray-900">Nouvel utilisateur</h3>
             <p class="text-sm text-textMuted">
               Creez un admin de centre ou un agent rattache au centre.
             </p>
@@ -1608,7 +1608,7 @@
             />
           </div>
           <div class="field-card">
-            <label class="field-label">Mot de passe *</label>
+            <label id="user-password-label" class="field-label">Mot de passe *</label>
             <input
               type="password"
               id="user-password"
@@ -1650,7 +1650,7 @@
             >
               Annuler
             </button>
-            <button type="submit" class="btn-primary flex-1">Creer</button>
+            <button type="submit" id="user-submit-button" class="btn-primary flex-1">Creer</button>
           </div>
         </form>
       </div>
@@ -1662,6 +1662,7 @@
       let allUsers = [];
       let allCenters = [];
       let currentUser = null;
+      let editingUserId = null;
       let currentImportFile = null;
       const EXPORT_FIELDS = [
         ["ID", "id"],
@@ -2784,7 +2785,12 @@
             <span class="px-2 py-1 rounded-full text-xs font-semibold ${user.role === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800" : user.role === "ADMIN" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}">${user.role}</span>
           </td>
           <td class="px-6 py-4 text-gray-900 font-medium">${userLeads}</td>
-          <td class="px-6 py-4 text-right">
+          <td class="px-6 py-4 text-right space-x-3">
+            ${
+              user.role === "SUPER_ADMIN"
+                ? ""
+                : `<button onclick="editUser(${user.id})" class="text-primary hover:text-blue-700 font-medium text-sm">Modifier</button>`
+            }
             <button onclick="deleteUserHandler(${user.id})" class="text-red-600 hover:text-red-700 font-medium text-sm">Supprimer</button>
           </td>
         </tr>
@@ -2794,12 +2800,43 @@
       }
 
       function showUserModal() {
+        editingUserId = null;
+        document.getElementById("user-modal-title").textContent =
+          "Nouvel utilisateur";
+        document.getElementById("user-submit-button").textContent = "Creer";
         document.getElementById("user-name").value = "";
         document.getElementById("user-email").value = "";
-        document.getElementById("user-password").value = "";
+        const passwordInput = document.getElementById("user-password");
+        passwordInput.value = "";
+        passwordInput.required = true;
+        passwordInput.parentElement.style.display = "block";
+        document.getElementById("user-password-label").textContent =
+          "Mot de passe *";
         document.getElementById("user-center-name").value =
           currentUser?.center_name || "";
         renderUserRoleOptions();
+        updateUserCenterField();
+        document.getElementById("user-modal").style.display = "flex";
+      }
+
+      function editUser(userId) {
+        const user = allUsers.find((item) => item.id === userId);
+        if (!user || user.role === "SUPER_ADMIN") return;
+        editingUserId = userId;
+        document.getElementById("user-modal-title").textContent =
+          "Modifier utilisateur";
+        document.getElementById("user-submit-button").textContent =
+          "Enregistrer";
+        document.getElementById("user-name").value = user.name || "";
+        document.getElementById("user-email").value = user.email || "";
+        const passwordInput = document.getElementById("user-password");
+        passwordInput.value = "";
+        passwordInput.required = false;
+        passwordInput.parentElement.style.display = "none";
+        document.getElementById("user-center-name").value =
+          user.center_name || currentUser?.center_name || "";
+        renderUserRoleOptions();
+        document.getElementById("user-role").value = user.role;
         updateUserCenterField();
         document.getElementById("user-modal").style.display = "flex";
       }
@@ -2840,13 +2877,23 @@
           return;
         }
         try {
-          await register(
-            data.email,
-            data.password,
-            data.name,
-            data.role,
-            data.centerName,
-          );
+          if (editingUserId) {
+            await updateUser(
+              editingUserId,
+              data.email,
+              data.name,
+              data.role,
+              data.centerName,
+            );
+          } else {
+            await register(
+              data.email,
+              data.password,
+              data.name,
+              data.role,
+              data.centerName,
+            );
+          }
           closeUserModal();
           await loadCenters();
           await loadUsers();

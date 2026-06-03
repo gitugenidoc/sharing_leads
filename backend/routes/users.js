@@ -77,8 +77,11 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       return res.status(403).json({ error: "Cannot promote users to super admin" });
     }
 
+    const requestedEmail = String(req.body.email || existingUser.email)
+      .trim()
+      .toLowerCase();
     const validation = validateUser({
-      email: existingUser.email,
+      email: requestedEmail,
       name: req.body.name,
       role: requestedRole,
     });
@@ -86,6 +89,13 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       return res
         .status(400)
         .json({ error: "Validation failed", details: validation.errors });
+    }
+
+    if (requestedEmail !== existingUser.email) {
+      const duplicateUser = await User.getUserByEmail(requestedEmail);
+      if (duplicateUser && duplicateUser.id !== existingUser.id) {
+        return res.status(409).json({ error: "Email already in use" });
+      }
     }
 
     let centerId = existingUser.center_id;
@@ -105,6 +115,7 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
     }
 
     const user = await User.updateUser(req.params.id, {
+      email: requestedEmail,
       name: req.body.name,
       role: requestedRole,
       centerId: requestedRole === "SUPER_ADMIN" ? null : centerId,

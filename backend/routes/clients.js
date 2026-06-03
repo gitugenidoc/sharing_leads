@@ -68,6 +68,15 @@ const getAssignableAgent = async (user, userId) => {
   return agent;
 };
 
+const parseOptionalDurationHours = (body = {}) => {
+  const rawDuration = body.durationHours ?? body.duration;
+  if (rawDuration === undefined || rawDuration === null || rawDuration === "") {
+    return null;
+  }
+  const duration = parseFloat(rawDuration);
+  return Number.isFinite(duration) && duration > 0 ? duration : null;
+};
+
 const normalizeHeader = (value) =>
   String(value || "")
     .normalize("NFD")
@@ -697,7 +706,7 @@ router.post("/assign-random", verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: "Assignable agent not found" });
     }
 
-    const durationHours = parseFloat(req.body.durationHours || req.body.duration) || 24;
+    const durationHours = parseOptionalDurationHours(req.body);
     const clients = await Client.assignRandomClients(userId, count, agent.center_id, durationHours);
     await Promise.all(
       clients.map((client) =>
@@ -798,19 +807,20 @@ router.put("/:id", verifyToken, async (req, res) => {
     const updates = { ...req.body };
     delete updates.center_id;
     delete updates.centerId;
+    if (
+      Object.prototype.hasOwnProperty.call(updates, "assigned_to") ||
+      Object.prototype.hasOwnProperty.call(updates, "assignedTo")
+    ) {
+      return res.status(400).json({
+        error: "Use the assignment endpoint to change client assignment",
+      });
+    }
     const validation = validateClient({ ...client, ...updates });
     if (!validation.isValid) {
       return res
         .status(400)
         .json({ error: "Validation failed", details: validation.errors });
     }
-    if (updates.assigned_to) {
-      const agent = await getAssignableAgent(req.user, updates.assigned_to);
-      if (!agent || agent.center_id !== client.center_id) {
-        return res.status(400).json({ error: "Assignable agent not found" });
-      }
-    }
-
     const updatedClient = await Client.updateClient(req.params.id, updates);
     const changes = getClientChangeSummary(client, updatedClient, updates);
     if (Object.keys(changes).length > 0) {
@@ -947,8 +957,17 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: "Assignable agent not found" });
     }
 
-    const durationHours = parseFloat(req.body.durationHours || req.body.duration) || 24;
-    const client = await Client.assignClient(req.params.id, userId, durationHours);
+    const durationHours = parseOptionalDurationHours(req.body);
+    const forceReassign =
+      req.body.forceReassign === true || req.body.forceReassign === "true";
+    const client = await Client.assignClient(req.params.id, userId, durationHours, {
+      forceReassign,
+    });
+    if (!client) {
+      return res.status(409).json({
+        error: "Cette fiche est deja affectee. Utilisez forceReassign pour la reaffecter explicitement.",
+      });
+    }
     await Client.addClientHistory({
       clientId: client.id,
       userId: req.user.id,

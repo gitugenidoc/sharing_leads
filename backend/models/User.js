@@ -88,13 +88,13 @@ const createUser = async ({
   return getUserById(result.rows[0].id);
 };
 
-const updateUser = async (id, { name, role, centerId = null }) => {
+const updateUser = async (id, { email, name, role, centerId = null }) => {
   const result = await query(
     `UPDATE users
-     SET name = $1, role = $2, center_id = $3
-     WHERE id = $4
+     SET email = $1, name = $2, role = $3, center_id = $4
+     WHERE id = $5
      RETURNING id`,
-    [name, role, centerId, id],
+    [email, name, role, centerId, id],
   );
   if (!result.rows[0]) {
     return null;

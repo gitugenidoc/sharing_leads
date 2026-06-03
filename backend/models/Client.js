@@ -214,7 +214,6 @@ const releaseExpiredAssignments = async () => {
 };
 
 const getAllClients = async (offset = 0, limit = 100, centerId = null) => {
-  await releaseExpiredAssignments();
   const scope = withCenterFilter("SELECT * FROM clients", centerId, 3);
   const result = await pool.query(
     `${scope.text} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
@@ -224,14 +223,12 @@ const getAllClients = async (offset = 0, limit = 100, centerId = null) => {
 };
 
 const getClientsCount = async (centerId = null) => {
-  await releaseExpiredAssignments();
   const scope = withCenterFilter("SELECT COUNT(*) FROM clients", centerId, 1);
   const result = await pool.query(scope.text, scope.params);
   return parseInt(result.rows[0].count, 10);
 };
 
 const getUserClients = async (userId, offset = 0, limit = 100) => {
-  await releaseExpiredAssignments();
   const result = await pool.query(
     "SELECT * FROM clients WHERE assigned_to = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
     [userId, limit, offset],
@@ -240,7 +237,6 @@ const getUserClients = async (userId, offset = 0, limit = 100) => {
 };
 
 const getUserClientsCount = async (userId) => {
-  await releaseExpiredAssignments();
   const result = await pool.query(
     "SELECT COUNT(*) FROM clients WHERE assigned_to = $1",
     [userId],
@@ -249,7 +245,6 @@ const getUserClientsCount = async (userId) => {
 };
 
 const getClientById = async (id) => {
-  await releaseExpiredAssignments();
   const result = await pool.query("SELECT * FROM clients WHERE id = $1", [id]);
   return result.rows[0];
 };
@@ -317,7 +312,12 @@ const deleteClient = async (id) => {
   await pool.query("DELETE FROM clients WHERE id = $1", [id]);
 };
 
-const assignClient = async (clientId, userId, durationHours = 24) => {
+const assignClient = async (
+  clientId,
+  userId,
+  durationHours = null,
+  { forceReassign = false } = {},
+) => {
   let expiresAt = null;
   if (durationHours && durationHours > 0) {
     expiresAt = new Date();
@@ -330,15 +330,15 @@ const assignClient = async (clientId, userId, durationHours = 24) => {
          assigned_at = NOW(), 
          assignment_expires_at = $2, 
          updated_at = NOW() 
-     WHERE id = $3 
+     WHERE id = $3
+       AND (assigned_to IS NULL OR assigned_to = $1 OR $4 = TRUE)
      RETURNING *`,
-    [userId, expiresAt, clientId],
+    [userId, expiresAt, clientId, forceReassign],
   );
   return result.rows[0];
 };
 
-const assignRandomClients = async (userId, count, centerId, durationHours = 24) => {
-  await releaseExpiredAssignments();
+const assignRandomClients = async (userId, count, centerId, durationHours = null) => {
   let expiresAt = null;
   if (durationHours && durationHours > 0) {
     expiresAt = new Date();
@@ -354,7 +354,7 @@ const assignRandomClients = async (userId, count, centerId, durationHours = 24) 
      WHERE id IN (
        SELECT id
        FROM clients
-       WHERE (assigned_to IS NULL OR assignment_expires_at < NOW())
+       WHERE assigned_to IS NULL
          AND center_id = $4
        ORDER BY
          CASE
@@ -462,7 +462,6 @@ const getClientHistory = async (clientId) => {
 };
 
 const searchClients = async (query, offset = 0, limit = 100, centerId = null) => {
-  await releaseExpiredAssignments();
   await ensureFlexibleClientColumns();
   const params = [`%${query}%`, limit, offset];
   let centerFilter = "";

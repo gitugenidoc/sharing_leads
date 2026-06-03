@@ -301,8 +301,7 @@
               type="email"
               id="email-recipient"
               required
-              readonly
-              class="field-control bg-gray-50 text-gray-600"
+              class="field-control"
             />
           </div>
           <div class="mt-4"><label class="field-label">Template conseille</label><select id="email-template" onchange="applySelectedMailTemplate()" class="field-control"></select><p id="email-template-help" class="mail-help">Le contenu est adapte automatiquement avec les donnees de la fiche.</p></div></div><div>
@@ -924,12 +923,8 @@
       async function openEmailModal(leadId) {
         const lead = allLeads.find((item) => item.id === leadId);
         if (!lead) return;
-        if (!lead.email) {
-          alert("Erreur : Ce client n'a pas d'adresse e-mail renseignee.");
-          return;
-        }
         selectedLeadForMail = lead;
-        document.getElementById("email-recipient").value = lead.email;
+        document.getElementById("email-recipient").value = lead.email || "";
         document.getElementById("email-preview-box").style.display = "none";
         const templates = await ensureMailTemplates();
         const select = document.getElementById("email-template");
