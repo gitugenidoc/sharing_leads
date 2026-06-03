@@ -202,6 +202,15 @@
         gap: 0.5rem;
         justify-content: flex-end;
       }
+      .action-row select {
+        min-height: 36px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.45rem 0.65rem;
+        font-size: 13px;
+        color: #334155;
+        background: white;
+      }
       .btn-primary,
       .btn-secondary,
       .btn-danger {
@@ -790,6 +799,22 @@
                 <p class="text-sm text-gray-500" id="leads-count">0 clients</p>
               </div>
               <div class="flex items-center gap-3">
+                <button
+                  onclick="exportClients('csv')"
+                  class="px-3 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+                  title="Exporter les clients en CSV"
+                >
+                  <span class="material-symbols-outlined">download</span>
+                  CSV
+                </button>
+                <button
+                  onclick="exportClients('excel')"
+                  class="px-3 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
+                  title="Exporter les clients en Excel"
+                >
+                  <span class="material-symbols-outlined">table</span>
+                  Excel
+                </button>
                 <select
                   id="random-agent"
                   class="px-3 py-2 border border-gray-300 rounded-lg text-sm"
@@ -1149,7 +1174,7 @@
           </div>
 
           <!-- MAILS TAB -->
-          <div id="mails-tab" class="tab-content" style="display: none">
+          <div id="mails-tab-legacy" class="tab-content" style="display: none">
             <div class="mb-6 flex items-center justify-between gap-4">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">
@@ -1206,7 +1231,7 @@
                     </tr>
                   </thead>
                   <tbody
-                    id="mail-history-tbody"
+                    id="mail-history-tbody-legacy"
                     class="divide-y divide-gray-100"
                   >
                     <tr>
@@ -1236,7 +1261,7 @@
                           <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
                         </tr>
                       </thead>
-                      <tbody id="import-logs-tbody" class="divide-y divide-gray-100"></tbody>
+                      <tbody id="import-logs-tbody-legacy" class="divide-y divide-gray-100"></tbody>
                     </table>
                   </div>
                 </section>
@@ -1255,7 +1280,7 @@
                           <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Date</th>
                         </tr>
                       </thead>
-                      <tbody id="audit-logs-tbody" class="divide-y divide-gray-100"></tbody>
+                      <tbody id="audit-logs-tbody-legacy" class="divide-y divide-gray-100"></tbody>
                     </table>
                   </div>
                 </section>
@@ -1427,6 +1452,16 @@
               class="btn-primary"
             >
               Envoyer e-mail
+            </button>
+            <select id="client-detail-agent-select" title="Agent a affecter">
+              <option value="">Agent...</option>
+            </select>
+            <button
+              id="client-detail-reassign-btn"
+              type="button"
+              class="btn-secondary"
+            >
+              Reaffecter
             </button>
             <button
               type="button"
@@ -1628,6 +1663,28 @@
       let allCenters = [];
       let currentUser = null;
       let currentImportFile = null;
+      const EXPORT_FIELDS = [
+        ["ID", "id"],
+        ["Centre", "center_id"],
+        ["Nom", "nom"],
+        ["Prenom", "prenom"],
+        ["Telephone GSM", "tel_gsm"],
+        ["Telephone fixe", "tel_fixe"],
+        ["Telephone professionnel", "tel_professionnel"],
+        ["Email", "email"],
+        ["Ville", "ville"],
+        ["Code postal", "code_postal"],
+        ["Mutuelle", "nom_mutuelle"],
+        ["Prix mutuelle", "prix_mutuelle"],
+        ["Statut", "status"],
+        ["Agent", "assigned_to"],
+        ["Rappel", "reminder_at"],
+        ["Score", "nlp_score"],
+        ["Qualification", "nlp_label"],
+        ["Notes", "notes"],
+        ["Cree le", "created_at"],
+        ["Mis a jour le", "updated_at"],
+      ];
 
       const CLIENT_STATUSES = [
         ["NEW", "Nouveau"],
@@ -1913,6 +1970,7 @@
         if (mailBtn) {
           mailBtn.onclick = () => openEmailModal(leadId);
         }
+        configureDetailAssignment(lead);
 
         document.getElementById("client-detail-modal").style.display = "flex";
       }
@@ -2230,6 +2288,113 @@
             submitBtn.textContent = "Envoyer";
           }
         }
+      }
+
+      function getAssignableAgentsForClient(lead) {
+        return allUsers.filter(
+          (user) =>
+            user.role === "AGENT" &&
+            (currentUser?.role === "SUPER_ADMIN"
+              ? true
+              : user.center_id === lead.center_id),
+        );
+      }
+
+      function configureDetailAssignment(lead) {
+        const select = document.getElementById("client-detail-agent-select");
+        const button = document.getElementById("client-detail-reassign-btn");
+        if (!select || !button) return;
+
+        const agents = getAssignableAgentsForClient(lead);
+        select.innerHTML =
+          '<option value="">Agent...</option>' +
+          agents
+            .map(
+              (agent) =>
+                `<option value="${agent.id}" ${lead.assigned_to === agent.id ? "selected" : ""}>${escapeHtml(agent.name)}</option>`,
+            )
+            .join("");
+        select.disabled = agents.length === 0;
+        button.disabled = agents.length === 0;
+        button.onclick = () => reassignClientFromDetails(lead.id);
+      }
+
+      async function reassignClientFromDetails(leadId) {
+        const select = document.getElementById("client-detail-agent-select");
+        const userId = select?.value;
+        if (!userId) {
+          alert("Selectionnez un agent.");
+          return;
+        }
+        try {
+          const updated = await assignLead(leadId, userId);
+          const index = allLeads.findIndex((item) => item.id === updated.id);
+          if (index >= 0) allLeads[index] = updated;
+          selectedLeadForDetails = updated;
+          renderLeads(allLeads);
+          renderImportAgentAssignments();
+          updateDashboard();
+          showClientDetails(updated.id);
+          alert("Client reaffecte.");
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
+        }
+      }
+
+      function getExportRows() {
+        return allLeads.map((lead) => {
+          const agent = allUsers.find((user) => user.id === lead.assigned_to);
+          return EXPORT_FIELDS.map(([, field]) =>
+            field === "assigned_to" ? agent?.name || "" : lead[field] || "",
+          );
+        });
+      }
+
+      function downloadBlob(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+      }
+
+      function exportClients(format) {
+        if (!allLeads.length) {
+          alert("Aucun client a exporter.");
+          return;
+        }
+        const headers = EXPORT_FIELDS.map(([label]) => label);
+        const rows = getExportRows();
+        const filenameDate = new Date().toISOString().slice(0, 10);
+        if (format === "excel") {
+          const htmlRows = [headers, ...rows]
+            .map(
+              (row) =>
+                `<tr>${row.map((value) => `<td>${escapeHtml(value)}</td>`).join("")}</tr>`,
+            )
+            .join("");
+          downloadBlob(
+            `<html><head><meta charset="utf-8"></head><body><table>${htmlRows}</table></body></html>`,
+            `clients-${filenameDate}.xls`,
+            "application/vnd.ms-excel;charset=utf-8",
+          );
+          return;
+        }
+        const csv = [headers, ...rows]
+          .map((row) =>
+            row
+              .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+              .join(","),
+          )
+          .join("\r\n");
+        downloadBlob(
+          `\ufeff${csv}`,
+          `clients-${filenameDate}.csv`,
+          "text/csv;charset=utf-8",
+        );
       }
 
       async function updateLeadStatus(leadId, status) {

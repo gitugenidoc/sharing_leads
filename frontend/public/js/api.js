@@ -254,6 +254,15 @@ const getClientHistory = async (id) => {
   return data.history || [];
 };
 
+const logClientContact = async (id, channel, phone = "", message = "") => {
+  const data = await apiCall("POST", `/clients/${id}/contact`, {
+    channel,
+    phone,
+    message,
+  });
+  return data;
+};
+
 const getClientStatuses = async () => {
   const data = await apiCall("GET", "/clients/statuses/list");
   return data;
@@ -395,6 +404,7 @@ Object.assign(window, {
   assignLead,
   assignRandomLeads,
   getClientHistory,
+  logClientContact,
   getClientStatuses,
   searchLeads,
   getImportLogs,

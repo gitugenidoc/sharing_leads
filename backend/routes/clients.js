@@ -876,6 +876,60 @@ router.get("/:id/history", verifyToken, async (req, res) => {
   }
 });
 
+router.post("/:id/contact", verifyToken, async (req, res) => {
+  try {
+    const client = await Client.getClientById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    if (!canAccessClient(req.user, client)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const channel = String(req.body.channel || "").toUpperCase();
+    const allowedChannels = ["CALL", "SMS", "WHATSAPP"];
+    if (!allowedChannels.includes(channel)) {
+      return res.status(400).json({ error: "Invalid contact channel" });
+    }
+
+    const phone = String(req.body.phone || "").trim();
+    const message = String(req.body.message || "").trim();
+    const actionLabels = {
+      CALL: "CALL_STARTED",
+      SMS: "SMS_STARTED",
+      WHATSAPP: "WHATSAPP_STARTED",
+    };
+
+    const updatedClient = await Client.updateClient(req.params.id, {
+      last_contacted_at: new Date(),
+      last_action_at: new Date(),
+    });
+    await Client.addClientHistory({
+      clientId: updatedClient.id,
+      userId: req.user.id,
+      action: actionLabels[channel],
+      oldValue: { last_contacted_at: client.last_contacted_at },
+      newValue: {
+        channel,
+        phone: phone || null,
+        message: message || null,
+        last_contacted_at: updatedClient.last_contacted_at,
+      },
+      note: `${channel === "CALL" ? "Appel lance" : channel === "SMS" ? "SMS prepare" : "WhatsApp prepare"}${phone ? ` vers ${phone}` : ""}`,
+    });
+    await Log.createAuditLog({
+      userId: req.user.id,
+      action: actionLabels[channel],
+      entityType: "client",
+      entityId: updatedClient.id,
+      newValue: { channel, phone: phone || null },
+    });
+
+    res.json({ message: "Contact action logged", client: updatedClient });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
   try {
     const { userId } = req.body;

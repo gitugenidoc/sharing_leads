@@ -93,6 +93,9 @@
       .btn-primary:hover { filter: brightness(.96); }
       .btn-secondary { background: white; color: #334155; border: 1px solid #e5e7eb; }
       .btn-secondary:hover { background: #f8fafc; }
+      .btn-contact { background: #f8fafc; color: #111827; border: 1px solid #e5e7eb; }
+      .btn-contact:hover { background: #eef2f7; }
+      .btn-contact:disabled { cursor: not-allowed; opacity: .5; }
       .detail-section {
         border: 1px solid #eef0f2;
         border-radius: 12px;
@@ -245,6 +248,27 @@
               Envoyer e-mail
             </button>
             <button
+              id="client-detail-call-btn"
+              type="button"
+              class="btn-secondary btn-contact"
+            >
+              Appeler
+            </button>
+            <button
+              id="client-detail-sms-btn"
+              type="button"
+              class="btn-secondary btn-contact"
+            >
+              SMS
+            </button>
+            <button
+              id="client-detail-whatsapp-btn"
+              type="button"
+              class="btn-secondary btn-contact"
+            >
+              WhatsApp
+            </button>
+            <button
               type="button"
               onclick="saveClientDetails()"
               class="btn-primary"
@@ -332,6 +356,8 @@
     <script>
       let allLeads = [];
       let sortAscending = true;
+      const DEFAULT_CONTACT_MESSAGE =
+        "Bonjour [Civilite] [Nom], nous vous contactons au sujet de votre demande de mutuelle. Cordialement, SecurAssure.";
 
       const CLIENT_STATUSES = [
         ["NEW", "Nouveau"],
@@ -659,6 +685,7 @@
         if (mailBtn) {
           mailBtn.onclick = () => openEmailModal(leadId);
         }
+        configureContactActions(lead);
 
         document.getElementById("client-detail-modal").style.display = "flex";
       }
@@ -778,6 +805,75 @@
           alert("Fiche enregistree.");
         } catch (err) {
           alert(err.formattedMessage || err.message);
+        }
+      }
+
+      function normalizePhoneForAction(phone) {
+        return String(phone || "")
+          .replace(/[^\d+]/g, "")
+          .replace(/^00/, "+");
+      }
+
+      function normalizePhoneForWhatsapp(phone) {
+        const cleaned = normalizePhoneForAction(phone);
+        const digits = cleaned.replace(/[^\d]/g, "");
+        if (cleaned.startsWith("+")) return digits;
+        if (digits.length === 10 && digits.startsWith("0")) {
+          return `33${digits.slice(1)}`;
+        }
+        return digits;
+      }
+
+      function getContactMessage(lead) {
+        return fillTemplate(DEFAULT_CONTACT_MESSAGE, lead);
+      }
+
+      function configureContactActions(lead) {
+        const phone = normalizePhoneForAction(getPrimaryPhone(lead, ""));
+        const actions = [
+          ["client-detail-call-btn", "CALL"],
+          ["client-detail-sms-btn", "SMS"],
+          ["client-detail-whatsapp-btn", "WHATSAPP"],
+        ];
+        actions.forEach(([buttonId, channel]) => {
+          const button = document.getElementById(buttonId);
+          if (!button) return;
+          button.disabled = !phone;
+          button.onclick = () => openContactAction(lead.id, channel);
+        });
+      }
+
+      async function openContactAction(leadId, channel) {
+        const lead = allLeads.find((item) => item.id === leadId);
+        if (!lead) return;
+        const phone = normalizePhoneForAction(getPrimaryPhone(lead, ""));
+        if (!phone) {
+          alert("Ce client n'a pas de telephone renseigne.");
+          return;
+        }
+
+        const message = getContactMessage(lead);
+        let url = `tel:${phone}`;
+        if (channel === "SMS") {
+          url = `sms:${phone}?body=${encodeURIComponent(message)}`;
+        } else if (channel === "WHATSAPP") {
+          const whatsappPhone = normalizePhoneForWhatsapp(phone);
+          url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
+        }
+
+        try {
+          await logClientContact(lead.id, channel, phone, channel === "CALL" ? "" : message);
+          await loadLeads();
+          renderClientHistory(lead.id);
+        } catch (err) {
+          console.error(err);
+        }
+
+        if (channel === "WHATSAPP") {
+          const opened = window.open(url, "_blank", "noopener");
+          if (!opened) window.location.href = url;
+        } else {
+          window.location.href = url;
         }
       }
 
