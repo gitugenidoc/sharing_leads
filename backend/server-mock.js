@@ -194,7 +194,6 @@ app.post("/api/auth/register", (req, res) => {
   try {
     const { email, password, name, role } = req.body;
 
-    // Validate input
     if (!email || !password || !name) {
       return res.status(400).json({
         error: "Validation failed",
