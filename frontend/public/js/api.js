@@ -192,12 +192,20 @@ const getUserById = async (id) => {
   return data;
 };
 
-const updateUser = async (id, email, name, role, centerName = "") => {
+const updateUser = async (
+  id,
+  email,
+  name,
+  role,
+  centerName = "",
+  centerId = "",
+) => {
   const data = await apiCall("PUT", `/users/${id}`, {
     email,
     name,
     role,
     centerName,
+    centerId,
   });
   return data;
 };

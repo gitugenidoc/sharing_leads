@@ -1641,14 +1641,9 @@
             style="display: none"
           >
             <label class="field-label">Centre *</label>
-            <input
-              type="text"
-              id="user-center-name"
-              list="center-list"
-              class="field-control"
-              placeholder="Nom du centre"
-            />
-            <datalist id="center-list"></datalist>
+            <select id="user-center-id" class="field-control">
+              <option value="">Choisir un centre...</option>
+            </select>
           </div>
           <div class="action-row pt-2">
             <button
@@ -2637,7 +2632,7 @@
         const importSelect = document.getElementById("import-center");
         const leadWrapper = document.getElementById("lead-center-wrapper");
         const leadSelect = document.getElementById("lead-center");
-        const centerList = document.getElementById("center-list");
+        const userCenterSelect = document.getElementById("user-center-id");
 
         if (importWrapper && importSelect) {
           importWrapper.style.display =
@@ -2651,13 +2646,9 @@
           leadSelect.innerHTML =
             '<option value="">Choisir un centre...</option>' + options;
         }
-        if (centerList) {
-          centerList.innerHTML = allCenters
-            .map(
-              (center) =>
-                `<option value="${escapeHtml(center.name)}"></option>`,
-            )
-            .join("");
+        if (userCenterSelect) {
+          userCenterSelect.innerHTML =
+            '<option value="">Choisir un centre...</option>' + options;
         }
       }
 
@@ -2814,8 +2805,8 @@
         passwordInput.parentElement.style.display = "block";
         document.getElementById("user-password-label").textContent =
           "Mot de passe *";
-        document.getElementById("user-center-name").value =
-          currentUser?.center_name || "";
+        document.getElementById("user-center-id").value =
+          currentUser?.center_id || "";
         renderUserRoleOptions();
         updateUserCenterField();
         document.getElementById("user-modal").style.display = "flex";
@@ -2835,8 +2826,8 @@
         passwordInput.value = "";
         passwordInput.required = false;
         passwordInput.parentElement.style.display = "none";
-        document.getElementById("user-center-name").value =
-          user.center_name || currentUser?.center_name || "";
+        document.getElementById("user-center-id").value =
+          user.center_id || currentUser?.center_id || "";
         renderUserRoleOptions();
         document.getElementById("user-role").value = user.role;
         updateUserCenterField();
@@ -2872,10 +2863,13 @@
           password: document.getElementById("user-password").value,
           name: document.getElementById("user-name").value,
           role: document.getElementById("user-role").value,
-          centerName: document.getElementById("user-center-name").value,
+          centerId:
+            document.getElementById("user-center-id").value ||
+            currentUser?.center_id ||
+            "",
         };
-        if (currentUser?.role === "SUPER_ADMIN" && !data.centerName.trim()) {
-          alert("Indiquez le centre.");
+        if (currentUser?.role === "SUPER_ADMIN" && !data.centerId) {
+          alert("Choisissez un centre.");
           return;
         }
         try {
@@ -2885,7 +2879,8 @@
               data.email,
               data.name,
               data.role,
-              data.centerName,
+              "",
+              data.centerId,
             );
           } else {
             await register(
@@ -2893,7 +2888,8 @@
               data.password,
               data.name,
               data.role,
-              data.centerName,
+              "",
+              data.centerId,
             );
           }
           closeUserModal();

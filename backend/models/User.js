@@ -11,6 +11,19 @@ const USER_SELECT = `
 
 const normalizeCenterName = (name) => (name || "").trim();
 
+let userRoleConstraintReady = false;
+
+const ensureUserRoleConstraint = async () => {
+  if (userRoleConstraintReady) return;
+  await query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+  await query(`
+    ALTER TABLE users
+    ADD CONSTRAINT users_role_check
+    CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'AGENT'))
+  `);
+  userRoleConstraintReady = true;
+};
+
 const getAllUsers = async (viewer = null) => {
   const params = [];
   let where = "";
@@ -79,6 +92,7 @@ const createUser = async ({
   role = "AGENT",
   centerId = null,
 }) => {
+  await ensureUserRoleConstraint();
   const result = await query(
     `INSERT INTO users (email, password, name, role, center_id, created_at)
      VALUES ($1, $2, $3, $4, $5, NOW())
@@ -89,6 +103,7 @@ const createUser = async ({
 };
 
 const updateUser = async (id, { email, name, role, centerId = null }) => {
+  await ensureUserRoleConstraint();
   const result = await query(
     `UPDATE users
      SET email = $1, name = $2, role = $3, center_id = $4
