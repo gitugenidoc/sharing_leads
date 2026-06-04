@@ -166,6 +166,8 @@
         width: min(1080px, 100%);
         max-height: min(88vh, 900px);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
         border-radius: 14px;
         border: 1px solid #e5e7eb;
         background: white;
@@ -175,13 +177,7 @@
         width: min(520px, 100%);
       }
       .modal-panel-scroll {
-        display: flex;
-        flex-direction: column;
         max-height: calc(100vh - 2rem);
-      }
-      .modal-panel-scroll .modal-body {
-        min-height: 0;
-        overflow-y: auto;
       }
       .modal-panel-md {
         width: min(760px, 100%);
@@ -202,6 +198,8 @@
         letter-spacing: 0.04em;
       }
       .modal-body {
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
         padding: 1.25rem;
       }
@@ -1592,7 +1590,7 @@
 
     <!-- USER MODAL -->
     <div id="user-modal" class="modal-backdrop" style="display: none">
-      <div class="modal-panel modal-panel-sm modal-panel-scroll">
+      <div class="modal-panel modal-panel-sm">
         <div class="modal-header">
           <div>
             <div class="modal-kicker">Equipe centre</div>
