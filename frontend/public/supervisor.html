@@ -32,42 +32,51 @@
     <link href="css/coveo-chatbot.css?v=20260605" rel="stylesheet" />
     <style>
       * { font-family: "Inter", system-ui, sans-serif; }
-      body { background: #f3f4f6; color: #1e293b; }
-      .app-shell { min-height: 100vh; display: grid; grid-template-columns: 72px 1fr; }
-      .sidebar { background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
-      .icon-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: #64748b; }
-      .icon-btn:hover { background: #f8fafc; color: #d62d5a; }
-      .icon-btn.active { background: #d62d5a; color: #ffffff; }
-      .metric-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; min-height: 112px; }
-      .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; }
+      body { background-color: #f3f4f6; color: #1e293b; padding: 2rem; }
+      .dashboard-container { background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06); display: flex; height: calc(100vh - 4rem); max-width: 1600px; margin: 0 auto; border: 1px solid #e5e7eb; }
+      .sidebar { width: 64px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; flex-shrink: 0; }
+      .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: #fafafa; min-width: 0; }
+      .topbar { min-height: 64px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: .75rem 1.5rem; justify-content: space-between; background: #ffffff; gap: 1rem; }
+      .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+      .metric-card { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; min-height: 118px; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); }
+      .panel { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); }
       .status-pill { border-radius: 999px; padding: .25rem .55rem; font-size: .72rem; font-weight: 700; }
       .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(15, 23, 42, .48); padding: 1rem; }
       .modal-panel { width: min(980px, 100%); max-height: calc(100vh - 2rem); overflow: hidden; display: flex; flex-direction: column; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .22); }
       .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #eef0f2; padding: 1rem 1.25rem; }
       .modal-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1.25rem; }
       @media (max-width: 900px) {
-        .app-shell { grid-template-columns: 1fr; }
+        body { padding: .75rem; }
+        .dashboard-container { height: calc(100vh - 1.5rem); }
         .sidebar { display: none; }
+        .topbar { align-items: flex-start; flex-direction: column; padding: 1rem; }
+        .content-area { padding: 1rem; }
       }
     </style>
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="mb-8 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">SA</div>
-        <button class="icon-btn active" title="Supervision">
-          <i class="fa-solid fa-chart-line"></i>
-        </button>
-        <button class="icon-btn mt-auto" title="Deconnexion" onclick="handleLogout()">
-          <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
-      </aside>
+    <div class="dashboard-container">
+      <nav class="sidebar bg-white">
+        <div class="mb-8 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-xl text-white">
+          <i class="fa-solid fa-envelope-open-text"></i>
+        </div>
+        <div class="flex w-full flex-1 flex-col items-center gap-6">
+          <button class="w-full border-r-2 border-primary py-1 text-center text-primary" title="Supervision">
+            <i class="fa-solid fa-chart-line text-lg"></i>
+          </button>
+        </div>
+        <div class="mt-auto flex w-full flex-col items-center gap-6">
+          <button class="text-textMuted transition-colors hover:text-primary" title="Deconnexion" onclick="handleLogout()">
+            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+          </button>
+        </div>
+      </nav>
 
-      <main class="min-w-0">
-        <header class="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-5 py-4 backdrop-blur">
-          <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="main-content">
+        <header class="topbar">
+          <div class="flex w-full flex-wrap items-center justify-between gap-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-primary">Supervision centre</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-textMuted">Supervision centre</p>
               <h1 class="text-xl font-semibold text-textMain" id="page-title">Performance commerciale</h1>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -88,7 +97,7 @@
           </div>
         </header>
 
-        <section class="px-5 py-5">
+        <main class="content-area">
           <div id="error-box" class="mb-4 hidden rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-700"></div>
 
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -183,8 +192,8 @@
               </section>
             </aside>
           </div>
-        </section>
-      </main>
+        </main>
+      </div>
     </div>
 
     <div id="agent-detail-modal" class="modal-backdrop">

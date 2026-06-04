@@ -115,7 +115,7 @@
       <img class="coveo-chatbot-mascot" src="${mascotUrl}" alt="" />
       <span>
         <span class="coveo-chatbot-title"><span class="coveo-chatbot-dot"></span>Coveo Assistant</span>
-        <span class="coveo-chatbot-subtitle">Expert mutuelle France</span>
+        <span class="coveo-chatbot-subtitle">Expert mutuelle</span>
       </span>
     `;
     launcher.addEventListener("click", openPanel);
@@ -128,7 +128,7 @@
       <div class="coveo-chatbot-header">
         <img src="${mascotUrl}" alt="" />
         <div>
-          <div class="coveo-chatbot-kicker">France prioritaire</div>
+          <div class="coveo-chatbot-kicker">Assistant assurance</div>
           <div class="coveo-chatbot-heading">Coveo Assistant</div>
           <div class="coveo-chatbot-status">Sante, mutuelle, prevoyance, deces</div>
         </div>
@@ -174,7 +174,7 @@
     appendMessage({
       role: "bot",
       text:
-        "Bonjour, je suis Coveo Assistant. Je reponds par defaut pour la France. Posez une question sur la mutuelle, la Securite sociale, la prevoyance ou les obseques.",
+        "Bonjour, je suis Coveo Assistant. Posez une question sur la mutuelle, la Securite sociale, la prevoyance ou les obseques.",
       sources: [],
     });
   };
