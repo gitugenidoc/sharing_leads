@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecurAssure - Supervision centre</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#d62d5a",
+              background: "#f3f4f6",
+              textMain: "#1e293b",
+              textMuted: "#64748b",
+            },
+            fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      * { font-family: "Inter", system-ui, sans-serif; }
+      body { background: #f3f4f6; color: #1e293b; }
+      .app-shell { min-height: 100vh; display: grid; grid-template-columns: 72px 1fr; }
+      .sidebar { background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+      .icon-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: #64748b; }
+      .icon-btn:hover { background: #f8fafc; color: #d62d5a; }
+      .icon-btn.active { background: #d62d5a; color: #ffffff; }
+      .metric-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; min-height: 112px; }
+      .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; }
+      .status-pill { border-radius: 999px; padding: .25rem .55rem; font-size: .72rem; font-weight: 700; }
+      @media (max-width: 900px) {
+        .app-shell { grid-template-columns: 1fr; }
+        .sidebar { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="mb-8 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">SA</div>
+        <button class="icon-btn active" title="Supervision">
+          <i class="fa-solid fa-chart-line"></i>
+        </button>
+        <button class="icon-btn mt-auto" title="Deconnexion" onclick="handleLogout()">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </aside>
+
+      <main class="min-w-0">
+        <header class="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-5 py-4 backdrop-blur">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-primary">Supervision centre</p>
+              <h1 class="text-xl font-semibold text-textMain" id="page-title">Performance commerciale</h1>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="center-filter" class="hidden rounded-lg border-gray-200 text-sm" onchange="loadDashboard()"></select>
+              <select id="period-filter" class="rounded-lg border-gray-200 text-sm" onchange="applyPeriodPreset()">
+                <option value="7d">7 derniers jours</option>
+                <option value="today">Aujourd'hui</option>
+                <option value="month">Mois courant</option>
+                <option value="all">Tout</option>
+                <option value="custom">Personnalise</option>
+              </select>
+              <input id="from-filter" type="date" class="hidden rounded-lg border-gray-200 text-sm" onchange="loadDashboard()" />
+              <input id="to-filter" type="date" class="hidden rounded-lg border-gray-200 text-sm" onchange="loadDashboard()" />
+              <button class="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white" onclick="loadDashboard()">
+                <i class="fa-solid fa-rotate-right mr-2"></i>Actualiser
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <section class="px-5 py-5">
+          <div id="error-box" class="mb-4 hidden rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-700"></div>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="metric-card">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-textMuted">Prix mutuelle total</span>
+                <i class="fa-solid fa-euro-sign text-primary"></i>
+              </div>
+              <div id="kpi-total-price" class="mt-3 text-2xl font-semibold">0 EUR</div>
+              <p class="mt-2 text-xs text-textMuted">Toutes fiches du perimetre</p>
+            </article>
+            <article class="metric-card">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-textMuted">Prix ferme</span>
+                <i class="fa-solid fa-lock text-green-600"></i>
+              </div>
+              <div id="kpi-closed-price" class="mt-3 text-2xl font-semibold">0 EUR</div>
+              <p id="kpi-close-rate" class="mt-2 text-xs text-green-700">0% de fermeture</p>
+            </article>
+            <article class="metric-card">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-textMuted">Leads fermes</span>
+                <i class="fa-solid fa-circle-check text-green-600"></i>
+              </div>
+              <div id="kpi-closed" class="mt-3 text-2xl font-semibold">0</div>
+              <p id="kpi-total" class="mt-2 text-xs text-textMuted">0 leads au total</p>
+            </article>
+            <article class="metric-card">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-textMuted">Retards</span>
+                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+              </div>
+              <div id="kpi-overdue" class="mt-3 text-2xl font-semibold">0</div>
+              <p id="kpi-stale" class="mt-2 text-xs text-amber-700">0 sans action 48h</p>
+            </article>
+          </div>
+
+          <div class="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
+            <section class="panel p-4">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-sm font-semibold">Performance par agent</h2>
+                  <p class="text-xs text-textMuted">Fermetures, prix mutuelle, retards et activite</p>
+                </div>
+                <input
+                  id="agent-search"
+                  class="w-56 rounded-lg border-gray-200 text-sm"
+                  placeholder="Filtrer agent..."
+                  oninput="renderAgents()"
+                />
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                  <thead class="border-y border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
+                    <tr>
+                      <th class="px-3 py-3 font-semibold">Agent</th>
+                      <th class="px-3 py-3 font-semibold">Assignes</th>
+                      <th class="px-3 py-3 font-semibold">Fermes</th>
+                      <th class="px-3 py-3 font-semibold">Prix ferme</th>
+                      <th class="px-3 py-3 font-semibold">Taux</th>
+                      <th class="px-3 py-3 font-semibold">Retards</th>
+                      <th class="px-3 py-3 font-semibold">Derniere action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="agents-tbody" class="divide-y divide-gray-100">
+                    <tr><td colspan="7" class="px-3 py-8 text-center text-gray-500">Chargement...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside class="space-y-5">
+              <section class="panel p-4">
+                <div class="mb-3 flex items-center justify-between">
+                  <h2 class="text-sm font-semibold">Pipeline statuts</h2>
+                  <span id="status-count" class="text-xs text-textMuted">0 statuts</span>
+                </div>
+                <div class="h-64">
+                  <canvas id="status-chart"></canvas>
+                </div>
+              </section>
+
+              <section class="panel p-4">
+                <div class="mb-3 flex items-center justify-between">
+                  <h2 class="text-sm font-semibold">Alertes centre</h2>
+                  <span id="alerts-count" class="text-xs text-textMuted">0 alerte</span>
+                </div>
+                <div id="alerts-list" class="max-h-96 space-y-2 overflow-y-auto text-sm">
+                  <p class="rounded-lg bg-gray-50 p-3 text-textMuted">Chargement...</p>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/api.js?v=supervisor-20260604"></script>
+    <script>
+      const STATUS_LABELS = {
+        NEW: "Nouveau",
+        TO_CALL: "A appeler",
+        UNREACHABLE: "Injoignable",
+        CALLBACK_SCHEDULED: "Rappel prevu",
+        QUOTE_SENT: "Devis envoye",
+        INTERESTED: "Interesse",
+        REFUSED: "Refus",
+        SIGNED: "Signe",
+        LOST: "Perdu",
+        CONTACTED: "Contacte",
+        QUALIFIED: "Qualifie",
+        CLOSED: "Ferme",
+      };
+      const FINAL_SUCCESS = ["SIGNED", "CLOSED"];
+      let currentUser = null;
+      let dashboardData = null;
+      let statusChart = null;
+
+      window.addEventListener("load", async () => {
+        currentUser = getUser();
+        if (!currentUser || !["SUPER_ADMIN", "ADMIN", "SUPERVISOR"].includes(currentUser.role)) {
+          window.location.href = "/index.html";
+          return;
+        }
+
+        document.getElementById("page-title").textContent =
+          currentUser.center_name
+            ? `Performance ${currentUser.center_name}`
+            : "Performance commerciale";
+
+        await loadCenterFilter();
+        applyPeriodPreset(false);
+        await loadDashboard();
+      });
+
+      async function loadCenterFilter() {
+        if (currentUser?.role !== "SUPER_ADMIN") return;
+        const select = document.getElementById("center-filter");
+        try {
+          const centers = await getCenters();
+          select.innerHTML =
+            '<option value="">Tous les centres</option>' +
+            centers.map((center) => `<option value="${center.id}">${escapeHtml(center.name)}</option>`).join("");
+          select.classList.remove("hidden");
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function applyPeriodPreset(shouldLoad = true) {
+        const period = document.getElementById("period-filter").value;
+        const fromInput = document.getElementById("from-filter");
+        const toInput = document.getElementById("to-filter");
+        const today = new Date();
+        const toDate = toInputDate(today);
+        let fromDate = "";
+
+        fromInput.classList.toggle("hidden", period !== "custom");
+        toInput.classList.toggle("hidden", period !== "custom");
+
+        if (period === "today") {
+          fromDate = toDate;
+        } else if (period === "7d") {
+          const date = new Date(today);
+          date.setDate(date.getDate() - 6);
+          fromDate = toInputDate(date);
+        } else if (period === "month") {
+          fromDate = toInputDate(new Date(today.getFullYear(), today.getMonth(), 1));
+        } else if (period === "all") {
+          fromInput.value = "";
+          toInput.value = "";
+          if (shouldLoad) loadDashboard();
+          return;
+        }
+
+        if (period !== "custom") {
+          fromInput.value = fromDate;
+          toInput.value = toDate;
+        }
+        if (shouldLoad) loadDashboard();
+      }
+
+      async function loadDashboard() {
+        const errorBox = document.getElementById("error-box");
+        errorBox.classList.add("hidden");
+        try {
+          const filters = {
+            from: document.getElementById("from-filter").value,
+            to: document.getElementById("to-filter").value,
+            centerId: document.getElementById("center-filter").value,
+          };
+          dashboardData = await getCenterAnalytics(filters);
+          renderOverview();
+          renderAgents();
+          renderStatusChart();
+          renderAlerts();
+        } catch (err) {
+          errorBox.textContent = err.formattedMessage || err.message;
+          errorBox.classList.remove("hidden");
+        }
+      }
+
+      function renderOverview() {
+        const overview = dashboardData?.overview || {};
+        setText("kpi-total-price", formatCurrency(overview.totalPrixMutuelle));
+        setText("kpi-closed-price", formatCurrency(overview.closedPrixMutuelle));
+        setText("kpi-closed", overview.closedClients || 0);
+        setText("kpi-total", `${overview.totalClients || 0} leads au total`);
+        setText("kpi-close-rate", `${formatPercent(overview.closeRate)} de fermeture`);
+        setText("kpi-overdue", overview.overdueReminders || 0);
+        setText("kpi-stale", `${overview.staleClients || 0} sans action 48h`);
+      }
+
+      function renderAgents() {
+        const tbody = document.getElementById("agents-tbody");
+        const query = document.getElementById("agent-search").value.toLowerCase().trim();
+        const agents = (dashboardData?.agents || []).filter((agent) =>
+          [agent.name, agent.email, agent.centerName].join(" ").toLowerCase().includes(query),
+        );
+
+        if (!agents.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-8 text-center text-gray-500">Aucun agent</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = agents.map((agent) => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 py-3">
+              <div class="font-medium text-gray-900">${escapeHtml(agent.name)}</div>
+              <div class="text-xs text-textMuted">${escapeHtml(agent.email || "")}</div>
+            </td>
+            <td class="px-3 py-3">${agent.assignedClients}</td>
+            <td class="px-3 py-3">
+              <span class="status-pill bg-green-100 text-green-800">${agent.closedClients}</span>
+            </td>
+            <td class="px-3 py-3 font-medium">${formatCurrency(agent.closedPrixMutuelle)}</td>
+            <td class="px-3 py-3">${formatPercent(agent.closeRate)}</td>
+            <td class="px-3 py-3">
+              <span class="status-pill ${agent.overdueReminders > 0 ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-600"}">${agent.overdueReminders}</span>
+            </td>
+            <td class="px-3 py-3 text-textMuted">${formatDateTime(agent.lastActionAt)}</td>
+          </tr>
+        `).join("");
+      }
+
+      function renderStatusChart() {
+        const rows = dashboardData?.statusBreakdown || [];
+        setText("status-count", `${rows.length} statut${rows.length > 1 ? "s" : ""}`);
+        const labels = rows.map((row) => STATUS_LABELS[row.status] || row.status || "-");
+        const values = rows.map((row) => row.count);
+        const colors = rows.map((row) => FINAL_SUCCESS.includes(row.status) ? "#16a34a" : row.status === "REFUSED" || row.status === "LOST" ? "#ef4444" : row.status === "QUOTE_SENT" || row.status === "INTERESTED" ? "#d97706" : "#64748b");
+
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(document.getElementById("status-chart"), {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{ data: values, backgroundColor: colors, borderRadius: 6 }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+              y: { beginAtZero: true, ticks: { precision: 0 } },
+            },
+          },
+        });
+      }
+
+      function renderAlerts() {
+        const list = document.getElementById("alerts-list");
+        const alerts = dashboardData?.alerts || [];
+        setText("alerts-count", `${alerts.length} alerte${alerts.length > 1 ? "s" : ""}`);
+
+        if (!alerts.length) {
+          list.innerHTML = '<p class="rounded-lg bg-green-50 p-3 text-sm text-green-700">Aucun retard critique sur la periode.</p>';
+          return;
+        }
+
+        list.innerHTML = alerts.map((alert) => {
+          const isOverdue = alert.reminderAt && new Date(alert.reminderAt) < new Date();
+          return `
+            <article class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-medium text-gray-900">${escapeHtml(`${alert.nom || ""} ${alert.prenom || ""}`.trim())}</div>
+                  <div class="mt-1 text-xs text-textMuted">${escapeHtml(alert.agentName || "Non assigne")} - ${STATUS_LABELS[alert.status] || alert.status || "-"}</div>
+                </div>
+                <span class="status-pill ${isOverdue ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-700"}">${isOverdue ? "Rappel" : "Action"}</span>
+              </div>
+              <div class="mt-2 flex items-center justify-between text-xs text-textMuted">
+                <span>${isOverdue ? formatDateTime(alert.reminderAt) : formatDateTime(alert.lastActionAt)}</span>
+                <span>${formatCurrency(alert.prixMutuelle)}</span>
+              </div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value;
+      }
+
+      function formatCurrency(value) {
+        return `${Number(value || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} EUR`;
+      }
+
+      function formatPercent(value) {
+        return `${Number(value || 0).toLocaleString("fr-FR", { maximumFractionDigits: 1 })}%`;
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "-";
+        return new Date(value).toLocaleString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function toInputDate(date) {
+        const offset = date.getTimezoneOffset();
+        return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10);
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function handleLogout() {
+        logout();
+        window.location.href = "/index.html";
+      }
+    </script>
+  </body>
+</html>

@@ -100,9 +100,11 @@
       if (getToken()) {
         const user = getUser();
         window.location.href =
-          user.role === "ADMIN" || user.role === "SUPER_ADMIN"
-            ? "/admin.html"
-            : "/agent.html";
+          user.role === "SUPERVISOR"
+            ? "/supervisor.html"
+            : user.role === "ADMIN" || user.role === "SUPER_ADMIN"
+              ? "/admin.html"
+              : "/agent.html";
       }
 
       function toggleForm() {
@@ -132,9 +134,11 @@
         try {
           const data = await login(email, password);
           window.location.href =
-            data.user.role === "ADMIN" || data.user.role === "SUPER_ADMIN"
-              ? "/admin.html"
-              : "/agent.html";
+            data.user.role === "SUPERVISOR"
+              ? "/supervisor.html"
+              : data.user.role === "ADMIN" || data.user.role === "SUPER_ADMIN"
+                ? "/admin.html"
+                : "/agent.html";
         } catch (err) {
           errorDiv.textContent = err.message;
           errorDiv.style.display = "block";

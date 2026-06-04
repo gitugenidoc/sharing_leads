@@ -15,7 +15,7 @@ const getAllUsers = async (viewer = null) => {
   const params = [];
   let where = "";
 
-  if (viewer?.role === "ADMIN") {
+  if (["ADMIN", "SUPERVISOR"].includes(viewer?.role)) {
     params.push(viewer.center_id);
     where = "WHERE users.center_id = $1 AND users.role <> 'SUPER_ADMIN'";
   }

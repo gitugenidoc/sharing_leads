@@ -4,7 +4,11 @@ const jwt = require("jsonwebtoken");
 
 process.env.JWT_SECRET = "test-secret";
 
-const { verifyToken, isAdmin } = require("../backend/middleware/auth");
+const {
+  verifyToken,
+  isAdmin,
+  isCenterViewer,
+} = require("../backend/middleware/auth");
 
 const createResponse = () => {
   const res = {
@@ -55,9 +59,10 @@ test("verifyToken attaches decoded users and calls next", () => {
   assert.equal(res.statusCode, 200);
 });
 
-test("isAdmin allows super admins and center admins, and rejects agents", () => {
+test("isAdmin allows super admins and center admins, and rejects supervisors and agents", () => {
   const superAdminReq = { user: { role: "SUPER_ADMIN" } };
   const adminReq = { user: { role: "ADMIN" } };
+  const supervisorReq = { user: { role: "SUPERVISOR" } };
   const agentReq = { user: { role: "AGENT" } };
   const res = createResponse();
   let nextCalled = 0;
@@ -68,9 +73,34 @@ test("isAdmin allows super admins and center admins, and rejects agents", () => 
   isAdmin(adminReq, createResponse(), () => {
     nextCalled += 1;
   });
+  isAdmin(supervisorReq, createResponse(), () => {});
   isAdmin(agentReq, res, () => {});
 
   assert.equal(nextCalled, 2);
   assert.equal(res.statusCode, 403);
   assert.deepEqual(res.body, { error: "Admin access required" });
+});
+
+test("isCenterViewer allows supervisors but rejects agents", () => {
+  const superAdminReq = { user: { role: "SUPER_ADMIN" } };
+  const adminReq = { user: { role: "ADMIN" } };
+  const supervisorReq = { user: { role: "SUPERVISOR" } };
+  const agentReq = { user: { role: "AGENT" } };
+  const res = createResponse();
+  let nextCalled = 0;
+
+  isCenterViewer(superAdminReq, createResponse(), () => {
+    nextCalled += 1;
+  });
+  isCenterViewer(adminReq, createResponse(), () => {
+    nextCalled += 1;
+  });
+  isCenterViewer(supervisorReq, createResponse(), () => {
+    nextCalled += 1;
+  });
+  isCenterViewer(agentReq, res, () => {});
+
+  assert.equal(nextCalled, 3);
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.body, { error: "Center visibility access required" });
 });

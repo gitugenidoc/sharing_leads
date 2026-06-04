@@ -379,6 +379,28 @@ const getMailHistory = async (clientId = null) => {
   return data;
 };
 
+const getCenterAnalytics = async (filters = {}) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, value);
+    }
+  });
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return apiCall("GET", `/analytics/center${suffix}`);
+};
+
+const getAgentAnalytics = async (agentId, filters = {}) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, value);
+    }
+  });
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return apiCall("GET", `/analytics/agent/${agentId}${suffix}`);
+};
+
 Object.assign(window, {
   getToken,
   setToken,
@@ -419,4 +441,6 @@ Object.assign(window, {
   sendMail,
   getMailTemplates,
   getMailHistory,
+  getCenterAnalytics,
+  getAgentAnalytics,
 });

@@ -14,3 +14,9 @@ CREATE INDEX IF NOT EXISTS idx_leads_assigned_at ON leads(assigned_at);
 UPDATE leads 
 SET assigned_at = created_at 
 WHERE assigned_to IS NOT NULL AND assigned_at IS NULL;
+
+-- Add supervisor center visibility role.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users
+ADD CONSTRAINT users_role_check
+CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'AGENT'));

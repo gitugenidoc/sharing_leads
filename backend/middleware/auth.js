@@ -19,11 +19,20 @@ const verifyToken = (req, res, next) => {
 };
 
 const isAdminRole = (role) => ["SUPER_ADMIN", "ADMIN"].includes(role);
+const isCenterViewerRole = (role) =>
+  ["SUPER_ADMIN", "ADMIN", "SUPERVISOR"].includes(role);
 
 // Check if user can access admin features
 const isAdmin = (req, res, next) => {
   if (!isAdminRole(req.user.role)) {
     return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+};
+
+const isCenterViewer = (req, res, next) => {
+  if (!isCenterViewerRole(req.user.role)) {
+    return res.status(403).json({ error: "Center visibility access required" });
   }
   next();
 };
@@ -48,6 +57,8 @@ module.exports = {
   verifyToken,
   isAdmin,
   isAdminRole,
+  isCenterViewer,
+  isCenterViewerRole,
   isSuperAdmin,
   isOwnerOrAdmin,
 };

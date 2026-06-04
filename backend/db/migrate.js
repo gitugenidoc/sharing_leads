@@ -190,7 +190,7 @@ const createTables = async () => {
   await pool.query(`
     ALTER TABLE users
     ADD CONSTRAINT users_role_check
-    CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'AGENT'))
+    CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'AGENT'))
   `);
 
   await pool.query(`

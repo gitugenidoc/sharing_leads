@@ -66,6 +66,15 @@ test("validateUser accepts valid supported roles", () => {
     }).isValid,
     true,
   );
+  assert.equal(
+    validateUser({
+      email: "supervisor@example.com",
+      name: "Supervisor User",
+      password: "secret123",
+      role: "SUPERVISOR",
+    }).isValid,
+    true,
+  );
 });
 
 test("validateUser rejects weak account data", () => {

@@ -24,6 +24,7 @@ const leadsRoutes = require("./routes/leads");
 const clientsRoutes = require("./routes/clients");
 const logsRoutes = require("./routes/logs");
 const mailRoutes = require("./routes/mail");
+const analyticsRoutes = require("./routes/analytics");
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use("/api/leads", leadsRoutes);
 app.use("/api/clients", clientsRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/mail", mailRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

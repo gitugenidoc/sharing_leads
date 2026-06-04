@@ -1,7 +1,12 @@
 const express = require("express");
 const User = require("../models/User");
 const Log = require("../models/Log");
-const { verifyToken, isAdmin, isAdminRole } = require("../middleware/auth");
+const {
+  verifyToken,
+  isAdmin,
+  isAdminRole,
+  isCenterViewer,
+} = require("../middleware/auth");
 const { validateUser } = require("../middleware/validation-mutuelle");
 
 const router = express.Router();
@@ -12,7 +17,7 @@ const canManageUser = (actor, target) => {
   }
   if (actor.role === "ADMIN") {
     return (
-      target.role === "AGENT" &&
+      ["AGENT", "SUPERVISOR"].includes(target.role) &&
       actor.center_id &&
       actor.center_id === target.center_id
     );
@@ -33,7 +38,7 @@ router.get("/centers", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-router.get("/", verifyToken, isAdmin, async (req, res) => {
+router.get("/", verifyToken, isCenterViewer, async (req, res) => {
   try {
     const users = await User.getAllUsers(req.user);
     res.json(users);
@@ -71,8 +76,10 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const requestedRole =
-      req.user.role === "ADMIN" ? "AGENT" : req.body.role || existingUser.role;
+    let requestedRole = req.body.role || existingUser.role;
+    if (req.user.role === "ADMIN" && !["AGENT", "SUPERVISOR"].includes(requestedRole)) {
+      requestedRole = existingUser.role === "SUPERVISOR" ? "SUPERVISOR" : "AGENT";
+    }
     if (requestedRole === "SUPER_ADMIN" && req.user.id !== existingUser.id) {
       return res.status(403).json({ error: "Cannot promote users to super admin" });
     }

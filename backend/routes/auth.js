@@ -25,8 +25,8 @@ const resolveCenterForNewUser = async ({ creator, requestedRole, body }) => {
   }
 
   if (creator.role === "ADMIN") {
-    if (requestedRole !== "AGENT") {
-      const error = new Error("Center admins can only create agents");
+    if (!["AGENT", "SUPERVISOR"].includes(requestedRole)) {
+      const error = new Error("Center admins can only create agents or supervisors");
       error.statusCode = 403;
       throw error;
     }
@@ -75,7 +75,7 @@ router.post("/register", async (req, res) => {
       if (requestedRole === "SUPER_ADMIN") {
         return res.status(403).json({ error: "Super admin cannot be created here" });
       }
-      if (creator.role === "ADMIN") {
+      if (creator.role === "ADMIN" && !["AGENT", "SUPERVISOR"].includes(requestedRole)) {
         requestedRole = "AGENT";
       }
     } else {

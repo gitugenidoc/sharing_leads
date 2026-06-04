@@ -3,7 +3,7 @@ const XLSX = require("xlsx");
 const Client = require("../models/Client");
 const User = require("../models/User");
 const Log = require("../models/Log");
-const { verifyToken, isAdmin } = require("../middleware/auth");
+const { verifyToken, isAdmin, isCenterViewer } = require("../middleware/auth");
 const { validateClient } = require("../middleware/validation-mutuelle");
 
 const router = express.Router();
@@ -45,12 +45,20 @@ const CLIENT_STATUS_LABELS = {
   CLOSED: "Ferme",
 };
 
-const canAccessClient = (user, client) => {
+const canManageClient = (user, client) => {
   if (isSuperAdmin(user)) return true;
   if (user.role === "ADMIN") {
     return user.center_id && user.center_id === client.center_id;
   }
   return client.assigned_to === user.id;
+};
+
+const canViewClient = (user, client) => {
+  if (canManageClient(user, client)) return true;
+  if (user.role === "SUPERVISOR") {
+    return user.center_id && user.center_id === client.center_id;
+  }
+  return false;
 };
 
 const resolveCenterIdForWrite = (user, body = {}) => {
@@ -498,7 +506,7 @@ router.get("/search", verifyToken, async (req, res) => {
     }
 
     let results;
-    if (req.user.role === "ADMIN" || req.user.role === "SUPER_ADMIN") {
+    if (["ADMIN", "SUPER_ADMIN", "SUPERVISOR"].includes(req.user.role)) {
       results = await Client.searchClients(
         q,
         parseInt(offset, 10),
@@ -726,7 +734,7 @@ router.post("/assign-random", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-router.get("/", verifyToken, isAdmin, async (req, res) => {
+router.get("/", verifyToken, isCenterViewer, async (req, res) => {
   try {
     const offset = parseInt(req.query.offset, 10) || 0;
     const limit = parseInt(req.query.limit, 10) || 100;
@@ -745,7 +753,7 @@ router.get("/:id", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canAccessClient(req.user, client)) {
+    if (!canViewClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     res.json(client);
@@ -800,7 +808,7 @@ router.put("/:id", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canAccessClient(req.user, client)) {
+    if (!canManageClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -852,7 +860,7 @@ router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canAccessClient(req.user, client)) {
+    if (!canManageClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -875,7 +883,7 @@ router.get("/:id/history", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canAccessClient(req.user, client)) {
+    if (!canViewClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     const history = await Client.getClientHistory(req.params.id);
@@ -890,7 +898,7 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canAccessClient(req.user, client)) {
+    if (!canManageClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -949,7 +957,7 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
     if (!existingClient) {
       return res.status(404).json({ error: "Client not found" });
     }
-    if (!canAccessClient(req.user, existingClient)) {
+    if (!canManageClient(req.user, existingClient)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     const agent = await getAssignableAgent(req.user, userId);
