@@ -293,6 +293,86 @@ const getAlerts = async (scope) => {
   }));
 };
 
+const getAgentStatusBreakdown = async (user, query, agentId) => {
+  const scope = buildClientScope(user, query);
+  const params = [...scope.params, agentId];
+  const assignedClause = `clients.assigned_to = $${params.length}`;
+  const result = await pool.query(
+    `
+      SELECT status, COUNT(*) AS count, COALESCE(SUM(COALESCE(prix_mutuelle, 0)), 0) AS total_prix_mutuelle
+      FROM clients
+      ${scope.where ? `${scope.where} AND ${assignedClause}` : `WHERE ${assignedClause}`}
+      GROUP BY status
+      ORDER BY count DESC, status ASC
+    `,
+    params,
+  );
+  return result.rows.map((row) => ({
+    status: row.status,
+    count: normalizeNumber(row.count),
+    totalPrixMutuelle: normalizeNumber(row.total_prix_mutuelle),
+  }));
+};
+
+const getAgentClients = async (user, query, agentId) => {
+  const scope = buildClientScope(user, query);
+  const limit = Math.min(parseInt(query.limit, 10) || 100, 500);
+  const params = [...scope.params, agentId, [...SUCCESS_STATUSES, ...FAILURE_STATUSES], limit];
+  const assignedParam = params.length - 2;
+  const finalParam = params.length - 1;
+  const limitParam = params.length;
+  const assignedClause = `clients.assigned_to = $${assignedParam}`;
+
+  const result = await pool.query(
+    `
+      SELECT
+        clients.id,
+        clients.nom,
+        clients.prenom,
+        clients.email,
+        clients.tel_gsm,
+        clients.tel_fixe,
+        clients.ville,
+        clients.status,
+        clients.prix_mutuelle,
+        clients.reminder_at,
+        clients.last_action_at,
+        clients.last_contacted_at,
+        clients.created_at
+      FROM clients
+      ${scope.where ? `${scope.where} AND ${assignedClause}` : `WHERE ${assignedClause}`}
+      ORDER BY
+        CASE
+          WHEN clients.reminder_at IS NOT NULL
+            AND clients.reminder_at < NOW()
+            AND clients.status <> ALL($${finalParam}) THEN 0
+          WHEN clients.status <> ALL($${finalParam})
+            AND (clients.last_action_at IS NULL OR clients.last_action_at < NOW() - INTERVAL '48 hours') THEN 1
+          ELSE 2
+        END,
+        COALESCE(clients.last_action_at, clients.reminder_at, clients.created_at) DESC
+      LIMIT $${limitParam}
+    `,
+    params,
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    nom: row.nom,
+    prenom: row.prenom,
+    email: row.email,
+    telGsm: row.tel_gsm,
+    telFixe: row.tel_fixe,
+    ville: row.ville,
+    status: row.status,
+    prixMutuelle: normalizeNumber(row.prix_mutuelle),
+    reminderAt: row.reminder_at,
+    lastActionAt: row.last_action_at,
+    lastContactedAt: row.last_contacted_at,
+    createdAt: row.created_at,
+  }));
+};
+
 router.get("/center", verifyToken, isCenterViewer, async (req, res) => {
   try {
     const scope = buildClientScope(req.user, req.query);
@@ -332,12 +412,17 @@ router.get("/agents", verifyToken, isCenterViewer, async (req, res) => {
 
 router.get("/agent/:id", verifyToken, isCenterViewer, async (req, res) => {
   try {
+    const agentId = parseInt(req.params.id, 10);
     const agents = await getAgentPerformance(req.user, req.query);
-    const agent = agents.find((item) => item.id === parseInt(req.params.id, 10));
+    const agent = agents.find((item) => item.id === agentId);
     if (!agent) {
       return res.status(404).json({ error: "Agent not found" });
     }
-    res.json({ agent });
+    const [statusBreakdown, clients] = await Promise.all([
+      getAgentStatusBreakdown(req.user, req.query, agentId),
+      getAgentClients(req.user, req.query, agentId),
+    ]);
+    res.json({ agent, statusBreakdown, clients });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
