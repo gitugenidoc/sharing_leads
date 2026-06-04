@@ -1,0 +1,278 @@
+.coveo-chatbot-launcher {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 220px;
+  min-height: 68px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+  color: #1e293b;
+  cursor: pointer;
+  padding: 8px 10px;
+  text-align: left;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.coveo-chatbot-launcher:hover {
+  transform: translateY(-2px);
+  border-color: rgba(214, 45, 90, 0.35);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.2);
+}
+
+.coveo-chatbot-launcher:focus-visible,
+.coveo-chatbot-close:focus-visible,
+.coveo-chatbot-send:focus-visible,
+.coveo-chatbot-suggestion:focus-visible {
+  outline: 3px solid rgba(214, 45, 90, 0.22);
+  outline-offset: 2px;
+}
+
+.coveo-chatbot-mascot {
+  width: 52px;
+  height: 52px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  object-fit: cover;
+  object-position: 50% 34%;
+  animation: coveoMascotFloat 3.5s ease-in-out infinite;
+}
+
+.coveo-chatbot-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.coveo-chatbot-subtitle {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.coveo-chatbot-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 999px;
+  background: #55b947;
+  box-shadow: 0 0 0 5px rgba(85, 185, 71, 0.13);
+}
+
+.coveo-chatbot-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  display: none;
+  width: min(420px, 100vw);
+  background: #ffffff;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -20px 0 55px rgba(15, 23, 42, 0.18);
+}
+
+.coveo-chatbot-panel.open {
+  display: flex;
+  flex-direction: column;
+}
+
+.coveo-chatbot-header {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #eef0f2;
+}
+
+.coveo-chatbot-header img {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  object-position: 50% 34%;
+  border: 1px solid #e5e7eb;
+}
+
+.coveo-chatbot-kicker {
+  color: #d62d5a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.coveo-chatbot-heading {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.coveo-chatbot-status {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.coveo-chatbot-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.coveo-chatbot-close:hover {
+  background: #f8fafc;
+}
+
+.coveo-chatbot-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.coveo-chatbot-message {
+  max-width: 92%;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.coveo-chatbot-message.bot {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.coveo-chatbot-message.user {
+  margin-left: auto;
+  background: #d62d5a;
+  color: #ffffff;
+}
+
+.coveo-chatbot-sources {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.coveo-chatbot-source {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #166534;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.coveo-chatbot-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 0;
+  background: #ffffff;
+}
+
+.coveo-chatbot-suggestion {
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  padding: 6px 9px;
+}
+
+.coveo-chatbot-suggestion:hover {
+  background: #f8fafc;
+  border-color: rgba(214, 45, 90, 0.3);
+}
+
+.coveo-chatbot-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 14px;
+  border-top: 1px solid #eef0f2;
+  background: #ffffff;
+}
+
+.coveo-chatbot-input {
+  min-height: 42px;
+  resize: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 11px;
+  color: #1e293b;
+  font: inherit;
+  font-size: 13px;
+}
+
+.coveo-chatbot-input:focus {
+  border-color: #d62d5a;
+  box-shadow: 0 0 0 3px rgba(214, 45, 90, 0.1);
+  outline: none;
+}
+
+.coveo-chatbot-send {
+  min-width: 44px;
+  border: 1px solid #d62d5a;
+  border-radius: 10px;
+  background: #d62d5a;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.coveo-chatbot-send:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@keyframes coveoMascotFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@media (max-width: 640px) {
+  .coveo-chatbot-launcher {
+    right: 12px;
+    bottom: 12px;
+    width: 68px;
+    grid-template-columns: 1fr;
+    padding: 7px;
+  }
+
+  .coveo-chatbot-launcher span:not(.coveo-chatbot-dot) {
+    display: none;
+  }
+
+  .coveo-chatbot-panel {
+    width: 100vw;
+  }
+}
