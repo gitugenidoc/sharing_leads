@@ -126,6 +126,18 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       name: req.body.name,
       role: requestedRole,
       centerId: requestedRole === "SUPER_ADMIN" ? null : centerId,
+      phoneNumber:
+        req.body.phone_number || req.body.phoneNumber || existingUser.phone_number || "",
+      smsSenderNumber:
+        req.body.sms_sender_number ||
+        req.body.smsSenderNumber ||
+        existingUser.sms_sender_number ||
+        "",
+      whatsappBusinessNumber:
+        req.body.whatsapp_business_number ||
+        req.body.whatsappBusinessNumber ||
+        existingUser.whatsapp_business_number ||
+        "",
     });
     await Log.createAuditLog({
       userId: req.user.id,

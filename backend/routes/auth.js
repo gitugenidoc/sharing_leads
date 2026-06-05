@@ -106,6 +106,10 @@ router.post("/register", async (req, res) => {
       name,
       role: requestedRole,
       centerId,
+      phoneNumber: req.body.phone_number || req.body.phoneNumber || "",
+      smsSenderNumber: req.body.sms_sender_number || req.body.smsSenderNumber || "",
+      whatsappBusinessNumber:
+        req.body.whatsapp_business_number || req.body.whatsappBusinessNumber || "",
     });
 
     if (creator) {
@@ -125,6 +129,9 @@ router.post("/register", async (req, res) => {
       role: newUser.role,
       center_id: newUser.center_id,
       center_name: newUser.center_name,
+      phone_number: newUser.phone_number,
+      sms_sender_number: newUser.sms_sender_number,
+      whatsapp_business_number: newUser.whatsapp_business_number,
     });
   } catch (err) {
     console.error(err);
@@ -158,6 +165,9 @@ router.post("/login", async (req, res) => {
         name: user.name,
         center_id: user.center_id,
         center_name: user.center_name,
+        phone_number: user.phone_number,
+        sms_sender_number: user.sms_sender_number,
+        whatsapp_business_number: user.whatsapp_business_number,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
@@ -172,6 +182,9 @@ router.post("/login", async (req, res) => {
         role: user.role,
         center_id: user.center_id,
         center_name: user.center_name,
+        phone_number: user.phone_number,
+        sms_sender_number: user.sms_sender_number,
+        whatsapp_business_number: user.whatsapp_business_number,
       },
     });
   } catch (err) {

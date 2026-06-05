@@ -150,6 +150,9 @@ const register = async (
   role = "AGENT",
   centerName = "",
   centerId = "",
+  phoneNumber = "",
+  smsSenderNumber = "",
+  whatsappBusinessNumber = "",
 ) => {
   const data = await apiCall("POST", "/auth/register", {
     email,
@@ -158,6 +161,9 @@ const register = async (
     role,
     center_name: centerName,
     center_id: centerId,
+    phoneNumber,
+    smsSenderNumber,
+    whatsappBusinessNumber,
   });
   return data;
 };
@@ -199,6 +205,9 @@ const updateUser = async (
   role,
   centerName = "",
   centerId = "",
+  phoneNumber = "",
+  smsSenderNumber = "",
+  whatsappBusinessNumber = "",
 ) => {
   const data = await apiCall("PUT", `/users/${id}`, {
     email,
@@ -206,6 +215,9 @@ const updateUser = async (
     role,
     centerName,
     centerId,
+    phoneNumber,
+    smsSenderNumber,
+    whatsappBusinessNumber,
   });
   return data;
 };
@@ -274,6 +286,17 @@ const logClientContact = async (id, channel, phone = "", message = "") => {
     message,
   });
   return data;
+};
+
+const getClientMessages = async (id, channel = "") => {
+  const suffix = channel ? `?channel=${encodeURIComponent(channel)}` : "";
+  const data = await apiCall("GET", `/clients/${id}/messages${suffix}`);
+  return data.messages || [];
+};
+
+const createClientMessage = async (id, messageData) => {
+  const data = await apiCall("POST", `/clients/${id}/messages`, messageData);
+  return data.message;
 };
 
 const getClientStatuses = async () => {
@@ -440,6 +463,8 @@ Object.assign(window, {
   assignRandomLeads,
   getClientHistory,
   logClientContact,
+  getClientMessages,
+  createClientMessage,
   getClientStatuses,
   searchLeads,
   getImportLogs,

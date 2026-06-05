@@ -4,6 +4,7 @@ const query = (text, params) => pool.query(text, params);
 
 const USER_SELECT = `
   SELECT users.id, users.email, users.name, users.role, users.center_id,
+         users.phone_number, users.sms_sender_number, users.whatsapp_business_number,
          centers.name AS center_name, users.created_at
   FROM users
   LEFT JOIN centers ON centers.id = users.center_id
@@ -15,6 +16,9 @@ let userRoleConstraintReady = false;
 
 const ensureUserRoleConstraint = async () => {
   if (userRoleConstraintReady) return;
+  await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(50)");
+  await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS sms_sender_number VARCHAR(50)");
+  await query("ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_business_number VARCHAR(50)");
   await query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
   await query(`
     ALTER TABLE users
@@ -25,6 +29,7 @@ const ensureUserRoleConstraint = async () => {
 };
 
 const getAllUsers = async (viewer = null) => {
+  await ensureUserRoleConstraint();
   const params = [];
   let where = "";
 
@@ -66,6 +71,7 @@ const getOrCreateCenter = async (name) => {
 };
 
 const getUserByEmail = async (email) => {
+  await ensureUserRoleConstraint();
   const result = await query(
     `SELECT users.*, centers.name AS center_name
      FROM users
@@ -77,6 +83,7 @@ const getUserByEmail = async (email) => {
 };
 
 const getUserById = async (id) => {
+  await ensureUserRoleConstraint();
   const result = await query(
     `${USER_SELECT}
      WHERE users.id = $1`,
@@ -91,25 +98,64 @@ const createUser = async ({
   name,
   role = "AGENT",
   centerId = null,
+  phoneNumber = "",
+  smsSenderNumber = "",
+  whatsappBusinessNumber = "",
 }) => {
   await ensureUserRoleConstraint();
   const result = await query(
-    `INSERT INTO users (email, password, name, role, center_id, created_at)
-     VALUES ($1, $2, $3, $4, $5, NOW())
+    `INSERT INTO users
+      (email, password, name, role, center_id, phone_number, sms_sender_number, whatsapp_business_number, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
      RETURNING id`,
-    [email, password, name, role, centerId],
+    [
+      email,
+      password,
+      name,
+      role,
+      centerId,
+      phoneNumber || null,
+      smsSenderNumber || null,
+      whatsappBusinessNumber || null,
+    ],
   );
   return getUserById(result.rows[0].id);
 };
 
-const updateUser = async (id, { email, name, role, centerId = null }) => {
+const updateUser = async (
+  id,
+  {
+    email,
+    name,
+    role,
+    centerId = null,
+    phoneNumber = "",
+    smsSenderNumber = "",
+    whatsappBusinessNumber = "",
+  },
+) => {
   await ensureUserRoleConstraint();
   const result = await query(
     `UPDATE users
-     SET email = $1, name = $2, role = $3, center_id = $4
-     WHERE id = $5
+     SET email = $1,
+         name = $2,
+         role = $3,
+         center_id = $4,
+         phone_number = $5,
+         sms_sender_number = $6,
+         whatsapp_business_number = $7
+     WHERE id = $8
      RETURNING id`,
-    [email, name, role, centerId, id],
+    [
+      email,
+      name,
+      role,
+      centerId,
+      phoneNumber || null,
+      smsSenderNumber || null,
+      whatsappBusinessNumber || null,
+      id,
+    ],
   );
   if (!result.rows[0]) {
     return null;

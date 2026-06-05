@@ -1,8 +1,10 @@
 const express = require("express");
 const XLSX = require("xlsx");
 const Client = require("../models/Client");
+const CommunicationMessage = require("../models/CommunicationMessage");
 const User = require("../models/User");
 const Log = require("../models/Log");
+const { sendSms } = require("../services/smsProvider");
 const { verifyToken, isAdmin, isCenterViewer } = require("../middleware/auth");
 const { validateClient } = require("../middleware/validation-mutuelle");
 
@@ -55,10 +57,37 @@ const canManageClient = (user, client) => {
 
 const canViewClient = (user, client) => {
   if (canManageClient(user, client)) return true;
+  if (user.role === "AGENT" && client.closed_by === user.id) return true;
   if (user.role === "SUPERVISOR") {
     return user.center_id && user.center_id === client.center_id;
   }
   return false;
+};
+
+const TERMINAL_CLIENT_STATUSES = ["SIGNED", "LOST", "CLOSED", "REFUSED"];
+
+const decorateClosureUpdates = (user, existingClient, updates) => {
+  if (!Object.prototype.hasOwnProperty.call(updates, "status")) {
+    return updates;
+  }
+
+  if (TERMINAL_CLIENT_STATUSES.includes(updates.status)) {
+    return {
+      ...updates,
+      closed_by: existingClient.closed_by || existingClient.assigned_to || user.id,
+      closed_at: existingClient.closed_at || new Date(),
+    };
+  }
+
+  if (TERMINAL_CLIENT_STATUSES.includes(existingClient.status)) {
+    return {
+      ...updates,
+      closed_by: null,
+      closed_at: null,
+    };
+  }
+
+  return updates;
 };
 
 const resolveCenterIdForWrite = (user, body = {}) => {
@@ -812,7 +841,7 @@ router.put("/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const updates = { ...req.body };
+    let updates = { ...req.body };
     delete updates.center_id;
     delete updates.centerId;
     if (
@@ -829,6 +858,7 @@ router.put("/:id", verifyToken, async (req, res) => {
         .status(400)
         .json({ error: "Validation failed", details: validation.errors });
     }
+    updates = decorateClosureUpdates(req.user, client, updates);
     const updatedClient = await Client.updateClient(req.params.id, updates);
     const changes = getClientChangeSummary(client, updatedClient, updates);
     if (Object.keys(changes).length > 0) {
@@ -941,7 +971,117 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       newValue: { channel, phone: phone || null },
     });
 
-    res.json({ message: "Contact action logged", client: updatedClient });
+    let communication = null;
+    let smsResult = null;
+    const actor = await User.getUserById(req.user.id);
+    const senderNumber =
+      actor?.sms_sender_number || actor?.phone_number || req.user.sms_sender_number || "";
+
+    if (channel === "SMS") {
+      try {
+        smsResult = await sendSms({
+          from: senderNumber,
+          to: phone,
+          body: message,
+        });
+      } catch (smsErr) {
+        smsResult = {
+          status: "FAILED",
+          provider: process.env.SMS_PROVIDER || "manual",
+          providerMessageId: "",
+          rawPayload: smsErr.providerResponse || { error: smsErr.message },
+        };
+      }
+    }
+
+    if (["SMS", "WHATSAPP"].includes(channel)) {
+      communication = await CommunicationMessage.createMessage({
+        clientId: updatedClient.id,
+        userId: req.user.id,
+        channel,
+        direction: "OUTBOUND",
+        status: smsResult?.status || "PREPARED",
+        fromNumber: senderNumber,
+        toNumber: phone,
+        body: message,
+        provider: smsResult?.provider || (channel === "SMS" ? process.env.SMS_PROVIDER || "manual" : "wa.me"),
+        providerMessageId: smsResult?.providerMessageId || "",
+        rawPayload: smsResult?.rawPayload || {},
+      });
+    }
+
+    res.json({
+      message: "Contact action logged",
+      client: updatedClient,
+      communication,
+      sms_status: smsResult?.status || null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/:id/messages", verifyToken, async (req, res) => {
+  try {
+    const client = await Client.getClientById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    if (!canViewClient(req.user, client)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const messages = await CommunicationMessage.getClientMessages(
+      req.params.id,
+      req.query.channel || null,
+      parseInt(req.query.limit, 10) || 100,
+    );
+    res.json({ messages });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/:id/messages", verifyToken, async (req, res) => {
+  try {
+    const client = await Client.getClientById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    if (!canViewClient(req.user, client)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const channel = String(req.body.channel || "WHATSAPP").toUpperCase();
+    const direction = String(req.body.direction || "INBOUND").toUpperCase();
+    if (!["SMS", "WHATSAPP"].includes(channel)) {
+      return res.status(400).json({ error: "Invalid message channel" });
+    }
+    if (!["OUTBOUND", "INBOUND"].includes(direction)) {
+      return res.status(400).json({ error: "Invalid message direction" });
+    }
+
+    const message = await CommunicationMessage.createMessage({
+      clientId: client.id,
+      userId: req.user.id,
+      channel,
+      direction,
+      status: req.body.status || "RECORDED",
+      fromNumber: req.body.fromNumber || req.body.from_number || "",
+      toNumber: req.body.toNumber || req.body.to_number || "",
+      body: req.body.body || req.body.message || "",
+      provider: req.body.provider || "manual",
+      providerMessageId: req.body.providerMessageId || req.body.provider_message_id || "",
+      rawPayload: req.body.rawPayload || req.body.raw_payload || {},
+    });
+
+    await Client.addClientHistory({
+      clientId: client.id,
+      userId: req.user.id,
+      action: `${channel}_${direction}_MESSAGE`,
+      newValue: message,
+      note: req.body.body || req.body.message || "",
+    });
+
+    res.status(201).json({ message });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

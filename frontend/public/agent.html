@@ -97,6 +97,7 @@
       .btn-contact { background: #f8fafc; color: #111827; border: 1px solid #e5e7eb; }
       .btn-contact:hover { background: #eef2f7; }
       .btn-contact:disabled { cursor: not-allowed; opacity: .5; }
+      .btn-whatsapp { color: #16a34a; font-size: 16px; }
       .detail-section {
         border: 1px solid #eef0f2;
         border-radius: 12px;
@@ -217,7 +218,7 @@
             <div class="flex justify-between items-center mb-4">
               <div><h3 class="text-base font-semibold text-textMain">Liste des clients</h3><p id="status-message" class="text-sm text-gray-500">Chargement...</p></div>
               <div class="flex gap-2">
-                <select id="status-filter" onchange="applyClientFilters()" class="border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"><option value="">Tous les statuts</option><option value="NEW">Nouveau</option><option value="TO_CALL">A appeler</option><option value="UNREACHABLE">Injoignable</option><option value="CALLBACK_SCHEDULED">Rappel prevu</option><option value="QUOTE_SENT">Devis envoye</option><option value="INTERESTED">Interesse</option><option value="REFUSED">Refus</option><option value="SIGNED">Signe</option><option value="LOST">Perdu</option></select>
+                <select id="status-filter" onchange="applyClientFilters()" class="border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"><option value="">Tous les statuts</option><option value="NEW">Nouveau</option><option value="TO_CALL">A appeler</option><option value="UNREACHABLE">Injoignable</option><option value="CALLBACK_SCHEDULED">Rappel prevu</option><option value="QUOTE_SENT">Devis envoye</option><option value="INTERESTED">Interesse</option><option value="REFUSED">Refus</option><option value="SIGNED">Signe</option><option value="LOST">Perdu</option><option value="CLOSED">Ferme</option></select>
                 <button onclick="toggleSortClients()" class="border border-gray-200 rounded px-2 py-1.5 text-gray-400 hover:bg-gray-50"><i class="fa-solid fa-ellipsis"></i></button>
               </div>
             </div>
@@ -265,9 +266,11 @@
             <button
               id="client-detail-whatsapp-btn"
               type="button"
-              class="btn-secondary btn-contact"
+              class="btn-secondary btn-contact btn-whatsapp"
+              title="WhatsApp"
             >
-              WhatsApp
+              <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+              <span class="sr-only">WhatsApp</span>
             </button>
             <button
               type="button"
@@ -352,7 +355,7 @@
       </div>
     </div>
 
-    <script src="js/api.js?v=login-fix-20260602"></script>
+    <script src="js/api.js?v=communications-20260605"></script>
     <script src="js/coveo-chatbot.js?v=20260605"></script>
     <script>
       let allLeads = [];
@@ -679,8 +682,10 @@
           (extraFields.length
             ? renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true)
             : "") +
+          `<section class="detail-section"><div class="detail-section-title"><span>Historique WhatsApp</span><span id="whatsapp-history-count">0</span></div><div class="p-4"><div id="whatsapp-history-list" class="space-y-2 text-sm text-gray-600">Chargement...</div><div class="mt-3 flex gap-2"><input id="whatsapp-inbound-message" class="field-control" placeholder="Ajouter un message recu" /><button type="button" onclick="addInboundWhatsappMessage(${lead.id})" class="btn-secondary">Ajouter</button></div></div></section>` +
           `<section class="detail-section"><div class="detail-section-title"><span>Historique fiche</span><span id="history-count">0</span></div><div id="client-history-list" class="space-y-2 p-4 text-sm text-gray-600">Chargement...</div></section>`;
         renderClientHistory(lead.id);
+        renderClientMessages(lead.id, "WHATSAPP");
 
         const mailBtn = document.getElementById("client-detail-mail-btn");
         if (mailBtn) {
@@ -745,6 +750,58 @@
             .join("");
         } catch (err) {
           list.innerHTML = "Historique indisponible.";
+        }
+      }
+
+      async function renderClientMessages(leadId, channel = "WHATSAPP") {
+        const list = document.getElementById("whatsapp-history-list");
+        const count = document.getElementById("whatsapp-history-count");
+        if (!list) return;
+        try {
+          const messages = await getClientMessages(leadId, channel);
+          if (count) count.textContent = messages.length;
+          if (!messages.length) {
+            list.innerHTML = "Aucun message WhatsApp enregistre.";
+            return;
+          }
+          list.innerHTML = messages
+            .slice(0, 20)
+            .map((item) => {
+              const isInbound = item.direction === "INBOUND";
+              return `
+                <div class="rounded-lg border ${isInbound ? "border-green-100 bg-green-50" : "border-gray-100 bg-white"} p-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <strong class="text-gray-900">${isInbound ? "Recu" : "Envoye"}</strong>
+                    <span class="text-xs text-gray-500">${formatDate(item.created_at)}</span>
+                  </div>
+                  <div class="mt-1 text-xs text-gray-500">${escapeHtml(item.from_number || item.to_number || item.provider || "")}</div>
+                  ${item.body ? `<div class="mt-2 whitespace-pre-wrap">${escapeHtml(item.body)}</div>` : ""}
+                </div>
+              `;
+            })
+            .join("");
+        } catch (err) {
+          list.innerHTML = "Historique WhatsApp indisponible.";
+        }
+      }
+
+      async function addInboundWhatsappMessage(leadId) {
+        const input = document.getElementById("whatsapp-inbound-message");
+        if (!input || !input.value.trim()) return;
+        const lead = allLeads.find((item) => item.id === leadId);
+        try {
+          await createClientMessage(leadId, {
+            channel: "WHATSAPP",
+            direction: "INBOUND",
+            fromNumber: normalizePhoneForAction(getPrimaryPhone(lead || {}, "")),
+            body: input.value.trim(),
+            provider: "manual",
+          });
+          input.value = "";
+          renderClientMessages(leadId, "WHATSAPP");
+          renderClientHistory(leadId);
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
         }
       }
 
@@ -863,9 +920,14 @@
         }
 
         try {
-          await logClientContact(lead.id, channel, phone, channel === "CALL" ? "" : message);
+          const contactResult = await logClientContact(lead.id, channel, phone, channel === "CALL" ? "" : message);
           await loadLeads();
           renderClientHistory(lead.id);
+          if (channel === "WHATSAPP") renderClientMessages(lead.id, "WHATSAPP");
+          if (channel === "SMS" && contactResult.sms_status && contactResult.sms_status !== "PREPARED") {
+            alert(contactResult.sms_status === "FAILED" ? "SMS non envoye par le provider." : "SMS envoye par le provider.");
+            return;
+          }
         } catch (err) {
           console.error(err);
         }

@@ -961,6 +961,11 @@
                       <th
                         class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
                       >
+                        Contact
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase"
+                      >
                         Clients
                       </th>
                       <th
@@ -973,7 +978,7 @@
                   <tbody id="users-tbody" class="divide-y divide-gray-200">
                     <tr>
                       <td
-                        colspan="6"
+                        colspan="7"
                         class="px-6 py-8 text-center text-gray-500"
                       >
                         Chargement...
@@ -1646,6 +1651,33 @@
               <option value="">Choisir un centre...</option>
             </select>
           </div>
+          <div class="field-card">
+            <label class="field-label">Telephone agent</label>
+            <input
+              type="tel"
+              id="user-phone-number"
+              class="field-control"
+              placeholder="+33..."
+            />
+          </div>
+          <div class="field-card">
+            <label class="field-label">Numero SMS sortant</label>
+            <input
+              type="tel"
+              id="user-sms-sender-number"
+              class="field-control"
+              placeholder="+33..."
+            />
+          </div>
+          <div class="field-card">
+            <label class="field-label">Numero WhatsApp Business</label>
+            <input
+              type="tel"
+              id="user-whatsapp-business-number"
+              class="field-control"
+              placeholder="+33..."
+            />
+          </div>
           <div class="action-row pt-2">
             <button
               type="button"
@@ -1660,7 +1692,7 @@
       </div>
     </div>
 
-    <script src="js/api.js?v=login-fix-20260602"></script>
+    <script src="js/api.js?v=communications-20260605"></script>
     <script src="js/coveo-chatbot.js?v=20260605"></script>
     <script>
       let allLeads = [];
@@ -2763,7 +2795,7 @@
         const tbody = document.getElementById("users-tbody");
         if (users.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Aucun utilisateur</td></tr>';
+            '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Aucun utilisateur</td></tr>';
           return;
         }
         tbody.innerHTML = users
@@ -2778,6 +2810,10 @@
           <td class="px-6 py-4 text-gray-600">${escapeHtml(user.center_name || "-")}</td>
           <td class="px-6 py-4">
             <span class="px-2 py-1 rounded-full text-xs font-semibold ${user.role === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800" : user.role === "ADMIN" ? "bg-red-100 text-red-800" : user.role === "SUPERVISOR" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}">${user.role}</span>
+          </td>
+          <td class="px-6 py-4 text-gray-600">
+            <div>${escapeHtml(user.sms_sender_number || user.phone_number || "-")}</div>
+            <div class="text-xs text-gray-400">${escapeHtml(user.whatsapp_business_number || "")}</div>
           </td>
           <td class="px-6 py-4 text-gray-900 font-medium">${userLeads}</td>
           <td class="px-6 py-4 text-right space-x-3">
@@ -2801,6 +2837,9 @@
         document.getElementById("user-submit-button").textContent = "Creer";
         document.getElementById("user-name").value = "";
         document.getElementById("user-email").value = "";
+        document.getElementById("user-phone-number").value = "";
+        document.getElementById("user-sms-sender-number").value = "";
+        document.getElementById("user-whatsapp-business-number").value = "";
         const passwordInput = document.getElementById("user-password");
         passwordInput.value = "";
         passwordInput.required = true;
@@ -2824,6 +2863,12 @@
           "Enregistrer";
         document.getElementById("user-name").value = user.name || "";
         document.getElementById("user-email").value = user.email || "";
+        document.getElementById("user-phone-number").value =
+          user.phone_number || "";
+        document.getElementById("user-sms-sender-number").value =
+          user.sms_sender_number || "";
+        document.getElementById("user-whatsapp-business-number").value =
+          user.whatsapp_business_number || "";
         const passwordInput = document.getElementById("user-password");
         passwordInput.value = "";
         passwordInput.required = false;
@@ -2869,6 +2914,10 @@
             document.getElementById("user-center-id").value ||
             currentUser?.center_id ||
             "",
+          phoneNumber: document.getElementById("user-phone-number").value,
+          smsSenderNumber: document.getElementById("user-sms-sender-number").value,
+          whatsappBusinessNumber:
+            document.getElementById("user-whatsapp-business-number").value,
         };
         if (currentUser?.role === "SUPER_ADMIN" && !data.centerId) {
           alert("Choisissez un centre.");
@@ -2883,6 +2932,9 @@
               data.role,
               "",
               data.centerId,
+              data.phoneNumber,
+              data.smsSenderNumber,
+              data.whatsappBusinessNumber,
             );
           } else {
             await register(
@@ -2892,6 +2944,9 @@
               data.role,
               "",
               data.centerId,
+              data.phoneNumber,
+              data.smsSenderNumber,
+              data.whatsappBusinessNumber,
             );
           }
           closeUserModal();

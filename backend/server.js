@@ -26,6 +26,7 @@ const logsRoutes = require("./routes/logs");
 const mailRoutes = require("./routes/mail");
 const analyticsRoutes = require("./routes/analytics");
 const { router: chatbotRoutes } = require("./routes/chatbot");
+const { releaseExpiredAssignments } = require("./models/Client");
 
 const app = express();
 
@@ -87,6 +88,8 @@ if (require.main === module) {
     console.log(
       `Frontend: ${process.env.FRONTEND_URL || `http://localhost:${PORT}`}`,
     );
+    releaseExpiredAssignments();
+    setInterval(releaseExpiredAssignments, 5 * 60 * 1000);
   });
 }
 

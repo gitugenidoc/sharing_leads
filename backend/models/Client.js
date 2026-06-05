@@ -39,6 +39,8 @@ const CLIENT_FIELDS = [
   "nlp_label",
   "last_contacted_at",
   "last_action_at",
+  "closed_by",
+  "closed_at",
   "center_id",
   "extra_data",
 ];
@@ -70,6 +72,8 @@ const FLEXIBLE_CLIENT_COLUMNS = [
   ["nlp_label", "VARCHAR(30) DEFAULT 'INCOMPLET'"],
   ["last_contacted_at", "TIMESTAMP"],
   ["last_action_at", "TIMESTAMP"],
+  ["closed_by", "INTEGER REFERENCES users(id) ON DELETE SET NULL"],
+  ["closed_at", "TIMESTAMP"],
   ["extra_data", "JSONB DEFAULT '{}'::jsonb"],
 ];
 
@@ -117,6 +121,7 @@ const ensureFlexibleClientColumns = async (db = pool) => {
   await db.query("CREATE INDEX IF NOT EXISTS idx_client_history_created_at ON client_history(created_at)");
   await db.query("CREATE INDEX IF NOT EXISTS idx_clients_reminder_at ON clients(reminder_at)");
   await db.query("CREATE INDEX IF NOT EXISTS idx_clients_nlp_label ON clients(nlp_label)");
+  await db.query("CREATE INDEX IF NOT EXISTS idx_clients_closed_by ON clients(closed_by)");
   schemaReady = true;
 };
 
@@ -170,7 +175,7 @@ const serializeFieldValue = (field, value) => {
     return JSON.stringify(value || {});
   }
   if (
-    ["assigned_at", "assignment_expires_at", "reminder_at", "last_contacted_at", "last_action_at"].includes(field) &&
+    ["assigned_at", "assignment_expires_at", "reminder_at", "last_contacted_at", "last_action_at", "closed_at"].includes(field) &&
     (value === "" || value === undefined)
   ) {
     return null;
@@ -220,6 +225,7 @@ const releaseExpiredAssignments = async () => {
 };
 
 const getAllClients = async (offset = 0, limit = 100, centerId = null) => {
+  await ensureFlexibleClientColumns();
   const scope = withCenterFilter("SELECT * FROM clients", centerId, 3);
   const result = await pool.query(
     `${scope.text} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
@@ -235,16 +241,23 @@ const getClientsCount = async (centerId = null) => {
 };
 
 const getUserClients = async (userId, offset = 0, limit = 100) => {
+  await ensureFlexibleClientColumns();
   const result = await pool.query(
-    "SELECT * FROM clients WHERE assigned_to = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+    `SELECT * FROM clients
+     WHERE assigned_to = $1 OR closed_by = $1
+     ORDER BY
+       CASE WHEN assigned_to = $1 THEN 0 ELSE 1 END,
+       COALESCE(last_action_at, updated_at, created_at) DESC
+     LIMIT $2 OFFSET $3`,
     [userId, limit, offset],
   );
   return result.rows;
 };
 
 const getUserClientsCount = async (userId) => {
+  await ensureFlexibleClientColumns();
   const result = await pool.query(
-    "SELECT COUNT(*) FROM clients WHERE assigned_to = $1",
+    "SELECT COUNT(*) FROM clients WHERE assigned_to = $1 OR closed_by = $1",
     [userId],
   );
   return parseInt(result.rows[0].count, 10);
@@ -543,4 +556,5 @@ module.exports = {
   getClientHistory,
   calculateClientScore,
   ensureFlexibleClientColumns,
+  releaseExpiredAssignments,
 };

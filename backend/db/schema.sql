@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL DEFAULT 'AGENT' CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'AGENT')),
   center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL,
+  phone_number VARCHAR(50),
+  sms_sender_number VARCHAR(50),
+  whatsapp_business_number VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,6 +35,22 @@ CREATE TABLE IF NOT EXISTS leads (
   cancellation_expiry TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS communication_messages (
+  id SERIAL PRIMARY KEY,
+  client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WHATSAPP')),
+  direction VARCHAR(20) NOT NULL CHECK (direction IN ('OUTBOUND', 'INBOUND')),
+  status VARCHAR(30) NOT NULL DEFAULT 'RECORDED',
+  from_number VARCHAR(50),
+  to_number VARCHAR(50),
+  body TEXT,
+  provider VARCHAR(50),
+  provider_message_id VARCHAR(255),
+  raw_payload JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create import logs table
@@ -66,6 +85,9 @@ CREATE INDEX idx_leads_status ON leads(status);
 CREATE INDEX idx_leads_assigned_to ON leads(assigned_to);
 CREATE INDEX idx_leads_center_id ON leads(center_id);
 CREATE INDEX idx_leads_created_at ON leads(created_at);
+CREATE INDEX idx_communication_messages_client_id ON communication_messages(client_id);
+CREATE INDEX idx_communication_messages_channel ON communication_messages(channel);
+CREATE INDEX idx_communication_messages_created_at ON communication_messages(created_at);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 

@@ -62,6 +62,8 @@ const createTables = async () => {
       nlp_label VARCHAR(30) DEFAULT 'INCOMPLET',
       last_contacted_at TIMESTAMP,
       last_action_at TIMESTAMP,
+      closed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      closed_at TIMESTAMP,
       extra_data JSONB DEFAULT '{}'::jsonb,
       center_id INTEGER REFERENCES centers(id) ON DELETE SET NULL,
       assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -164,6 +166,21 @@ const createTables = async () => {
     "ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMP",
   );
   await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS closed_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
+  );
+  await pool.query(
+    "ALTER TABLE clients ADD COLUMN IF NOT EXISTS closed_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS sms_sender_number VARCHAR(50)",
+  );
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_business_number VARCHAR(50)",
+  );
+  await pool.query(
     "ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_status_check",
   );
   await pool.query(`
@@ -252,6 +269,24 @@ const createTables = async () => {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS communication_messages (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WHATSAPP')),
+      direction VARCHAR(20) NOT NULL CHECK (direction IN ('OUTBOUND', 'INBOUND')),
+      status VARCHAR(30) NOT NULL DEFAULT 'RECORDED',
+      from_number VARCHAR(50),
+      to_number VARCHAR(50),
+      body TEXT,
+      provider VARCHAR(50),
+      provider_message_id VARCHAR(255),
+      raw_payload JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
   );
@@ -286,6 +321,9 @@ const createTables = async () => {
     "CREATE INDEX IF NOT EXISTS idx_clients_nlp_label ON clients(nlp_label)",
   );
   await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_clients_closed_by ON clients(closed_by)",
+  );
+  await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id)",
   );
   await pool.query(
@@ -305,6 +343,15 @@ const createTables = async () => {
   );
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_client_history_created_at ON client_history(created_at)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_communication_messages_client_id ON communication_messages(client_id)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_communication_messages_channel ON communication_messages(channel)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_communication_messages_created_at ON communication_messages(created_at)",
   );
 
   await pool.query(`
@@ -370,6 +417,7 @@ const ensureSuperAdminOnly = async () => {
 };
 
 const purgeToSuperAdminOnly = async () => {
+  await pool.query("DELETE FROM communication_messages");
   await pool.query("DELETE FROM client_history");
   await pool.query("DELETE FROM audit_logs");
   await pool.query("DELETE FROM mail_logs");
