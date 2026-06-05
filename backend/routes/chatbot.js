@@ -21,6 +21,12 @@ const MAROC_SOURCES = [
 const FINAL_WARNING =
   "Cette reponse est une aide generale. Verifiez toujours le contrat, le tableau de garanties et les documents officiels avant de prendre une decision.";
 
+const DEFAULT_GEMMA_MODEL = "gemma-4-12b-it";
+const GOOGLE_GENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const GEMMA_TEMPERATURE = Number(process.env.GEMMA_TEMPERATURE || 0.3);
+const GEMMA_MAX_OUTPUT_TOKENS = Number(process.env.GEMMA_MAX_OUTPUT_TOKENS || 900);
+
 const detectCountry = (message = "", requestedCountry = "") => {
   const explicit = String(requestedCountry || "").toUpperCase();
   if (["FR", "MA"].includes(explicit)) return explicit;
@@ -80,7 +86,7 @@ const getSourcesForMessage = (country, message = "") => {
 
 const buildSystemPrompt = (country) => `
 Tu es Coveo Assistant, expert assurance pour SecurAssure.
-Priorite: France. Marche secondaire: Maroc.
+Marche principal: France. Marche secondaire: Maroc.
 Pays applicable actuel: ${country === "MA" ? "Maroc" : "France"}.
 Domaines prioritaires: sante, mutuelle, Securite sociale, prevoyance, deces/obseques.
 Reponds en francais clair, prudemment, sans inventer de droit ni de garantie.
@@ -120,47 +126,149 @@ const buildFallbackAnswer = ({ message, country, sources }) => {
 };
 
 const normalizeGemmaResponse = (payload, apiType) => {
-  if (apiType === "openai_compatible") {
-    return payload?.choices?.[0]?.message?.content || "";
+  if (["openai_compatible", "openrouter"].includes(apiType)) {
+    return stripGemmaThinking(payload?.choices?.[0]?.message?.content || "");
   }
-  return payload?.message?.content || payload?.response || "";
+  if (apiType === "google_genai") {
+    const parts = payload?.candidates?.[0]?.content?.parts || [];
+    return stripGemmaThinking(parts.map((part) => part.text || "").join("\n"));
+  }
+  return stripGemmaThinking(payload?.message?.content || payload?.response || "");
 };
 
-const callGemma = async ({ message, country, sources }) => {
-  const apiUrl = process.env.GEMMA_API_URL;
-  const model = process.env.GEMMA_MODEL;
-  const apiType = process.env.GEMMA_API_TYPE || "ollama";
+const stripGemmaThinking = (text = "") =>
+  String(text || "")
+    .replace(/<\|channel\>thought[\s\S]*?<channel\|>/g, "")
+    .replace(/<\|[^>]+?\|>/g, "")
+    .trim();
 
-  if (!apiUrl || !model) return null;
+const getGemmaConfig = (env = process.env) => {
+  const apiType = env.GEMMA_API_TYPE || (env.OPENROUTER_API_KEY ? "openrouter" : "google_genai");
+  const model = env.GEMMA_MODEL || DEFAULT_GEMMA_MODEL;
+  const apiKey =
+    env.OPENROUTER_API_KEY || env.GEMMA_API_KEY || env.GOOGLE_API_KEY || env.GEMINI_API_KEY;
+  const apiUrl =
+    env.GEMMA_API_URL ||
+    (apiType === "google_genai"
+      ? GOOGLE_GENAI_BASE_URL
+      : apiType === "openrouter"
+        ? OPENROUTER_BASE_URL
+        : "");
 
+  return { apiType, apiUrl, model, apiKey };
+};
+
+const buildGemmaMessages = ({ message, country, sources }) => {
   const sourceText = sources
     .map((source) => `${source.name}: ${source.url}`)
     .join("\n");
-  const messages = [
+
+  return [
     { role: "system", content: buildSystemPrompt(country) },
     {
       role: "user",
       content: `Sources fixes disponibles:\n${sourceText}\n\nQuestion utilisateur:\n${message}`,
     },
   ];
+};
+
+const buildGoogleGenAiPayload = (messages) => {
+  const systemMessage = messages.find((message) => message.role === "system")?.content || "";
+  const userMessages = messages.filter((message) => message.role !== "system");
+
+  return {
+    systemInstruction: {
+      parts: [{ text: systemMessage }],
+    },
+    contents: userMessages.map((message) => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: [{ text: message.content }],
+    })),
+    generationConfig: {
+      temperature: GEMMA_TEMPERATURE,
+      topP: 0.95,
+      topK: 64,
+      maxOutputTokens: GEMMA_MAX_OUTPUT_TOKENS,
+    },
+  };
+};
+
+const buildGoogleGenAiEndpoint = ({ apiUrl, model }) => {
+  const base = apiUrl.replace(/\/$/, "");
+  const modelPath = String(model || DEFAULT_GEMMA_MODEL).startsWith("models/")
+    ? model
+    : `models/${model || DEFAULT_GEMMA_MODEL}`;
+  return `${base}/${modelPath}:generateContent`;
+};
+
+const callGoogleGenAi = async ({ apiUrl, model, apiKey, messages }) => {
+  if (!apiKey) return null;
+
+  const response = await fetch(buildGoogleGenAiEndpoint({ apiUrl, model }), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
+    body: JSON.stringify(buildGoogleGenAiPayload(messages)),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Google GenAI service error: ${response.status} ${errorText}`);
+  }
+
+  return normalizeGemmaResponse(await response.json(), "google_genai");
+};
+
+const callGemma = async ({ message, country, sources }) => {
+  const { apiType, apiUrl, model, apiKey } = getGemmaConfig();
+
+  if (!apiUrl || !model) return null;
+
+  const messages = buildGemmaMessages({ message, country, sources });
+
+  if (apiType === "google_genai") {
+    return callGoogleGenAi({ apiUrl, model, apiKey, messages });
+  }
 
   const base = apiUrl.replace(/\/$/, "");
   const endpoint =
-    apiType === "openai_compatible"
+    ["openai_compatible", "openrouter"].includes(apiType)
       ? base.endsWith("/chat/completions")
         ? base
         : `${base}/chat/completions`
       : base.endsWith("/api/chat")
         ? base
         : `${base}/api/chat`;
+  const headers = { "Content-Type": "application/json" };
+
+  if (["openai_compatible", "openrouter"].includes(apiType) && apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  if (apiType === "openrouter") {
+    headers["HTTP-Referer"] = process.env.OPENROUTER_SITE_URL || process.env.FRONTEND_URL || "http://localhost:5000";
+    headers["X-Title"] = process.env.OPENROUTER_APP_NAME || "SecurAssure Coveo Assistant";
+  }
 
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(
-      apiType === "openai_compatible"
-        ? { model, messages, temperature: 0.2 }
-        : { model, messages, stream: false, options: { temperature: 0.2 } },
+      ["openai_compatible", "openrouter"].includes(apiType)
+        ? { model, messages, temperature: GEMMA_TEMPERATURE, max_tokens: GEMMA_MAX_OUTPUT_TOKENS }
+        : {
+            model,
+            messages,
+            stream: false,
+            options: {
+              temperature: GEMMA_TEMPERATURE,
+              top_p: 0.95,
+              top_k: 64,
+              num_predict: GEMMA_MAX_OUTPUT_TOKENS,
+            },
+          },
     ),
   });
 
@@ -218,4 +326,9 @@ module.exports = {
   detectCountry,
   getSourcesForMessage,
   buildFallbackAnswer,
+  buildGemmaMessages,
+  buildGoogleGenAiPayload,
+  buildGoogleGenAiEndpoint,
+  getGemmaConfig,
+  normalizeGemmaResponse,
 };
