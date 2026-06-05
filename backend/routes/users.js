@@ -13,6 +13,9 @@ const { validateUser } = require("../middleware/validation-mutuelle");
 const router = express.Router();
 
 const canManageUser = (actor, target) => {
+  if (actor.id === target.id) {
+    return true;
+  }
   if (actor.role === "SUPER_ADMIN") {
     return target.role !== "SUPER_ADMIN" || actor.id === target.id;
   }
@@ -77,9 +80,15 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
+    const isSelfUpdate = req.user.id === existingUser.id;
     let requestedRole = req.body.role || existingUser.role;
+    if (isSelfUpdate) {
+      requestedRole = existingUser.role;
+    }
     if (req.user.role === "ADMIN" && !["AGENT", "SUPERVISOR"].includes(requestedRole)) {
-      requestedRole = existingUser.role === "SUPERVISOR" ? "SUPERVISOR" : "AGENT";
+      requestedRole = isSelfUpdate
+        ? existingUser.role
+        : existingUser.role === "SUPERVISOR" ? "SUPERVISOR" : "AGENT";
     }
     if (requestedRole === "SUPER_ADMIN" && req.user.id !== existingUser.id) {
       return res.status(403).json({ error: "Cannot promote users to super admin" });

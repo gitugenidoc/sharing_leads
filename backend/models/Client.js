@@ -281,6 +281,44 @@ const getUserClientsCount = async (userId) => {
   return parseInt(result.rows[0].count, 10);
 };
 
+const getReminderClients = async (user) => {
+  await ensureFlexibleClientColumns();
+  const params = [];
+  let scopeFilter = "";
+  if (user.role === "AGENT") {
+    params.push(user.id);
+    scopeFilter = `AND clients.assigned_to = $${params.length}`;
+  } else if (["ADMIN", "SUPERVISOR"].includes(user.role)) {
+    params.push(user.center_id || -1);
+    scopeFilter = `AND clients.center_id = $${params.length}`;
+  }
+
+  const result = await pool.query(
+    `SELECT
+       clients.*,
+       users.name AS agent_name,
+       users.email AS agent_email
+     FROM clients
+     LEFT JOIN users ON users.id = clients.assigned_to
+     WHERE clients.reminder_at IS NOT NULL
+       AND clients.reminder_at <= NOW() + INTERVAL '1 hour'
+       AND clients.status NOT IN ('SIGNED', 'LOST', 'CLOSED', 'REFUSED')
+       ${scopeFilter}
+     ORDER BY
+       CASE WHEN clients.reminder_at < NOW() THEN 0 ELSE 1 END,
+       CASE clients.reminder_priority
+         WHEN 'HIGH' THEN 0
+         WHEN 'NORMAL' THEN 1
+         WHEN 'LOW' THEN 2
+         ELSE 3
+       END,
+       clients.reminder_at ASC
+     LIMIT 200`,
+    params,
+  );
+  return result.rows;
+};
+
 const getClientById = async (id) => {
   const result = await pool.query("SELECT * FROM clients WHERE id = $1", [id]);
   return result.rows[0];
@@ -578,6 +616,7 @@ module.exports = {
   getClientsCount,
   getUserClients,
   getUserClientsCount,
+  getReminderClients,
   getClientById,
   createClient,
   updateClient,

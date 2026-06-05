@@ -88,6 +88,57 @@
         justify-content: space-between;
         background: white;
       }
+      .reminder-menu {
+        position: relative;
+      }
+      .reminder-badge {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: #dc2626;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        font-size: 10px;
+        font-weight: 800;
+        border: 2px solid white;
+      }
+      .reminder-dropdown {
+        position: absolute;
+        top: 42px;
+        right: 0;
+        z-index: 80;
+        display: none;
+        width: min(390px, calc(100vw - 2rem));
+        max-height: 420px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, .14);
+      }
+      .reminder-dropdown.open {
+        display: block;
+      }
+      .reminder-list {
+        max-height: 330px;
+        overflow-y: auto;
+        padding: .75rem;
+      }
+      .reminder-agent {
+        border: 1px solid #eef0f2;
+        border-radius: 10px;
+        padding: .75rem;
+        background: #fff;
+      }
+      .reminder-agent + .reminder-agent {
+        margin-top: .55rem;
+      }
       .content-area {
         flex: 1;
         overflow-y: auto;
@@ -433,8 +484,8 @@
         <!-- Bottom Nav -->
         <div class="flex flex-col gap-6 w-full items-center mt-auto">
           <button
-            onclick="alert('Les parametres seront disponibles prochainement.')"
-            class="text-textMuted hover:text-primary transition-colors"
+            onclick="switchTab('settings', event)"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
             title="Parametres"
           >
             <i class="fa-solid fa-gear text-lg"></i>
@@ -487,13 +538,23 @@
             >
               <i class="fa-solid fa-plus"></i>
             </button>
-            <button
-              onclick="alert('Aucune nouvelle notification.')"
-              class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition relative"
-              title="Notifications"
-            >
-              <i class="fa-regular fa-bell"></i>
-            </button>
+            <div class="reminder-menu">
+              <button
+                onclick="toggleReminderDropdown()"
+                class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition relative"
+                title="Rappels"
+              >
+                <i class="fa-regular fa-bell"></i>
+                <span id="reminder-badge" class="reminder-badge">0</span>
+              </button>
+              <div id="reminder-dropdown" class="reminder-dropdown">
+                <div class="border-b border-gray-100 px-4 py-3">
+                  <div class="text-sm font-bold text-gray-900">Rappels par agent</div>
+                  <div id="reminder-summary" class="mt-1 text-xs text-gray-500">Chargement...</div>
+                </div>
+                <div id="reminder-list" class="reminder-list"></div>
+              </div>
+            </div>
           </div>
         </header>
         <!-- END: Topbar -->
@@ -1340,6 +1401,93 @@
                 </div>
               </section>
             </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="settings-tab" class="tab-content" style="display: none">
+              <div class="mb-6 flex items-center justify-between gap-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">Parametres</h3>
+                  <p class="text-sm text-gray-500">Profil, communications et preferences d'interface.</p>
+                </div>
+                <button onclick="loadSettings()" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                  <i class="fa-solid fa-rotate-right"></i>
+                  Actualiser
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,.75fr)]">
+                <form onsubmit="saveSettings(event)" class="rounded-xl border border-gray-100 bg-white p-5">
+                  <div class="mb-5">
+                    <h4 class="font-semibold text-gray-900">Compte connecte</h4>
+                    <p class="text-sm text-gray-500">Ces informations sont utilisees pour les actions, SMS et WhatsApp sortants.</p>
+                  </div>
+                  <div class="field-grid !p-0">
+                    <div class="field-card">
+                      <label class="field-label">Nom</label>
+                      <input id="settings-name" class="field-control" required />
+                    </div>
+                    <div class="field-card">
+                      <label class="field-label">E-mail</label>
+                      <input id="settings-email" type="email" class="field-control" required />
+                    </div>
+                    <div class="field-card">
+                      <label class="field-label">Role</label>
+                      <input id="settings-role" class="field-control bg-gray-50 text-gray-500" readonly />
+                    </div>
+                    <div class="field-card">
+                      <label class="field-label">Telephone agent</label>
+                      <input id="settings-phone-number" class="field-control" placeholder="+33..." />
+                    </div>
+                    <div class="field-card">
+                      <label class="field-label">Numero SMS sortant</label>
+                      <input id="settings-sms-sender-number" class="field-control" placeholder="+33..." />
+                    </div>
+                    <div class="field-card">
+                      <label class="field-label">Numero WhatsApp Business</label>
+                      <input id="settings-whatsapp-business-number" class="field-control" placeholder="+33..." />
+                    </div>
+                    <div class="field-card field-card-wide">
+                      <label class="field-label">Nouveau mot de passe</label>
+                      <input id="settings-password" type="password" class="field-control" autocomplete="new-password" placeholder="Laisser vide pour ne pas changer" />
+                    </div>
+                    <div class="field-card">
+                      <label class="field-label">Centre</label>
+                      <input id="settings-center" class="field-control bg-gray-50 text-gray-500" readonly />
+                    </div>
+                  </div>
+                  <div class="mt-5 flex items-center justify-between gap-3">
+                    <span id="settings-save-status" class="text-sm text-gray-500"></span>
+                    <button id="settings-save-btn" type="submit" class="btn-primary">Enregistrer</button>
+                  </div>
+                </form>
+
+                <div class="space-y-4">
+                  <section class="rounded-xl border border-gray-100 bg-white p-5">
+                    <h4 class="font-semibold text-gray-900">Notifications rappels</h4>
+                    <div class="mt-4 space-y-3 text-sm text-gray-600">
+                      <label class="flex items-center justify-between gap-3">
+                        <span>Actualisation automatique des rappels</span>
+                        <input id="settings-reminder-polling" type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary" />
+                      </label>
+                      <label class="flex items-center justify-between gap-3">
+                        <span>Badge rouge sur la cloche</span>
+                        <input id="settings-reminder-toast" type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary" />
+                      </label>
+                    </div>
+                    <button onclick="saveLocalSettings()" class="mt-4 btn-secondary">Sauvegarder preferences</button>
+                  </section>
+
+                  <section class="rounded-xl border border-gray-100 bg-white p-5">
+                    <h4 class="font-semibold text-gray-900">Configuration technique</h4>
+                    <div class="mt-4 space-y-2 text-sm text-gray-600">
+                      <div class="flex items-center justify-between gap-3"><span>SMS reel</span><code class="rounded bg-gray-100 px-2 py-1">SMS_SEND_MODE=provider</code></div>
+                      <div class="flex items-center justify-between gap-3"><span>WhatsApp Cloud API</span><code class="rounded bg-gray-100 px-2 py-1">WHATSAPP_ACCESS_TOKEN</code></div>
+                      <div class="flex items-center justify-between gap-3"><span>Webhook</span><code class="rounded bg-gray-100 px-2 py-1">/api/whatsapp/webhook</code></div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
         </main>
         <!-- END: Dashboard Content -->
       </div>
@@ -1692,15 +1840,17 @@
       </div>
     </div>
 
-    <script src="js/api.js?v=whatsapp-api-20260605"></script>
+    <script src="js/api.js?v=reminders-20260605"></script>
     <script src="js/coveo-chatbot.js?v=20260605"></script>
     <script>
       let allLeads = [];
       let allUsers = [];
       let allCenters = [];
       let currentUser = null;
+      let settingsCurrentUser = null;
       let editingUserId = null;
       let currentImportFile = null;
+      let reminderPollTimer = null;
       const EXPORT_FIELDS = [
         ["ID", "id"],
         ["Centre", "center_id"],
@@ -1802,6 +1952,7 @@
         await loadLeads();
         renderUsers(allUsers);
         updateDashboard();
+        initReminderPolling();
       });
 
       function switchTab(tab, evt) {
@@ -1820,6 +1971,9 @@
         if (tab === "mails") {
           loadMailHistory();
         }
+        if (tab === "settings") {
+          loadSettings();
+        }
       }
 
       async function loadLeads() {
@@ -1833,6 +1987,164 @@
         } catch (err) {
           console.error(err);
         }
+      }
+
+      function initReminderPolling() {
+        refreshReminderNotifications();
+        if (reminderPollTimer) clearInterval(reminderPollTimer);
+        reminderPollTimer = setInterval(refreshReminderNotifications, 60000);
+        applyLocalSettings();
+        document.addEventListener("click", (event) => {
+          const menu = document.querySelector(".reminder-menu");
+          const dropdown = document.getElementById("reminder-dropdown");
+          if (dropdown && menu && !menu.contains(event.target)) {
+            dropdown.classList.remove("open");
+          }
+        });
+      }
+
+      async function refreshReminderNotifications() {
+        try {
+          renderReminderNotifications(await getClientReminders());
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderReminderNotifications(data) {
+        const badge = document.getElementById("reminder-badge");
+        const summary = document.getElementById("reminder-summary");
+        const list = document.getElementById("reminder-list");
+        if (!badge || !summary || !list) return;
+        const agents = data.agents || [];
+        const count = data.total || 0;
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.style.display = count && getLocalSettings().reminderBadge !== false ? "flex" : "none";
+        summary.textContent = count
+          ? `${data.overdue || 0} en retard, ${data.upcoming || 0} dans l'heure`
+          : "Aucun rappel urgent";
+        if (!count) {
+          list.innerHTML = '<div class="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">Aucun agent en surcharge rappel.</div>';
+          return;
+        }
+        list.innerHTML = agents
+          .map((agent) => `
+            <div class="reminder-agent">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <div class="font-semibold text-gray-900">${escapeHtml(agent.agent_name || "Non assigne")}</div>
+                  <div class="mt-1 text-xs text-gray-500">${escapeHtml(agent.agent_email || "")}</div>
+                </div>
+                <span class="rounded-full ${agent.overdue ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"} px-2 py-1 text-xs font-bold">${agent.overdue} en retard</span>
+              </div>
+              <div class="mt-2 text-xs text-gray-600">${agent.total} rappel${agent.total > 1 ? "s" : ""} urgent${agent.total > 1 ? "s" : ""}, ${agent.upcoming} dans l'heure</div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function toggleReminderDropdown() {
+        const dropdown = document.getElementById("reminder-dropdown");
+        if (!dropdown) return;
+        dropdown.classList.toggle("open");
+        if (dropdown.classList.contains("open")) refreshReminderNotifications();
+      }
+
+      function getLocalSettings() {
+        try {
+          return JSON.parse(localStorage.getItem("adminSettings") || "{}");
+        } catch (err) {
+          return {};
+        }
+      }
+
+      function applyLocalSettings() {
+        const settings = {
+          reminderPolling: true,
+          reminderBadge: true,
+          ...getLocalSettings(),
+        };
+        const pollingInput = document.getElementById("settings-reminder-polling");
+        const badgeInput = document.getElementById("settings-reminder-toast");
+        if (pollingInput) pollingInput.checked = settings.reminderPolling !== false;
+        if (badgeInput) badgeInput.checked = settings.reminderBadge !== false;
+        const badge = document.getElementById("reminder-badge");
+        if (badge && settings.reminderBadge === false) {
+          badge.style.display = "none";
+        }
+        if (settings.reminderPolling === false && reminderPollTimer) {
+          clearInterval(reminderPollTimer);
+          reminderPollTimer = null;
+        } else if (settings.reminderPolling !== false && !reminderPollTimer) {
+          reminderPollTimer = setInterval(refreshReminderNotifications, 60000);
+        }
+      }
+
+      async function loadSettings() {
+        applyLocalSettings();
+        const status = document.getElementById("settings-save-status");
+        try {
+          settingsCurrentUser = await getUserById(currentUser.id);
+          document.getElementById("settings-name").value = settingsCurrentUser.name || "";
+          document.getElementById("settings-email").value = settingsCurrentUser.email || "";
+          document.getElementById("settings-role").value = settingsCurrentUser.role || "";
+          document.getElementById("settings-phone-number").value = settingsCurrentUser.phone_number || "";
+          document.getElementById("settings-sms-sender-number").value = settingsCurrentUser.sms_sender_number || "";
+          document.getElementById("settings-whatsapp-business-number").value = settingsCurrentUser.whatsapp_business_number || "";
+          document.getElementById("settings-password").value = "";
+          document.getElementById("settings-center").value =
+            settingsCurrentUser.center_name || currentUser.center_name || (settingsCurrentUser.center_id ? `Centre #${settingsCurrentUser.center_id}` : "Global");
+          if (status) status.textContent = "";
+        } catch (err) {
+          if (status) status.textContent = err.formattedMessage || err.message;
+        }
+      }
+
+      async function saveSettings(event) {
+        event.preventDefault();
+        if (!settingsCurrentUser) {
+          await loadSettings();
+        }
+        const status = document.getElementById("settings-save-status");
+        const button = document.getElementById("settings-save-btn");
+        try {
+          if (button) button.disabled = true;
+          if (status) status.textContent = "Enregistrement...";
+          const updated = await updateUser(
+            settingsCurrentUser.id,
+            document.getElementById("settings-email").value,
+            document.getElementById("settings-name").value,
+            settingsCurrentUser.role,
+            "",
+            settingsCurrentUser.center_id || currentUser.center_id || "",
+            document.getElementById("settings-phone-number").value,
+            document.getElementById("settings-sms-sender-number").value,
+            document.getElementById("settings-whatsapp-business-number").value,
+            document.getElementById("settings-password").value,
+          );
+          settingsCurrentUser = updated;
+          currentUser = { ...currentUser, ...updated };
+          setUser(currentUser);
+          document.getElementById("user-avatar").textContent = (updated.name || "A").charAt(0).toUpperCase();
+          document.getElementById("settings-password").value = "";
+          if (status) status.textContent = "Parametres enregistres.";
+          await loadUsers();
+        } catch (err) {
+          if (status) status.textContent = err.formattedMessage || err.message;
+        } finally {
+          if (button) button.disabled = false;
+        }
+      }
+
+      function saveLocalSettings() {
+        const settings = {
+          reminderPolling: document.getElementById("settings-reminder-polling")?.checked !== false,
+          reminderBadge: document.getElementById("settings-reminder-toast")?.checked !== false,
+        };
+        localStorage.setItem("adminSettings", JSON.stringify(settings));
+        applyLocalSettings();
+        const status = document.getElementById("settings-save-status");
+        if (status) status.textContent = "Preferences locales sauvegardees.";
       }
 
       function renderLeads(leads) {

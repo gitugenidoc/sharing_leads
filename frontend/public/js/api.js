@@ -301,6 +301,11 @@ const createClientMessage = async (id, messageData) => {
   return data.message;
 };
 
+const getClientReminders = async () => {
+  const data = await apiCall("GET", "/clients/reminders");
+  return data;
+};
+
 const sendWhatsappMessage = async (id, { body = "", phone = "", file = null } = {}) => {
   const formData = new FormData();
   if (body) formData.append("body", body);
@@ -489,6 +494,7 @@ Object.assign(window, {
   logClientContact,
   getClientMessages,
   createClientMessage,
+  getClientReminders,
   sendWhatsappMessage,
   getClientStatuses,
   searchLeads,

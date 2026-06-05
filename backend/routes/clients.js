@@ -614,6 +614,59 @@ router.get("/statuses/list", verifyToken, (req, res) => {
   );
 });
 
+router.get("/reminders", verifyToken, async (req, res) => {
+  try {
+    const reminders = await Client.getReminderClients(req.user);
+    const now = Date.now();
+    const agentsMap = new Map();
+    const normalized = reminders.map((client) => {
+      const reminderTime = new Date(client.reminder_at).getTime();
+      const isOverdue = reminderTime < now;
+      const item = {
+        id: client.id,
+        nom: client.nom,
+        prenom: client.prenom,
+        status: client.status,
+        reminder_at: client.reminder_at,
+        reminder_priority: client.reminder_priority,
+        reminder_comment: client.reminder_comment,
+        assigned_to: client.assigned_to,
+        agent_name: client.agent_name || "Non assigne",
+        agent_email: client.agent_email || "",
+        overdue: isOverdue,
+      };
+      const agentKey = item.assigned_to || "unassigned";
+      if (!agentsMap.has(agentKey)) {
+        agentsMap.set(agentKey, {
+          agent_id: item.assigned_to || null,
+          agent_name: item.agent_name,
+          agent_email: item.agent_email,
+          total: 0,
+          overdue: 0,
+          upcoming: 0,
+        });
+      }
+      const agent = agentsMap.get(agentKey);
+      agent.total += 1;
+      if (isOverdue) agent.overdue += 1;
+      else agent.upcoming += 1;
+      return item;
+    });
+
+    res.json({
+      reminders: normalized,
+      agents: [...agentsMap.values()].sort((a, b) => b.overdue - a.overdue || b.total - a.total),
+      total: normalized.length,
+      overdue: normalized.filter((item) => item.overdue).length,
+      upcoming: normalized.filter((item) => !item.overdue).length,
+      generated_at: new Date(),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.post("/import/preview", verifyToken, isAdmin, async (req, res) => {
   try {
     if (!req.files || !req.files.file) {

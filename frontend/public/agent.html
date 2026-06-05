@@ -32,6 +32,58 @@
       .topbar { height: 64px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between; background: white; }
       .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
       .card { background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); }
+      .reminder-menu { position: relative; }
+      .reminder-badge {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: #dc2626;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        font-size: 10px;
+        font-weight: 800;
+        border: 2px solid white;
+      }
+      .reminder-dropdown {
+        position: absolute;
+        top: 42px;
+        right: 0;
+        z-index: 80;
+        display: none;
+        width: min(380px, calc(100vw - 2rem));
+        max-height: 420px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, .14);
+      }
+      .reminder-dropdown.open { display: block; }
+      .reminder-list { max-height: 330px; overflow-y: auto; padding: .75rem; }
+      .reminder-item { border: 1px solid #eef0f2; border-radius: 10px; padding: .7rem; background: #fff; }
+      .reminder-item + .reminder-item { margin-top: .55rem; }
+      .reminder-toast {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 100;
+        display: none;
+        max-width: 360px;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        background: #fff7ed;
+        color: #7f1d1d;
+        padding: .85rem 1rem;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, .16);
+        font-size: 13px;
+        font-weight: 650;
+      }
       .mini-bar { width: 8px; border-radius: 2px; background-color: #f1f5f9; margin: 0 2px; display: inline-block; vertical-align: bottom; }
       .mini-bar.active { background-color: #e2e8f0; }
       .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background-color: #e2e8f0; position: relative; cursor: pointer; }
@@ -496,6 +548,19 @@
           <div class="flex items-center gap-4">
             <span id="leads-count" class="text-sm font-semibold text-gray-600">0 clients</span>
             <div id="user-avatar" class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 flex items-center justify-center text-xs font-semibold text-textMain">A</div>
+            <div class="reminder-menu">
+              <button onclick="toggleReminderDropdown()" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition relative" title="Rappels">
+                <i class="fa-regular fa-bell"></i>
+                <span id="reminder-badge" class="reminder-badge">0</span>
+              </button>
+              <div id="reminder-dropdown" class="reminder-dropdown">
+                <div class="border-b border-gray-100 px-4 py-3">
+                  <div class="text-sm font-bold text-gray-900">Rappels a traiter</div>
+                  <div id="reminder-summary" class="mt-1 text-xs text-gray-500">Chargement...</div>
+                </div>
+                <div id="reminder-list" class="reminder-list"></div>
+              </div>
+            </div>
             <button onclick="refreshClients()" class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-opacity-90 transition" title="Actualiser"><i class="fa-solid fa-rotate-right"></i></button>
             <button onclick="handleLogout()" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition" title="Deconnexion"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
           </div>
@@ -531,6 +596,8 @@
       </div>
       <!-- END: Main Content Area -->
     </div>
+
+    <div id="reminder-toast" class="reminder-toast"></div>
 
     <div
       id="client-detail-modal"
@@ -708,11 +775,14 @@
       </div>
     </div>
 
-    <script src="js/api.js?v=whatsapp-api-20260605"></script>
+    <script src="js/api.js?v=reminders-20260605"></script>
     <script src="js/coveo-chatbot.js?v=20260605"></script>
     <script>
       let allLeads = [];
       let sortAscending = true;
+      let reminderPollTimer = null;
+      let reminderKnownDueIds = new Set();
+      let reminderPollingReady = false;
       const DEFAULT_CONTACT_MESSAGE =
         "Bonjour [Civilite] [Nom], nous vous contactons au sujet de votre demande de mutuelle. Cordialement, SecurAssure.";
 
@@ -809,6 +879,7 @@
           .charAt(0)
           .toUpperCase();
         loadLeads();
+        initReminderPolling();
       });
 
       async function loadLeads() {
@@ -827,6 +898,111 @@
           tbody.innerHTML =
             '<tr><td colspan="8" class="px-6 py-8 text-center text-red-600">Erreur serveur</td></tr>';
         }
+      }
+
+      function initReminderPolling() {
+        refreshReminderNotifications();
+        if (reminderPollTimer) clearInterval(reminderPollTimer);
+        reminderPollTimer = setInterval(refreshReminderNotifications, 60000);
+        document.addEventListener("click", (event) => {
+          const menu = document.querySelector(".reminder-menu");
+          const dropdown = document.getElementById("reminder-dropdown");
+          if (dropdown && menu && !menu.contains(event.target)) {
+            dropdown.classList.remove("open");
+          }
+        });
+      }
+
+      async function refreshReminderNotifications() {
+        try {
+          const data = await getClientReminders();
+          renderReminderNotifications(data);
+          notifyNewDueReminders(data.reminders || []);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderReminderNotifications(data) {
+        const reminders = data.reminders || [];
+        const badge = document.getElementById("reminder-badge");
+        const summary = document.getElementById("reminder-summary");
+        const list = document.getElementById("reminder-list");
+        if (!badge || !summary || !list) return;
+        const count = data.total || reminders.length;
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.style.display = count ? "flex" : "none";
+        summary.textContent = count
+          ? `${data.overdue || 0} en retard, ${data.upcoming || 0} dans l'heure`
+          : "Aucun rappel urgent";
+        if (!count) {
+          list.innerHTML = "<div class=\"rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500\">Aucun rappel en retard ou dans l'heure.</div>";
+          return;
+        }
+        list.innerHTML = reminders
+          .map((item) => `
+            <div class="reminder-item">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold text-gray-900">${escapeHtml(getReminderClientName(item))}</div>
+                  <div class="mt-1 text-xs ${item.overdue ? "text-red-600" : "text-amber-600"}">${item.overdue ? "En retard" : "Dans l'heure"} - ${formatDate(item.reminder_at)}</div>
+                </div>
+                <button type="button" onclick="openReminderLead(${item.id})" class="btn-secondary !min-h-0 px-2 py-1 text-xs">Ouvrir fiche</button>
+              </div>
+              ${item.reminder_comment ? `<div class="mt-2 text-xs text-gray-600">${escapeHtml(item.reminder_comment)}</div>` : ""}
+            </div>
+          `)
+          .join("");
+      }
+
+      function notifyNewDueReminders(reminders) {
+        const now = Date.now();
+        const currentDueIds = new Set(
+          reminders
+            .filter((item) => new Date(item.reminder_at).getTime() <= now)
+            .map((item) => String(item.id)),
+        );
+        if (reminderPollingReady) {
+          const newDue = reminders.find((item) => {
+            const reminderTime = new Date(item.reminder_at).getTime();
+            return !reminderKnownDueIds.has(String(item.id)) && reminderTime <= now;
+          });
+          if (newDue) {
+            showReminderToast(`Rappel : ${getReminderClientName(newDue)} - maintenant`);
+          }
+        }
+        reminderKnownDueIds = currentDueIds;
+        reminderPollingReady = true;
+      }
+
+      function showReminderToast(message) {
+        const toast = document.getElementById("reminder-toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.style.display = "block";
+        clearTimeout(showReminderToast.timer);
+        showReminderToast.timer = setTimeout(() => {
+          toast.style.display = "none";
+        }, 5000);
+      }
+
+      function toggleReminderDropdown() {
+        const dropdown = document.getElementById("reminder-dropdown");
+        if (!dropdown) return;
+        dropdown.classList.toggle("open");
+        if (dropdown.classList.contains("open")) refreshReminderNotifications();
+      }
+
+      async function openReminderLead(leadId) {
+        document.getElementById("reminder-dropdown")?.classList.remove("open");
+        if (!allLeads.some((lead) => lead.id === leadId)) {
+          await loadLeads();
+        }
+        showClientDetails(leadId);
+      }
+
+      function getReminderClientName(item) {
+        return `${item.nom || ""} ${item.prenom || ""}`.trim() || `Fiche #${item.id}`;
       }
 
       function renderLeads(leads) {

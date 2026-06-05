@@ -37,6 +37,42 @@
       .sidebar { width: 64px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; flex-shrink: 0; }
       .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: #fafafa; min-width: 0; }
       .topbar { min-height: 64px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: .75rem 1.5rem; justify-content: space-between; background: #ffffff; gap: 1rem; }
+      .reminder-menu { position: relative; }
+      .reminder-badge {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: #dc2626;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        font-size: 10px;
+        font-weight: 800;
+        border: 2px solid white;
+      }
+      .reminder-dropdown {
+        position: absolute;
+        top: 42px;
+        right: 0;
+        z-index: 80;
+        display: none;
+        width: min(390px, calc(100vw - 2rem));
+        max-height: 420px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, .14);
+      }
+      .reminder-dropdown.open { display: block; }
+      .reminder-list { max-height: 330px; overflow-y: auto; padding: .75rem; }
+      .reminder-agent { border: 1px solid #eef0f2; border-radius: 10px; padding: .75rem; background: #fff; }
+      .reminder-agent + .reminder-agent { margin-top: .55rem; }
       .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
       .metric-card { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; min-height: 118px; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); }
       .panel { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); }
@@ -90,6 +126,19 @@
               </select>
               <input id="from-filter" type="date" class="hidden rounded-lg border-gray-200 text-sm" onchange="loadDashboard()" />
               <input id="to-filter" type="date" class="hidden rounded-lg border-gray-200 text-sm" onchange="loadDashboard()" />
+              <div class="reminder-menu">
+                <button class="relative rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-primary" onclick="toggleReminderDropdown()" title="Rappels">
+                  <i class="fa-regular fa-bell"></i>
+                  <span id="reminder-badge" class="reminder-badge">0</span>
+                </button>
+                <div id="reminder-dropdown" class="reminder-dropdown">
+                  <div class="border-b border-gray-100 px-4 py-3">
+                    <div class="text-sm font-bold text-gray-900">Rappels par agent</div>
+                    <div id="reminder-summary" class="mt-1 text-xs text-gray-500">Chargement...</div>
+                  </div>
+                  <div id="reminder-list" class="reminder-list"></div>
+                </div>
+              </div>
               <button class="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white" onclick="loadDashboard()">
                 <i class="fa-solid fa-rotate-right mr-2"></i>Actualiser
               </button>
@@ -214,7 +263,7 @@
       </div>
     </div>
 
-    <script src="js/api.js?v=supervisor-20260604"></script>
+    <script src="js/api.js?v=reminders-20260605"></script>
     <script src="js/coveo-chatbot.js?v=20260605"></script>
     <script>
       const STATUS_LABELS = {
@@ -235,6 +284,7 @@
       let currentUser = null;
       let dashboardData = null;
       let statusChart = null;
+      let reminderPollTimer = null;
 
       window.addEventListener("load", async () => {
         currentUser = getUser();
@@ -251,6 +301,7 @@
         await loadCenterFilter();
         applyPeriodPreset(false);
         await loadDashboard();
+        initReminderPolling();
       });
 
       async function loadCenterFilter() {
@@ -318,6 +369,66 @@
           errorBox.textContent = err.formattedMessage || err.message;
           errorBox.classList.remove("hidden");
         }
+      }
+
+      function initReminderPolling() {
+        refreshReminderNotifications();
+        if (reminderPollTimer) clearInterval(reminderPollTimer);
+        reminderPollTimer = setInterval(refreshReminderNotifications, 60000);
+        document.addEventListener("click", (event) => {
+          const menu = document.querySelector(".reminder-menu");
+          const dropdown = document.getElementById("reminder-dropdown");
+          if (dropdown && menu && !menu.contains(event.target)) {
+            dropdown.classList.remove("open");
+          }
+        });
+      }
+
+      async function refreshReminderNotifications() {
+        try {
+          renderReminderNotifications(await getClientReminders());
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderReminderNotifications(data) {
+        const badge = document.getElementById("reminder-badge");
+        const summary = document.getElementById("reminder-summary");
+        const list = document.getElementById("reminder-list");
+        if (!badge || !summary || !list) return;
+        const agents = data.agents || [];
+        const count = data.total || 0;
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.style.display = count ? "flex" : "none";
+        summary.textContent = count
+          ? `${data.overdue || 0} en retard, ${data.upcoming || 0} dans l'heure`
+          : "Aucun rappel urgent";
+        if (!count) {
+          list.innerHTML = '<div class="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">Aucun agent en surcharge rappel.</div>';
+          return;
+        }
+        list.innerHTML = agents
+          .map((agent) => `
+            <div class="reminder-agent">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <div class="font-semibold text-gray-900">${escapeHtml(agent.agent_name || "Non assigne")}</div>
+                  <div class="mt-1 text-xs text-textMuted">${escapeHtml(agent.agent_email || "")}</div>
+                </div>
+                <span class="status-pill ${agent.overdue ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}">${agent.overdue} en retard</span>
+              </div>
+              <div class="mt-2 text-xs text-textMuted">${agent.total} rappel${agent.total > 1 ? "s" : ""} urgent${agent.total > 1 ? "s" : ""}, ${agent.upcoming} dans l'heure</div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function toggleReminderDropdown() {
+        const dropdown = document.getElementById("reminder-dropdown");
+        if (!dropdown) return;
+        dropdown.classList.toggle("open");
+        if (dropdown.classList.contains("open")) refreshReminderNotifications();
       }
 
       function getDashboardFilters() {
