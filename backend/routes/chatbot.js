@@ -26,6 +26,7 @@ const GOOGLE_GENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 const GEMMA_TEMPERATURE = Number(process.env.GEMMA_TEMPERATURE || 0.3);
 const GEMMA_MAX_OUTPUT_TOKENS = Number(process.env.GEMMA_MAX_OUTPUT_TOKENS || 900);
+const CHATBOT_MAX_MESSAGE_LENGTH = Number(process.env.CHATBOT_MAX_MESSAGE_LENGTH || 2000);
 
 const detectCountry = (message = "", requestedCountry = "") => {
   const explicit = String(requestedCountry || "").toUpperCase();
@@ -282,9 +283,17 @@ const callGemma = async ({ message, country, sources }) => {
 
 router.post("/message", verifyToken, async (req, res) => {
   try {
+    if (typeof req.body?.message !== "string") {
+      return res.status(400).json({ error: "Message must be text" });
+    }
     const message = String(req.body?.message || "").trim();
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
+    }
+    if (message.length > CHATBOT_MAX_MESSAGE_LENGTH) {
+      return res.status(413).json({
+        error: `Message is too long. Maximum is ${CHATBOT_MAX_MESSAGE_LENGTH} characters.`,
+      });
     }
 
     const country = detectCountry(message, req.body?.country);

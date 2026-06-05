@@ -224,7 +224,7 @@ const withCenterFilter = (baseQuery, centerId, nextParamIndex) => {
   };
 };
 
-const releaseExpiredAssignments = async () => {
+const releaseExpiredAssignments = async ({ silent = false } = {}) => {
   try {
     const result = await pool.query(
       `UPDATE clients 
@@ -234,11 +234,13 @@ const releaseExpiredAssignments = async () => {
          AND assignment_expires_at < NOW()
        RETURNING id`
     );
-    if (result.rowCount > 0) {
+    if (!silent && result.rowCount > 0) {
       console.log(`[Auto-Release] Released ${result.rowCount} expired client assignments.`);
     }
+    return { released: result.rowCount, ids: result.rows.map((row) => row.id) };
   } catch (err) {
     console.error("[Auto-Release] Error releasing expired assignments:", err);
+    throw err;
   }
 };
 
@@ -262,7 +264,8 @@ const getUserClients = async (userId, offset = 0, limit = 100) => {
   await ensureFlexibleClientColumns();
   const result = await pool.query(
     `SELECT * FROM clients
-     WHERE assigned_to = $1 OR closed_by = $1
+     WHERE (assigned_to = $1 AND (assignment_expires_at IS NULL OR assignment_expires_at >= NOW()))
+        OR closed_by = $1
      ORDER BY
        CASE WHEN assigned_to = $1 THEN 0 ELSE 1 END,
        COALESCE(last_action_at, updated_at, created_at) DESC
@@ -275,7 +278,9 @@ const getUserClients = async (userId, offset = 0, limit = 100) => {
 const getUserClientsCount = async (userId) => {
   await ensureFlexibleClientColumns();
   const result = await pool.query(
-    "SELECT COUNT(*) FROM clients WHERE assigned_to = $1 OR closed_by = $1",
+    `SELECT COUNT(*) FROM clients
+     WHERE (assigned_to = $1 AND (assignment_expires_at IS NULL OR assignment_expires_at >= NOW()))
+        OR closed_by = $1`,
     [userId],
   );
   return parseInt(result.rows[0].count, 10);

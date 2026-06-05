@@ -53,6 +53,12 @@ const canManageClient = (user, client) => {
   if (user.role === "ADMIN") {
     return user.center_id && user.center_id === client.center_id;
   }
+  if (
+    client.assignment_expires_at &&
+    new Date(client.assignment_expires_at).getTime() < Date.now()
+  ) {
+    return false;
+  }
   return client.assigned_to === user.id;
 };
 

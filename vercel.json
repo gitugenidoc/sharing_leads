@@ -19,5 +19,11 @@
       "src": "/(.*)",
       "dest": "frontend/public/$1"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/release-expired-assignments",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }
