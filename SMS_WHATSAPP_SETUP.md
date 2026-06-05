@@ -4,7 +4,7 @@
 
 - Chaque agent peut avoir trois numeros dans l'admin: telephone agent, numero SMS sortant, numero WhatsApp Business.
 - Le bouton SMS prepare un SMS local par defaut. Si `SMS_SEND_MODE=provider`, le backend envoie le SMS via le provider configure.
-- Le bouton WhatsApp ouvre `wa.me` avec le message pre-rempli et enregistre le message sortant dans l'historique WhatsApp.
+- Le bouton WhatsApp reste dans la fiche client, focalise le composer interne et enregistre le message sortant dans l'historique WhatsApp.
 - La fiche client contient un historique WhatsApp separe, avec ajout manuel des messages recus.
 
 ## Envoi SMS reel avec Twilio
@@ -38,7 +38,7 @@ Parcours recommande:
 
 ## WhatsApp
 
-`wa.me` ne donne pas une vraie boite de reception API. Il ouvre WhatsApp avec un message pre-rempli. Pour recevoir automatiquement les messages entrants dans l'application, il faut utiliser WhatsApp Business Platform via Meta ou un provider comme Twilio, puis connecter les webhooks entrants a `communication_messages`.
+Le site garde l'UI WhatsApp en interne. Pour recevoir automatiquement les messages entrants reels dans l'application, il faut utiliser WhatsApp Business Platform via Meta ou un provider comme Twilio, puis connecter les webhooks entrants a `communication_messages`.
 
 Le modele de donnees est deja pret:
 

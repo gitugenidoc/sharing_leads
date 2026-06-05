@@ -65,6 +65,13 @@ const canViewClient = (user, client) => {
 };
 
 const TERMINAL_CLIENT_STATUSES = ["SIGNED", "LOST", "CLOSED", "REFUSED"];
+const isTerminalClient = (client) =>
+  TERMINAL_CLIENT_STATUSES.includes(client?.status);
+
+const canEditClient = (user, client) => {
+  if (user.role === "AGENT" && isTerminalClient(client)) return false;
+  return canManageClient(user, client);
+};
 
 const decorateClosureUpdates = (user, existingClient, updates) => {
   if (!Object.prototype.hasOwnProperty.call(updates, "status")) {
@@ -837,7 +844,7 @@ router.put("/:id", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canManageClient(req.user, client)) {
+    if (!canEditClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -890,7 +897,7 @@ router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canManageClient(req.user, client)) {
+    if (!canEditClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -928,7 +935,7 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canManageClient(req.user, client)) {
+    if (!canEditClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -1004,7 +1011,7 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
         fromNumber: senderNumber,
         toNumber: phone,
         body: message,
-        provider: smsResult?.provider || (channel === "SMS" ? process.env.SMS_PROVIDER || "manual" : "wa.me"),
+        provider: smsResult?.provider || (channel === "SMS" ? process.env.SMS_PROVIDER || "manual" : "internal"),
         providerMessageId: smsResult?.providerMessageId || "",
         rawPayload: smsResult?.rawPayload || {},
       });
@@ -1046,7 +1053,7 @@ router.post("/:id/messages", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
     if (!client) return res.status(404).json({ error: "Client not found" });
-    if (!canViewClient(req.user, client)) {
+    if (!canEditClient(req.user, client)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
