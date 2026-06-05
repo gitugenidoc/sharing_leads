@@ -25,6 +25,7 @@ const clientsRoutes = require("./routes/clients");
 const logsRoutes = require("./routes/logs");
 const mailRoutes = require("./routes/mail");
 const analyticsRoutes = require("./routes/analytics");
+const whatsappRoutes = require("./routes/whatsapp");
 const { router: chatbotRoutes } = require("./routes/chatbot");
 const { releaseExpiredAssignments } = require("./models/Client");
 
@@ -50,9 +51,9 @@ app.use(
 );
 app.use(
   fileUpload({
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 25 * 1024 * 1024 },
     abortOnLimit: true,
-    responseOnLimit: "File too large. Maximum size is 5MB.",
+    responseOnLimit: "File too large. Maximum size is 25MB.",
   }),
 );
 
@@ -67,6 +68,7 @@ app.use("/api/clients", clientsRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/mail", mailRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 
 // Health check

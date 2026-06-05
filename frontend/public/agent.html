@@ -100,6 +100,125 @@
       .btn-whatsapp { color: #16a34a; font-size: 16px; }
       .btn-whatsapp-send { color: #fff; background: #16a34a; border-color: #16a34a; }
       .btn-whatsapp-send:hover { filter: brightness(.96); }
+      .whatsapp-shell { background: #f8fafc; }
+      .whatsapp-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fff;
+        padding: .85rem 1rem;
+      }
+      .whatsapp-title {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 750;
+      }
+      .whatsapp-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #16a34a;
+        font-size: 18px;
+      }
+      .whatsapp-chip {
+        border: 1px solid #bbf7d0;
+        border-radius: 999px;
+        background: #f0fdf4;
+        color: #15803d;
+        font-size: 11px;
+        font-weight: 700;
+        padding: .25rem .55rem;
+      }
+      .whatsapp-thread {
+        min-height: 260px;
+        max-height: 420px;
+        overflow-y: auto;
+        padding: 1rem;
+        background:
+          linear-gradient(rgba(248, 250, 252, .93), rgba(248, 250, 252, .93)),
+          repeating-linear-gradient(45deg, #e5e7eb 0, #e5e7eb 1px, transparent 1px, transparent 18px);
+      }
+      .wa-row { display: flex; margin-bottom: .75rem; }
+      .wa-row.outbound { justify-content: flex-end; }
+      .wa-bubble {
+        width: min(78%, 560px);
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fff;
+        padding: .7rem .8rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+      }
+      .wa-row.outbound .wa-bubble { border-color: #bbf7d0; background: #dcfce7; }
+      .wa-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: .35rem;
+      }
+      .wa-body { color: #1e293b; font-size: 13px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .wa-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        color: #64748b;
+        font-size: 11px;
+        margin-top: .4rem;
+      }
+      .wa-media {
+        margin-top: .55rem;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .75);
+      }
+      .wa-media img, .wa-media video { display: block; width: 100%; max-height: 280px; object-fit: contain; background: #0f172a; }
+      .wa-media audio { width: 100%; padding: .5rem; }
+      .wa-document {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        padding: .75rem;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .whatsapp-composer {
+        border-top: 1px solid #e5e7eb;
+        background: #fff;
+        padding: .85rem;
+      }
+      .whatsapp-compose-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .65rem;
+        align-items: end;
+      }
+      .whatsapp-tools {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        margin-top: .55rem;
+      }
+      .wa-file-control {
+        max-width: 360px;
+        color: #475569;
+        font-size: 12px;
+      }
       .detail-section {
         border: 1px solid #eef0f2;
         border-radius: 12px;
@@ -166,6 +285,8 @@
         body { padding: .75rem; }
         .field-grid { grid-template-columns: 1fr; }
         .field-card-wide { grid-column: auto; }
+        .whatsapp-compose-row { grid-template-columns: 1fr; }
+        .wa-bubble { width: min(92%, 560px); }
       }
 
       ::-webkit-scrollbar { width: 6px; }
@@ -358,7 +479,7 @@
       </div>
     </div>
 
-    <script src="js/api.js?v=communications-20260605"></script>
+    <script src="js/api.js?v=whatsapp-api-20260605"></script>
     <script src="js/coveo-chatbot.js?v=20260605"></script>
     <script>
       let allLeads = [];
@@ -722,10 +843,39 @@
       }
 
       function renderWhatsappSection(lead, locked) {
+        const defaultMessage = escapeHtml(getContactMessage(lead));
+        const composer = locked
+          ? ""
+          : `<div class="whatsapp-composer">
+              <div class="whatsapp-compose-row">
+                <textarea id="whatsapp-outbound-message" rows="3" class="field-control textarea" placeholder="Message WhatsApp">${defaultMessage}</textarea>
+                <button id="whatsapp-send-btn" type="button" onclick="sendInternalWhatsappMessage(${lead.id})" class="btn-secondary btn-whatsapp-send">
+                  <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                  <span>Envoyer</span>
+                </button>
+              </div>
+              <div class="whatsapp-tools">
+                <input id="whatsapp-media-file" class="wa-file-control" type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
+                <span id="whatsapp-send-status" class="text-xs text-gray-500"></span>
+              </div>
+            </div>`;
         if (locked) {
-          return `<section class="detail-section"><div class="detail-section-title"><span>Historique WhatsApp</span><span id="whatsapp-history-count">0</span></div><div class="p-4"><div id="whatsapp-history-list" class="space-y-2 text-sm text-gray-600">Chargement...</div></div></section>`;
+          return `<section class="detail-section whatsapp-shell">
+            <div class="whatsapp-header">
+              <div class="whatsapp-title"><span class="whatsapp-avatar"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span><div><div>Conversation WhatsApp</div><div class="text-xs font-normal text-gray-500">Lecture seule: fiche fermee</div></div></div>
+              <span class="whatsapp-chip"><span id="whatsapp-history-count">0</span> messages</span>
+            </div>
+            <div id="whatsapp-history-list" class="whatsapp-thread">Chargement...</div>
+          </section>`;
         }
-        return `<section class="detail-section"><div class="detail-section-title"><span>Historique WhatsApp</span><span id="whatsapp-history-count">0</span></div><div class="p-4"><div class="mb-4 rounded-lg border border-gray-100 bg-white p-3"><label class="field-label">Message sortant</label><textarea id="whatsapp-outbound-message" rows="3" class="field-control textarea">${escapeHtml(getContactMessage(lead))}</textarea><div class="mt-3 flex items-center justify-between gap-3"><span id="whatsapp-send-status" class="text-xs text-gray-500"></span><button id="whatsapp-send-btn" type="button" onclick="sendInternalWhatsappMessage(${lead.id})" class="btn-secondary btn-whatsapp-send"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><span>Envoyer</span></button></div></div><div id="whatsapp-history-list" class="space-y-2 text-sm text-gray-600">Chargement...</div><div class="mt-3 flex gap-2"><input id="whatsapp-inbound-message" class="field-control" placeholder="Ajouter un message recu" /><button type="button" onclick="addInboundWhatsappMessage(${lead.id})" class="btn-secondary">Ajouter</button></div></div></section>`;
+        return `<section class="detail-section whatsapp-shell">
+          <div class="whatsapp-header">
+            <div class="whatsapp-title"><span class="whatsapp-avatar"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span><div><div>Conversation WhatsApp</div><div class="text-xs font-normal text-gray-500">Cloud API Meta, messages et medias</div></div></div>
+            <span class="whatsapp-chip"><span id="whatsapp-history-count">0</span> messages</span>
+          </div>
+          <div id="whatsapp-history-list" class="whatsapp-thread">Chargement...</div>
+          ${composer}
+        </section>`;
       }
 
       function configureDetailReadonly(locked) {
@@ -803,28 +953,98 @@
           const messages = await getClientMessages(leadId, channel);
           if (count) count.textContent = messages.length;
           if (!messages.length) {
-            list.innerHTML = "Aucun message WhatsApp enregistre.";
+            list.innerHTML = `<div class="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">Aucun message WhatsApp enregistre.</div>`;
             return;
           }
           list.innerHTML = messages
-            .slice(0, 20)
+            .slice(0, 60)
+            .reverse()
             .map((item) => {
               const isInbound = item.direction === "INBOUND";
               return `
-                <div class="rounded-lg border ${isInbound ? "border-green-100 bg-green-50" : "border-gray-100 bg-white"} p-3">
-                  <div class="flex items-center justify-between gap-3">
-                    <strong class="text-gray-900">${isInbound ? "Recu" : "Envoye"}</strong>
-                    <span class="text-xs text-gray-500">${formatDate(item.created_at)}</span>
+                <div class="wa-row ${isInbound ? "inbound" : "outbound"}">
+                  <div class="wa-bubble">
+                    <div class="wa-meta">
+                      <span>${isInbound ? "Client" : escapeHtml(item.user_name || "Agent")}</span>
+                      <span>${formatDate(item.created_at)}</span>
+                    </div>
+                    ${renderWhatsappMediaAttachment(item)}
+                    ${getWhatsappMessageBody(item) ? `<div class="wa-body">${escapeHtml(getWhatsappMessageBody(item))}</div>` : ""}
+                    <div class="wa-status">
+                      <i class="fa-solid ${getWhatsappStatusIcon(item.status)}" aria-hidden="true"></i>
+                      <span>${escapeHtml(formatWhatsappStatus(item.status, item.error_text))}</span>
+                    </div>
                   </div>
-                  <div class="mt-1 text-xs text-gray-500">${escapeHtml(item.from_number || item.to_number || item.provider || "")}</div>
-                  ${item.body ? `<div class="mt-2 whitespace-pre-wrap">${escapeHtml(item.body)}</div>` : ""}
                 </div>
               `;
             })
             .join("");
+          hydrateWhatsappMedia();
         } catch (err) {
           list.innerHTML = "Historique WhatsApp indisponible.";
         }
+      }
+
+      function getWhatsappMessageBody(item) {
+        return item.body || item.media_caption || "";
+      }
+
+      function renderWhatsappMediaAttachment(item) {
+        if (!item.media_id) return "";
+        const type = String(item.message_type || "").toLowerCase();
+        const filename = item.media_filename || "Piece jointe";
+        return `<div class="wa-media" data-wa-media-id="${escapeHtml(item.media_id)}" data-wa-media-type="${escapeHtml(type)}" data-wa-filename="${escapeHtml(filename)}">
+          <div class="wa-document"><i class="fa-solid fa-paperclip" aria-hidden="true"></i><span>${escapeHtml(filename)}</span></div>
+        </div>`;
+      }
+
+      async function hydrateWhatsappMedia() {
+        const nodes = document.querySelectorAll("[data-wa-media-id]");
+        for (const node of nodes) {
+          if (node.dataset.loaded === "1") continue;
+          node.dataset.loaded = "1";
+          try {
+            const response = await fetch(`/api/whatsapp/media/${encodeURIComponent(node.dataset.waMediaId)}`, {
+              headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            if (!response.ok) throw new Error("Media unavailable");
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const type = node.dataset.waMediaType || "";
+            const filename = node.dataset.waFilename || "piece-jointe";
+            if (type === "image") {
+              node.innerHTML = `<img src="${url}" alt="${escapeHtml(filename)}" />`;
+            } else if (type === "video") {
+              node.innerHTML = `<video controls src="${url}"></video>`;
+            } else if (type === "audio" || type === "voice") {
+              node.innerHTML = `<audio controls src="${url}"></audio>`;
+            } else {
+              node.innerHTML = `<a class="wa-document" href="${url}" download="${escapeHtml(filename)}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>${escapeHtml(filename)}</span></a>`;
+            }
+          } catch (err) {
+            node.innerHTML = `<div class="wa-document text-gray-500"><i class="fa-solid fa-file-circle-exclamation" aria-hidden="true"></i><span>Media indisponible</span></div>`;
+          }
+        }
+      }
+
+      function getWhatsappStatusIcon(status) {
+        const normalized = String(status || "").toUpperCase();
+        if (normalized === "READ") return "fa-check-double text-blue-500";
+        if (normalized === "DELIVERED") return "fa-check-double text-gray-500";
+        if (normalized === "FAILED") return "fa-triangle-exclamation text-red-500";
+        if (normalized === "SENT") return "fa-check text-gray-500";
+        return "fa-clock text-gray-400";
+      }
+
+      function formatWhatsappStatus(status, errorText = "") {
+        const normalized = String(status || "RECORDED").toUpperCase();
+        if (normalized === "PREPARED") return "Enregistre, API non configuree";
+        if (normalized === "FAILED") return errorText ? `Echec: ${errorText}` : "Echec";
+        if (normalized === "RECEIVED") return "Recu";
+        if (normalized === "READ") return "Lu";
+        if (normalized === "DELIVERED") return "Livre";
+        if (normalized === "SENT") return "Envoye";
+        return normalized;
       }
 
       async function addInboundWhatsappMessage(leadId) {
@@ -858,6 +1078,7 @@
           return;
         }
         const input = document.getElementById("whatsapp-outbound-message");
+        const fileInput = document.getElementById("whatsapp-media-file");
         const button = document.getElementById("whatsapp-send-btn");
         const status = document.getElementById("whatsapp-send-status");
         const phone = normalizePhoneForAction(getPrimaryPhone(lead || {}, ""));
@@ -866,21 +1087,25 @@
           return;
         }
         const body = input?.value.trim() || getContactMessage(lead || {});
-        if (!body) return;
+        const file = fileInput?.files?.[0] || null;
+        if (!body && !file) return;
         try {
           if (button) button.disabled = true;
           if (status) status.textContent = "Envoi en cours...";
-          await logClientContact(
-            leadId,
-            "WHATSAPP",
-            phone,
-            body,
-          );
+          const result = await sendWhatsappMessage(leadId, { body, phone, file });
           if (input) input.value = "";
+          if (fileInput) fileInput.value = "";
           await loadLeads();
           renderClientMessages(leadId, "WHATSAPP");
           renderClientHistory(leadId);
-          if (status) status.textContent = "Message ajoute a l'historique.";
+          if (status) {
+            status.textContent =
+              result.provider_status === "PREPARED"
+                ? "Message enregistre. Configurez l'API Meta pour l'envoi reel."
+                : result.provider_status === "FAILED"
+                  ? "Echec d'envoi, message conserve dans l'historique."
+                  : "Message envoye via WhatsApp Cloud API.";
+          }
         } catch (err) {
           alert(err.formattedMessage || err.message);
         } finally {

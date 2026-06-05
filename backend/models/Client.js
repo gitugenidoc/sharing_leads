@@ -128,6 +128,24 @@ const ensureFlexibleClientColumns = async (db = pool) => {
 const toText = (value) =>
   value === undefined || value === null ? "" : String(value).trim();
 
+const normalizePhoneDigits = (phone) => toText(phone).replace(/[^\d]/g, "");
+
+const getPhoneVariants = (phone) => {
+  const digits = normalizePhoneDigits(phone);
+  if (!digits) return [];
+  const variants = new Set([digits]);
+  if (digits.startsWith("33") && digits.length > 2) {
+    variants.add(`0${digits.slice(2)}`);
+  }
+  if (digits.startsWith("0") && digits.length > 1) {
+    variants.add(`33${digits.slice(1)}`);
+  }
+  if (digits.startsWith("212") && digits.length > 3) {
+    variants.add(`0${digits.slice(3)}`);
+  }
+  return [...variants];
+};
+
 const calculateClientScore = (clientData) => {
   const checks = [
     toText(clientData.nom) && toText(clientData.prenom),
@@ -510,6 +528,23 @@ const searchClients = async (query, offset = 0, limit = 100, centerId = null) =>
   return result.rows;
 };
 
+const findClientByPhone = async (phone) => {
+  await ensureFlexibleClientColumns();
+  const variants = getPhoneVariants(phone);
+  if (!variants.length) return null;
+  const result = await pool.query(
+    `SELECT *
+     FROM clients
+     WHERE regexp_replace(COALESCE(tel_gsm, ''), '[^0-9]', '', 'g') = ANY($1)
+        OR regexp_replace(COALESCE(tel_fixe, ''), '[^0-9]', '', 'g') = ANY($1)
+        OR regexp_replace(COALESCE(tel_professionnel, ''), '[^0-9]', '', 'g') = ANY($1)
+     ORDER BY COALESCE(last_action_at, updated_at, created_at) DESC
+     LIMIT 1`,
+    [variants],
+  );
+  return result.rows[0] || null;
+};
+
 const bulkInsertClients = async (clients, centerId) => {
   const client = await pool.connect();
   try {
@@ -550,6 +585,7 @@ module.exports = {
   assignClient,
   assignRandomClients,
   searchClients,
+  findClientByPhone,
   bulkInsertClients,
   findPotentialDuplicates,
   addClientHistory,

@@ -2,10 +2,63 @@
 
 ## Ce qui est livre dans l'application
 
-- Chaque agent peut avoir trois numeros dans l'admin: telephone agent, numero SMS sortant, numero WhatsApp Business.
-- Le bouton SMS prepare un SMS local par defaut. Si `SMS_SEND_MODE=provider`, le backend envoie le SMS via le provider configure.
-- Le bouton WhatsApp reste dans la fiche client, focalise le composer interne et enregistre le message sortant dans l'historique WhatsApp.
-- La fiche client contient un historique WhatsApp separe, avec ajout manuel des messages recus.
+- Le bouton WhatsApp ne sort plus vers `wa.me`: tout reste dans la fiche.
+- L'agent envoie un message texte ou une piece jointe depuis l'UI: image, vocal/audio, video ou document.
+- Le backend appelle WhatsApp Cloud API Meta quand les variables `WHATSAPP_*` sont configurees.
+- Les messages entrants, statuts de livraison et medias recus arrivent par webhook dans `communication_messages`.
+- Les fiches fermees restent en lecture seule pour les agents: pas d'envoi, pas d'ajout manuel, pas d'enregistrement.
+
+## WhatsApp Cloud API Meta
+
+Variables a configurer dans `.env`:
+
+```env
+WHATSAPP_API_BASE_URL=https://graph.facebook.com
+WHATSAPP_API_VERSION=v20.0
+WHATSAPP_ACCESS_TOKEN=EAAG...
+WHATSAPP_PHONE_NUMBER_ID=1234567890
+WHATSAPP_VERIFY_TOKEN=un_token_secret_a_choisir
+```
+
+Webhook public a declarer chez Meta:
+
+```text
+https://votre-domaine.com/api/whatsapp/webhook
+```
+
+Champs webhook a souscrire:
+
+- `messages` pour recevoir les messages entrants.
+- `message_status` ou les statuts equivalents disponibles dans votre tableau de bord Meta pour recevoir `sent`, `delivered`, `read`, `failed`.
+
+Parcours de mise en service:
+
+1. Creer ou utiliser un Business Manager Meta verifie.
+2. Creer une app Meta avec le produit WhatsApp.
+3. Ajouter ou connecter un numero WhatsApp Business.
+4. Recuperer le `Phone Number ID` et generer un access token permanent via un utilisateur systeme Business.
+5. Renseigner les variables `.env`.
+6. Configurer le webhook public HTTPS ci-dessus avec le meme `WHATSAPP_VERIFY_TOKEN`.
+7. Redemarrer le serveur puis tester un envoi depuis une fiche non fermee.
+
+Si `WHATSAPP_ACCESS_TOKEN` ou `WHATSAPP_PHONE_NUMBER_ID` manque, l'application garde le message avec le statut `PREPARED`. C'est volontaire: l'historique reste propre, mais aucun message reel n'est envoye.
+
+## Medias WhatsApp
+
+L'UI gere:
+
+- Image: apercu dans la conversation.
+- Vocal/audio: lecteur audio.
+- Video: lecteur video.
+- Document: lien de telechargement.
+
+Les medias entrants sont telecharges depuis Meta a la demande via:
+
+```text
+GET /api/whatsapp/media/:mediaId
+```
+
+Cette route est protegee par le token utilisateur de l'application.
 
 ## Envoi SMS reel avec Twilio
 
@@ -30,20 +83,8 @@ Le backend appelle l'API Twilio Messages sans package supplementaire. Si le prov
 
 Parcours recommande:
 
-1. Choisir un provider SMS/voix qui vend des numeros francais et expose une API: Twilio, Vonage, Ringover, Aircall, MessageBird/Bird, etc.
-2. Verifier avant achat que le numero +33 supporte bien les usages necessaires: SMS sortant, SMS entrant, voix, WhatsApp Business si besoin.
-3. Acheter un numero par agent ou par equipe selon votre logique commerciale.
+1. Choisir un provider qui vend des numeros francais et expose une API: Twilio, Vonage, Ringover, Aircall, Bird, etc.
+2. Verifier avant achat que le numero +33 supporte les usages necessaires: SMS sortant, SMS entrant, voix, WhatsApp Business si besoin.
+3. Acheter un numero par agent ou par equipe selon la logique commerciale.
 4. Mettre le numero dans la fiche utilisateur admin.
-5. Configurer les webhooks entrants du provider vers une future route inbound pour remplir automatiquement `communication_messages`.
-
-## WhatsApp
-
-Le site garde l'UI WhatsApp en interne. Pour recevoir automatiquement les messages entrants reels dans l'application, il faut utiliser WhatsApp Business Platform via Meta ou un provider comme Twilio, puis connecter les webhooks entrants a `communication_messages`.
-
-Le modele de donnees est deja pret:
-
-- `channel`: `SMS` ou `WHATSAPP`
-- `direction`: `OUTBOUND` ou `INBOUND`
-- `status`: `PREPARED`, `SENT`, `FAILED`, etc.
-- `provider` et `provider_message_id`
-- `raw_payload` pour stocker la reponse brute du provider
+5. Pour WhatsApp, connecter le numero dans Meta Business ou chez le provider choisi avant de l'utiliser.

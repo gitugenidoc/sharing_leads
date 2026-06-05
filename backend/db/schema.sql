@@ -39,16 +39,25 @@ CREATE TABLE IF NOT EXISTS leads (
 
 CREATE TABLE IF NOT EXISTS communication_messages (
   id SERIAL PRIMARY KEY,
-  client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WHATSAPP')),
   direction VARCHAR(20) NOT NULL CHECK (direction IN ('OUTBOUND', 'INBOUND')),
   status VARCHAR(30) NOT NULL DEFAULT 'RECORDED',
+  message_type VARCHAR(30) NOT NULL DEFAULT 'text',
   from_number VARCHAR(50),
   to_number VARCHAR(50),
   body TEXT,
+  media_id VARCHAR(255),
+  media_mime_type VARCHAR(255),
+  media_sha256 VARCHAR(255),
+  media_filename VARCHAR(255),
+  media_caption TEXT,
   provider VARCHAR(50),
   provider_message_id VARCHAR(255),
+  error_text TEXT,
+  delivered_at TIMESTAMP,
+  read_at TIMESTAMP,
   raw_payload JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -88,6 +97,7 @@ CREATE INDEX idx_leads_created_at ON leads(created_at);
 CREATE INDEX idx_communication_messages_client_id ON communication_messages(client_id);
 CREATE INDEX idx_communication_messages_channel ON communication_messages(channel);
 CREATE INDEX idx_communication_messages_created_at ON communication_messages(created_at);
+CREATE INDEX idx_communication_messages_provider_id ON communication_messages(provider_message_id);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 

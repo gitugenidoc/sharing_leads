@@ -301,6 +301,28 @@ const createClientMessage = async (id, messageData) => {
   return data.message;
 };
 
+const sendWhatsappMessage = async (id, { body = "", phone = "", file = null } = {}) => {
+  const formData = new FormData();
+  if (body) formData.append("body", body);
+  if (phone) formData.append("phone", phone);
+  if (file) formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/clients/${id}/whatsapp/send`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: formData,
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    const error = new Error(json.error || "WhatsApp send failed");
+    error.status = response.status;
+    throw error;
+  }
+  return json;
+};
+
 const getClientStatuses = async () => {
   const data = await apiCall("GET", "/clients/statuses/list");
   return data;
@@ -467,6 +489,7 @@ Object.assign(window, {
   logClientContact,
   getClientMessages,
   createClientMessage,
+  sendWhatsappMessage,
   getClientStatuses,
   searchLeads,
   getImportLogs,

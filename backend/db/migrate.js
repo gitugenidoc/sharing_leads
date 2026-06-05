@@ -272,20 +272,59 @@ const createTables = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS communication_messages (
       id SERIAL PRIMARY KEY,
-      client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
       user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
       channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WHATSAPP')),
       direction VARCHAR(20) NOT NULL CHECK (direction IN ('OUTBOUND', 'INBOUND')),
       status VARCHAR(30) NOT NULL DEFAULT 'RECORDED',
+      message_type VARCHAR(30) NOT NULL DEFAULT 'text',
       from_number VARCHAR(50),
       to_number VARCHAR(50),
       body TEXT,
+      media_id VARCHAR(255),
+      media_mime_type VARCHAR(255),
+      media_sha256 VARCHAR(255),
+      media_filename VARCHAR(255),
+      media_caption TEXT,
       provider VARCHAR(50),
       provider_message_id VARCHAR(255),
+      error_text TEXT,
+      delivered_at TIMESTAMP,
+      read_at TIMESTAMP,
       raw_payload JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  await pool.query(
+    "ALTER TABLE communication_messages ALTER COLUMN client_id DROP NOT NULL",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(30) NOT NULL DEFAULT 'text'",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_id VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_mime_type VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_sha256 VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_filename VARCHAR(255)",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_caption TEXT",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS error_text TEXT",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP",
+  );
+  await pool.query(
+    "ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMP",
+  );
 
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
@@ -352,6 +391,9 @@ const createTables = async () => {
   );
   await pool.query(
     "CREATE INDEX IF NOT EXISTS idx_communication_messages_created_at ON communication_messages(created_at)",
+  );
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_communication_messages_provider_id ON communication_messages(provider_message_id)",
   );
 
   await pool.query(`

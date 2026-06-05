@@ -5,6 +5,7 @@ const CommunicationMessage = require("../models/CommunicationMessage");
 const User = require("../models/User");
 const Log = require("../models/Log");
 const { sendSms } = require("../services/smsProvider");
+const whatsappProvider = require("../services/whatsappProvider");
 const { verifyToken, isAdmin, isCenterViewer } = require("../middleware/auth");
 const { validateClient } = require("../middleware/validation-mutuelle");
 
@@ -72,6 +73,24 @@ const canEditClient = (user, client) => {
   if (user.role === "AGENT" && isTerminalClient(client)) return false;
   return canManageClient(user, client);
 };
+
+const inferWhatsappMediaType = (file) => {
+  const mime = file?.mimetype || "";
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("audio/")) return "audio";
+  return "document";
+};
+
+const getPrimaryClientPhone = (client) =>
+  client.tel_gsm || client.tel_professionnel || client.tel_fixe || "";
+
+const getWhatsappSenderNumber = (actor, user) =>
+  actor?.whatsapp_business_number ||
+  actor?.phone_number ||
+  user.whatsapp_business_number ||
+  user.phone_number ||
+  "";
 
 const decorateClosureUpdates = (user, existingClient, updates) => {
   if (!Object.prototype.hasOwnProperty.call(updates, "status")) {
@@ -931,6 +950,131 @@ router.get("/:id/history", verifyToken, async (req, res) => {
   }
 });
 
+router.post("/:id/whatsapp/send", verifyToken, async (req, res) => {
+  try {
+    const client = await Client.getClientById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Client not found" });
+    if (!canEditClient(req.user, client)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const actor = await User.getUserById(req.user.id);
+    const toNumber = String(req.body.phone || getPrimaryClientPhone(client) || "").trim();
+    const body = String(req.body.body || req.body.message || "").trim();
+    const file = req.files?.file || null;
+    if (!toNumber) {
+      return res.status(400).json({ error: "Client phone is required" });
+    }
+    if (!body && !file) {
+      return res.status(400).json({ error: "Message body or file is required" });
+    }
+
+    const fromNumber = getWhatsappSenderNumber(actor, req.user);
+    const configured = whatsappProvider.isConfigured();
+    const messageType = file
+      ? inferWhatsappMediaType(file)
+      : String(req.body.type || "text").toLowerCase();
+    let providerResult = null;
+    let mediaPayload = {};
+
+    if (configured) {
+      try {
+        if (file) {
+          const uploaded = await whatsappProvider.uploadMedia({
+            buffer: file.data,
+            mimeType: file.mimetype,
+            filename: file.name,
+          });
+          mediaPayload = {
+            mediaId: uploaded.id || "",
+            mediaMimeType: file.mimetype || "",
+            mediaFilename: file.name || "",
+            mediaCaption: body,
+          };
+          providerResult = await whatsappProvider.sendMediaMessage({
+            to: toNumber,
+            type: messageType,
+            mediaId: uploaded.id,
+            caption: body,
+            filename: file.name,
+          });
+        } else {
+          providerResult = await whatsappProvider.sendTextMessage({
+            to: toNumber,
+            body,
+          });
+        }
+      } catch (providerErr) {
+        providerResult = {
+          status: "FAILED",
+          provider: "meta",
+          providerMessageId: "",
+          errorText: providerErr.message,
+          rawPayload: providerErr.providerResponse || { error: providerErr.message },
+        };
+      }
+    } else if (file) {
+      mediaPayload = {
+        mediaMimeType: file.mimetype || "",
+        mediaFilename: file.name || "",
+        mediaCaption: body,
+      };
+    }
+
+    const updatedClient = await Client.updateClient(req.params.id, {
+      last_contacted_at: new Date(),
+      last_action_at: new Date(),
+    });
+    const message = await CommunicationMessage.createMessage({
+      clientId: updatedClient.id,
+      userId: req.user.id,
+      channel: "WHATSAPP",
+      direction: "OUTBOUND",
+      status: providerResult?.status || "PREPARED",
+      messageType,
+      fromNumber,
+      toNumber,
+      body: file ? "" : body,
+      provider: providerResult?.provider || (configured ? "meta" : "meta_unconfigured"),
+      providerMessageId: providerResult?.providerMessageId || "",
+      errorText: providerResult?.errorText || "",
+      rawPayload: providerResult?.rawPayload || {},
+      ...mediaPayload,
+    });
+
+    await Client.addClientHistory({
+      clientId: updatedClient.id,
+      userId: req.user.id,
+      action: "WHATSAPP_OUTBOUND_MESSAGE",
+      oldValue: { last_contacted_at: client.last_contacted_at },
+      newValue: message,
+      note: body || mediaPayload.mediaFilename || "Message WhatsApp",
+    });
+    await Log.createAuditLog({
+      userId: req.user.id,
+      action: "WHATSAPP_OUTBOUND_MESSAGE",
+      entityType: "client",
+      entityId: updatedClient.id,
+      newValue: {
+        message_id: message.id,
+        status: message.status,
+        provider: message.provider,
+        configured,
+      },
+    });
+
+    res.status(201).json({
+      message,
+      client: updatedClient,
+      whatsapp_configured: configured,
+      provider_status: providerResult?.status || "PREPARED",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.post("/:id/contact", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
@@ -980,9 +1124,11 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
 
     let communication = null;
     let smsResult = null;
+    let whatsappResult = null;
     const actor = await User.getUserById(req.user.id);
     const senderNumber =
       actor?.sms_sender_number || actor?.phone_number || req.user.sms_sender_number || "";
+    const whatsappSenderNumber = getWhatsappSenderNumber(actor, req.user);
 
     if (channel === "SMS") {
       try {
@@ -1001,19 +1147,50 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       }
     }
 
+    if (channel === "WHATSAPP") {
+      if (whatsappProvider.isConfigured()) {
+        try {
+          whatsappResult = await whatsappProvider.sendTextMessage({
+            to: phone,
+            body: message,
+          });
+        } catch (whatsappErr) {
+          whatsappResult = {
+            status: "FAILED",
+            provider: "meta",
+            providerMessageId: "",
+            errorText: whatsappErr.message,
+            rawPayload: whatsappErr.providerResponse || { error: whatsappErr.message },
+          };
+        }
+      } else {
+        whatsappResult = {
+          status: "PREPARED",
+          provider: "meta_unconfigured",
+          providerMessageId: "",
+          rawPayload: {},
+        };
+      }
+    }
+
     if (["SMS", "WHATSAPP"].includes(channel)) {
       communication = await CommunicationMessage.createMessage({
         clientId: updatedClient.id,
         userId: req.user.id,
         channel,
         direction: "OUTBOUND",
-        status: smsResult?.status || "PREPARED",
-        fromNumber: senderNumber,
+        status: smsResult?.status || whatsappResult?.status || "PREPARED",
+        messageType: "text",
+        fromNumber: channel === "WHATSAPP" ? whatsappSenderNumber : senderNumber,
         toNumber: phone,
         body: message,
-        provider: smsResult?.provider || (channel === "SMS" ? process.env.SMS_PROVIDER || "manual" : "internal"),
-        providerMessageId: smsResult?.providerMessageId || "",
-        rawPayload: smsResult?.rawPayload || {},
+        provider:
+          smsResult?.provider ||
+          whatsappResult?.provider ||
+          (channel === "SMS" ? process.env.SMS_PROVIDER || "manual" : "meta_unconfigured"),
+        providerMessageId: smsResult?.providerMessageId || whatsappResult?.providerMessageId || "",
+        errorText: smsResult?.errorText || whatsappResult?.errorText || "",
+        rawPayload: smsResult?.rawPayload || whatsappResult?.rawPayload || {},
       });
     }
 
@@ -1022,6 +1199,7 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       client: updatedClient,
       communication,
       sms_status: smsResult?.status || null,
+      whatsapp_status: whatsappResult?.status || null,
     });
   } catch (err) {
     console.error(err);
@@ -1072,11 +1250,18 @@ router.post("/:id/messages", verifyToken, async (req, res) => {
       channel,
       direction,
       status: req.body.status || "RECORDED",
+      messageType: req.body.messageType || req.body.message_type || "text",
       fromNumber: req.body.fromNumber || req.body.from_number || "",
       toNumber: req.body.toNumber || req.body.to_number || "",
       body: req.body.body || req.body.message || "",
+      mediaId: req.body.mediaId || req.body.media_id || "",
+      mediaMimeType: req.body.mediaMimeType || req.body.media_mime_type || "",
+      mediaSha256: req.body.mediaSha256 || req.body.media_sha256 || "",
+      mediaFilename: req.body.mediaFilename || req.body.media_filename || "",
+      mediaCaption: req.body.mediaCaption || req.body.media_caption || "",
       provider: req.body.provider || "manual",
       providerMessageId: req.body.providerMessageId || req.body.provider_message_id || "",
+      errorText: req.body.errorText || req.body.error_text || "",
       rawPayload: req.body.rawPayload || req.body.raw_payload || {},
     });
 
