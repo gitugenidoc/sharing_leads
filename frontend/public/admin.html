@@ -462,7 +462,7 @@
           <button
             onclick="window.location.href='/validation.html'"
             class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
-            title="Service validation"
+            title="Service gestion validation"
           >
             <i class="fa-solid fa-clipboard-check text-lg"></i>
           </button>
@@ -1792,7 +1792,7 @@
               class="field-control"
             >
               <option value="AGENT">Agent</option>
-              <option value="VALIDATION">Service validation</option>
+              <option value="VALIDATION">Service gestion (validation)</option>
               <option value="SUPERVISOR">Superviseur</option>
               <option value="ADMIN">Admin de centre</option>
             </select>
@@ -3129,7 +3129,7 @@
           <td class="px-6 py-4 text-gray-600">${user.email}</td>
           <td class="px-6 py-4 text-gray-600">${escapeHtml(user.center_name || "-")}</td>
           <td class="px-6 py-4">
-            <span class="px-2 py-1 rounded-full text-xs font-semibold ${user.role === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800" : user.role === "ADMIN" ? "bg-red-100 text-red-800" : user.role === "SUPERVISOR" ? "bg-amber-100 text-amber-800" : user.role === "VALIDATION" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"}">${user.role}</span>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${getRoleBadgeClass(user.role)}">${getRoleLabel(user.role)}</span>
           </td>
           <td class="px-6 py-4 text-gray-600">
             <div>${escapeHtml(user.sms_sender_number || user.phone_number || "-")}</div>
@@ -3207,11 +3207,31 @@
         const select = document.getElementById("user-role");
         if (currentUser?.role === "SUPER_ADMIN") {
           select.innerHTML =
-            '<option value="ADMIN">Admin de centre</option><option value="SUPERVISOR">Superviseur</option><option value="VALIDATION">Service validation</option><option value="AGENT">Agent</option>';
+            '<option value="ADMIN">Admin de centre</option><option value="SUPERVISOR">Superviseur</option><option value="VALIDATION">Service gestion (validation)</option><option value="AGENT">Agent</option>';
         } else {
-          select.innerHTML = '<option value="AGENT">Agent</option><option value="SUPERVISOR">Superviseur</option><option value="VALIDATION">Service validation</option>';
+          select.innerHTML = '<option value="AGENT">Agent</option><option value="SUPERVISOR">Superviseur</option><option value="VALIDATION">Service gestion (validation)</option>';
         }
         select.value = currentUser?.role === "SUPER_ADMIN" ? "ADMIN" : "AGENT";
+      }
+
+      function getRoleLabel(role) {
+        return {
+          SUPER_ADMIN: "Super admin",
+          ADMIN: "Admin de centre",
+          SUPERVISOR: "Superviseur",
+          VALIDATION: "Service gestion",
+          AGENT: "Agent",
+        }[role] || role || "-";
+      }
+
+      function getRoleBadgeClass(role) {
+        return {
+          SUPER_ADMIN: "bg-purple-100 text-purple-800",
+          ADMIN: "bg-red-100 text-red-800",
+          SUPERVISOR: "bg-amber-100 text-amber-800",
+          VALIDATION: "bg-emerald-100 text-emerald-800",
+          AGENT: "bg-blue-100 text-blue-800",
+        }[role] || "bg-gray-100 text-gray-700";
       }
 
       function updateUserCenterField() {
