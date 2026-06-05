@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecurAssure - Gestion validation</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#d62d5a",
+              background: "#f3f4f6",
+              textMain: "#1e293b",
+              textMuted: "#64748b",
+            },
+            fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          },
+        },
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+      * { font-family: "Inter", system-ui, sans-serif; }
+      body { min-height: 100vh; background: #f3f4f6; color: #1e293b; }
+      .shell { min-height: 100vh; display: flex; }
+      .sidebar { width: 72px; border-right: 1px solid #e5e7eb; background: #fff; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+      .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .topbar { min-height: 72px; border-bottom: 1px solid #e5e7eb; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; }
+      .content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+      .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); }
+      .metric { min-height: 116px; padding: 1rem; }
+      .status-pill { border-radius: 999px; padding: .25rem .6rem; font-size: .72rem; font-weight: 700; display: inline-flex; align-items: center; }
+      .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(15, 23, 42, .52); padding: 1rem; }
+      .modal-panel { width: min(920px, 100%); max-height: calc(100vh - 2rem); overflow: hidden; display: flex; flex-direction: column; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 24px 70px rgba(15, 23, 42, .22); }
+      .modal-body { flex: 1; overflow-y: auto; padding: 1.25rem; }
+      @media (max-width: 900px) {
+        .sidebar { display: none; }
+        .topbar { align-items: flex-start; flex-direction: column; }
+        .content { padding: 1rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="mb-8 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <div class="flex flex-1 flex-col items-center gap-6">
+          <button class="w-full border-r-2 border-primary py-1 text-center text-primary" title="Validation">
+            <i class="fa-solid fa-table-list text-lg"></i>
+          </button>
+        </div>
+        <button class="text-textMuted transition hover:text-primary" title="Deconnexion" onclick="handleLogout()">
+          <i class="fa-solid fa-right-from-bracket text-lg"></i>
+        </button>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-primary">Service gestion validation</p>
+            <h1 class="text-xl font-semibold text-textMain">Fiches fermees a controler</h1>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="search-input" class="w-72 rounded-lg border-gray-200 text-sm" placeholder="Rechercher nom, telephone, agent..." oninput="renderValidationList()" />
+            <select id="status-filter" class="rounded-lg border-gray-200 text-sm" onchange="renderValidationList()">
+              <option value="">Tous statuts fermes</option>
+              <option value="SIGNED">Signe</option>
+              <option value="REFUSED">Refus</option>
+              <option value="LOST">Perdu</option>
+              <option value="CLOSED">Ferme</option>
+            </select>
+            <button class="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white" onclick="loadClosedLeads()">
+              <i class="fa-solid fa-rotate-right mr-2"></i>Actualiser
+            </button>
+          </div>
+        </header>
+
+        <section class="content">
+          <div id="error-box" class="mb-4 hidden rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-700"></div>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="panel metric">
+              <div class="flex items-center justify-between text-xs font-semibold text-textMuted">
+                <span>Total validation</span>
+                <i class="fa-solid fa-folder-closed text-primary"></i>
+              </div>
+              <div id="kpi-total" class="mt-3 text-2xl font-semibold">0</div>
+              <p class="mt-2 text-xs text-textMuted">Fiches sorties de la prospection</p>
+            </article>
+            <article class="panel metric">
+              <div class="flex items-center justify-between text-xs font-semibold text-textMuted">
+                <span>Signes</span>
+                <i class="fa-solid fa-circle-check text-green-600"></i>
+              </div>
+              <div id="kpi-signed" class="mt-3 text-2xl font-semibold">0</div>
+              <p id="kpi-signed-rate" class="mt-2 text-xs text-green-700">0%</p>
+            </article>
+            <article class="panel metric">
+              <div class="flex items-center justify-between text-xs font-semibold text-textMuted">
+                <span>Refus / perdus</span>
+                <i class="fa-solid fa-ban text-red-600"></i>
+              </div>
+              <div id="kpi-lost" class="mt-3 text-2xl font-semibold">0</div>
+              <p class="mt-2 text-xs text-textMuted">REFUSED + LOST</p>
+            </article>
+            <article class="panel metric">
+              <div class="flex items-center justify-between text-xs font-semibold text-textMuted">
+                <span>Prix signe</span>
+                <i class="fa-solid fa-euro-sign text-primary"></i>
+              </div>
+              <div id="kpi-price" class="mt-3 text-2xl font-semibold">0 EUR</div>
+              <p class="mt-2 text-xs text-textMuted">Somme des fiches signees</p>
+            </article>
+          </div>
+
+          <div class="panel mt-5 overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
+              <div>
+                <h2 class="text-sm font-semibold text-gray-900">Liste validation</h2>
+                <p id="list-count" class="mt-1 text-xs text-textMuted">Chargement...</p>
+              </div>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Acces service validation</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-left text-sm">
+                <thead class="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
+                  <tr>
+                    <th class="px-4 py-3 font-semibold">Prospect</th>
+                    <th class="px-4 py-3 font-semibold">Contact</th>
+                    <th class="px-4 py-3 font-semibold">Statut</th>
+                    <th class="px-4 py-3 font-semibold">Fermee par</th>
+                    <th class="px-4 py-3 font-semibold">Date fermeture</th>
+                    <th class="px-4 py-3 font-semibold">Prix</th>
+                    <th class="px-4 py-3 text-right font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="validation-tbody" class="divide-y divide-gray-100">
+                  <tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Chargement...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="detail-modal" class="modal-backdrop">
+      <div class="modal-panel">
+        <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-primary">Fiche validation</p>
+            <h2 id="detail-title" class="mt-1 text-lg font-semibold text-gray-900">Fiche</h2>
+            <p id="detail-subtitle" class="mt-1 text-sm text-textMuted"></p>
+          </div>
+          <button class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" onclick="closeDetails()">
+            <i class="fa-solid fa-xmark mr-2"></i>Fermer
+          </button>
+        </div>
+        <div id="detail-body" class="modal-body"></div>
+        <div class="flex flex-wrap justify-end gap-2 border-t border-gray-100 px-5 py-4">
+          <button class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" onclick="saveValidationNotes()">
+            Enregistrer notes
+          </button>
+          <button class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90" onclick="reopenSelectedLead()">
+            Remettre en prospection
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/api.js?v=validation-20260605"></script>
+    <script>
+      const STATUS_LABELS = {
+        SIGNED: "Signe",
+        REFUSED: "Refus",
+        LOST: "Perdu",
+        CLOSED: "Ferme",
+        TO_CALL: "A appeler",
+      };
+      const STATUS_CLASSES = {
+        SIGNED: "bg-green-100 text-green-800",
+        REFUSED: "bg-red-100 text-red-800",
+        LOST: "bg-red-100 text-red-800",
+        CLOSED: "bg-gray-100 text-gray-700",
+      };
+      let closedLeads = [];
+      let selectedLead = null;
+
+      window.addEventListener("load", async () => {
+        const user = getUser();
+        if (!user || !["VALIDATION", "ADMIN", "SUPER_ADMIN"].includes(user.role)) {
+          window.location.href = "/index.html";
+          return;
+        }
+        await loadClosedLeads();
+      });
+
+      async function loadClosedLeads() {
+        const errorBox = document.getElementById("error-box");
+        errorBox.classList.add("hidden");
+        try {
+          const data = await getClosedLeads(0, 999999);
+          closedLeads = data.clients || [];
+          renderDashboard();
+          renderValidationList();
+        } catch (err) {
+          errorBox.textContent = err.formattedMessage || err.message;
+          errorBox.classList.remove("hidden");
+        }
+      }
+
+      function renderDashboard() {
+        const total = closedLeads.length;
+        const signed = closedLeads.filter((lead) => lead.status === "SIGNED").length;
+        const lost = closedLeads.filter((lead) => ["REFUSED", "LOST"].includes(lead.status)).length;
+        const signedPrice = closedLeads
+          .filter((lead) => lead.status === "SIGNED")
+          .reduce((sum, lead) => sum + Number(lead.prix_mutuelle || 0), 0);
+        setText("kpi-total", total);
+        setText("kpi-signed", signed);
+        setText("kpi-lost", lost);
+        setText("kpi-price", formatCurrency(signedPrice));
+        setText("kpi-signed-rate", `${total ? Math.round((signed / total) * 100) : 0}% des fiches fermees`);
+      }
+
+      function renderValidationList() {
+        const query = document.getElementById("search-input").value.trim().toLowerCase();
+        const status = document.getElementById("status-filter").value;
+        const rows = closedLeads.filter((lead) => {
+          const haystack = [
+            lead.nom,
+            lead.prenom,
+            lead.email,
+            lead.tel_gsm,
+            lead.tel_fixe,
+            lead.tel_professionnel,
+            lead.agent_name,
+            lead.closed_by_name,
+            lead.nom_mutuelle,
+          ].join(" ").toLowerCase();
+          return (!status || lead.status === status) && (!query || haystack.includes(query));
+        });
+        setText("list-count", `${rows.length} fiche${rows.length > 1 ? "s" : ""} affichee${rows.length > 1 ? "s" : ""}`);
+        const tbody = document.getElementById("validation-tbody");
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Aucune fiche fermee a valider.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map((lead) => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <div class="font-semibold text-gray-900">${escapeHtml(`${lead.nom || ""} ${lead.prenom || ""}`.trim() || "-")}</div>
+              <div class="text-xs text-textMuted">${escapeHtml(lead.nom_mutuelle || "")}</div>
+            </td>
+            <td class="px-4 py-3 text-textMuted">${escapeHtml(getPrimaryPhone(lead) || lead.email || "-")}</td>
+            <td class="px-4 py-3"><span class="status-pill ${STATUS_CLASSES[lead.status] || "bg-gray-100 text-gray-700"}">${STATUS_LABELS[lead.status] || lead.status || "-"}</span></td>
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900">${escapeHtml(lead.closed_by_name || lead.agent_name || "Non renseigne")}</div>
+              <div class="text-xs text-textMuted">${escapeHtml(lead.agent_email || "")}</div>
+            </td>
+            <td class="px-4 py-3 text-textMuted">${formatDateTime(lead.closed_at || lead.updated_at)}</td>
+            <td class="px-4 py-3 font-medium">${formatCurrency(lead.prix_mutuelle)}</td>
+            <td class="px-4 py-3 text-right">
+              <button class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-primary hover:bg-gray-50" onclick="showDetails(${lead.id})">Ouvrir</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      function showDetails(leadId) {
+        const lead = closedLeads.find((item) => item.id === leadId);
+        if (!lead) return;
+        selectedLead = lead;
+        document.getElementById("detail-title").textContent = `${lead.nom || ""} ${lead.prenom || ""}`.trim() || "Fiche";
+        document.getElementById("detail-subtitle").textContent = `${STATUS_LABELS[lead.status] || lead.status || "-"} - fermee le ${formatDateTime(lead.closed_at || lead.updated_at)}`;
+        document.getElementById("detail-body").innerHTML = `
+          <div class="grid gap-3 md:grid-cols-2">
+            ${detailField("Nom", lead.nom)}
+            ${detailField("Prenom", lead.prenom)}
+            ${detailField("Telephone", getPrimaryPhone(lead))}
+            ${detailField("Email", lead.email)}
+            ${detailField("Ville", lead.ville)}
+            ${detailField("Code postal", lead.code_postal)}
+            ${detailField("Mutuelle", lead.nom_mutuelle)}
+            ${detailField("Prix mutuelle", formatCurrency(lead.prix_mutuelle))}
+            ${detailField("Fermee par", lead.closed_by_name || lead.agent_name || "-")}
+            ${detailField("Date fermeture", formatDateTime(lead.closed_at || lead.updated_at))}
+          </div>
+          <label class="mt-4 block text-xs font-semibold uppercase text-textMuted">Notes validation</label>
+          <textarea id="detail-notes" rows="6" class="mt-2 w-full rounded-lg border-gray-200 text-sm">${escapeHtml(lead.notes || "")}</textarea>
+        `;
+        document.getElementById("detail-modal").style.display = "flex";
+      }
+
+      function detailField(label, value) {
+        return `
+          <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <div class="text-xs font-semibold uppercase text-textMuted">${escapeHtml(label)}</div>
+            <div class="mt-1 text-sm font-medium text-gray-900">${escapeHtml(value || "-")}</div>
+          </div>
+        `;
+      }
+
+      async function saveValidationNotes() {
+        if (!selectedLead) return;
+        try {
+          const updated = await updateLead(selectedLead.id, {
+            notes: document.getElementById("detail-notes").value,
+          });
+          upsertClosedLead(updated);
+          selectedLead = updated;
+          renderDashboard();
+          renderValidationList();
+          alert("Notes enregistrees.");
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
+        }
+      }
+
+      async function reopenSelectedLead() {
+        if (!selectedLead) return;
+        if (!confirm("Remettre cette fiche dans la liste des prospects actifs ?")) return;
+        try {
+          await updateLead(selectedLead.id, {
+            status: "TO_CALL",
+            notes: document.getElementById("detail-notes")?.value || selectedLead.notes || "",
+          });
+          closedLeads = closedLeads.filter((lead) => lead.id !== selectedLead.id);
+          closeDetails();
+          renderDashboard();
+          renderValidationList();
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
+        }
+      }
+
+      function upsertClosedLead(lead) {
+        const index = closedLeads.findIndex((item) => item.id === lead.id);
+        if (["SIGNED", "LOST", "CLOSED", "REFUSED"].includes(lead.status)) {
+          if (index >= 0) closedLeads[index] = { ...closedLeads[index], ...lead };
+          else closedLeads.unshift(lead);
+        } else if (index >= 0) {
+          closedLeads.splice(index, 1);
+        }
+      }
+
+      function closeDetails() {
+        document.getElementById("detail-modal").style.display = "none";
+        selectedLead = null;
+      }
+
+      function getPrimaryPhone(lead) {
+        return lead.tel_gsm || lead.tel_professionnel || lead.tel_fixe || "";
+      }
+
+      function formatCurrency(value) {
+        return `${Number(value || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} EUR`;
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "-";
+        return new Date(value).toLocaleString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value;
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function handleLogout() {
+        logout();
+        window.location.href = "/index.html";
+      }
+    </script>
+  </body>
+</html>

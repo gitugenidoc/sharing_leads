@@ -235,6 +235,11 @@ const getAllLeads = async (offset = 0, limit = 100) => {
   return data;
 };
 
+const getClosedLeads = async (offset = 0, limit = 100) => {
+  const data = await apiCall("GET", `/clients/closed?offset=${offset}&limit=${limit}`);
+  return data;
+};
+
 const getUserLeads = async (offset = 0, limit = 100) => {
   const data = await apiCall(
     "GET",
@@ -483,6 +488,7 @@ Object.assign(window, {
   updateUser,
   deleteUser,
   getAllLeads,
+  getClosedLeads,
   getUserLeads,
   getLeadById,
   createLead,

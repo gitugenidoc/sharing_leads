@@ -23,7 +23,7 @@ const ensureUserRoleConstraint = async () => {
   await query(`
     ALTER TABLE users
     ADD CONSTRAINT users_role_check
-    CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'AGENT'))
+    CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'VALIDATION', 'AGENT'))
   `);
   userRoleConstraintReady = true;
 };
@@ -33,7 +33,7 @@ const getAllUsers = async (viewer = null) => {
   const params = [];
   let where = "";
 
-  if (["ADMIN", "SUPERVISOR"].includes(viewer?.role)) {
+  if (["ADMIN", "SUPERVISOR", "VALIDATION"].includes(viewer?.role)) {
     params.push(viewer.center_id);
     where = "WHERE users.center_id = $1 AND users.role <> 'SUPER_ADMIN'";
   }

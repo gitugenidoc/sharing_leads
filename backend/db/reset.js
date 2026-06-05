@@ -197,7 +197,7 @@ async function applySchema() {
   await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
   await pool.query(`
     ALTER TABLE users ADD CONSTRAINT users_role_check
-    CHECK (role IN ('SUPER_ADMIN','ADMIN','SUPERVISOR','AGENT'))
+    CHECK (role IN ('SUPER_ADMIN','ADMIN','SUPERVISOR','VALIDATION','AGENT'))
   `);
 
   // ---------- INDEX ----------

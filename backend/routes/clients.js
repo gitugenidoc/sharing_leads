@@ -6,7 +6,12 @@ const User = require("../models/User");
 const Log = require("../models/Log");
 const { sendSms } = require("../services/smsProvider");
 const whatsappProvider = require("../services/whatsappProvider");
-const { verifyToken, isAdmin, isCenterViewer } = require("../middleware/auth");
+const {
+  verifyToken,
+  isAdmin,
+  isCenterViewer,
+  isValidationViewer,
+} = require("../middleware/auth");
 const { validateClient } = require("../middleware/validation-mutuelle");
 
 const router = express.Router();
@@ -32,6 +37,11 @@ const isAllowedImportFile = (file) => {
 const isSuperAdmin = (user) => user.role === "SUPER_ADMIN";
 const getAdminCenterId = (user) =>
   isSuperAdmin(user) ? null : user.center_id || -1;
+const TERMINAL_CLIENT_STATUSES = ["SIGNED", "LOST", "CLOSED", "REFUSED"];
+const isTerminalClient = (client) =>
+  TERMINAL_CLIENT_STATUSES.includes(client?.status);
+const isSameCenter = (user, client) =>
+  Boolean(user.center_id && user.center_id === client.center_id);
 
 const CLIENT_STATUS_LABELS = {
   NEW: "Nouveau",
@@ -63,20 +73,18 @@ const canManageClient = (user, client) => {
 };
 
 const canViewClient = (user, client) => {
+  if (user.role === "AGENT" && isTerminalClient(client)) return false;
+  if (user.role === "VALIDATION") return isTerminalClient(client) && isSameCenter(user, client);
   if (canManageClient(user, client)) return true;
-  if (user.role === "AGENT" && client.closed_by === user.id) return true;
   if (user.role === "SUPERVISOR") {
-    return user.center_id && user.center_id === client.center_id;
+    return isSameCenter(user, client);
   }
   return false;
 };
 
-const TERMINAL_CLIENT_STATUSES = ["SIGNED", "LOST", "CLOSED", "REFUSED"];
-const isTerminalClient = (client) =>
-  TERMINAL_CLIENT_STATUSES.includes(client?.status);
-
 const canEditClient = (user, client) => {
   if (user.role === "AGENT" && isTerminalClient(client)) return false;
+  if (user.role === "VALIDATION") return isTerminalClient(client) && isSameCenter(user, client);
   return canManageClient(user, client);
 };
 
@@ -108,6 +116,9 @@ const decorateClosureUpdates = (user, existingClient, updates) => {
       ...updates,
       closed_by: existingClient.closed_by || existingClient.assigned_to || user.id,
       closed_at: existingClient.closed_at || new Date(),
+      assigned_to: null,
+      assigned_at: null,
+      assignment_expires_at: null,
     };
   }
 
@@ -855,6 +866,21 @@ router.get("/", verifyToken, isCenterViewer, async (req, res) => {
     const centerId = getAdminCenterId(req.user);
     const clients = await Client.getAllClients(offset, limit, centerId);
     const total = await Client.getClientsCount(centerId);
+
+    res.json({ clients, total, offset, limit });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/closed", verifyToken, isValidationViewer, async (req, res) => {
+  try {
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const centerId = getAdminCenterId(req.user);
+    const clients = await Client.getClosedClients(offset, limit, centerId);
+    const total = await Client.getClosedClientsCount(centerId);
 
     res.json({ clients, total, offset, limit });
   } catch (err) {

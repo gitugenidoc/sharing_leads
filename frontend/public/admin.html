@@ -448,7 +448,7 @@
           <button
             onclick="switchTab('leads', event)"
             class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
-            title="Clients"
+            title="Prospects"
           >
             <i class="fa-regular fa-envelope text-lg"></i>
           </button>
@@ -458,6 +458,13 @@
             title="Utilisateurs"
           >
             <i class="fa-regular fa-user text-lg"></i>
+          </button>
+          <button
+            onclick="window.location.href='/validation.html'"
+            class="sidebar-link text-textMuted hover:text-primary transition-colors w-full text-center py-1"
+            title="Service validation"
+          >
+            <i class="fa-solid fa-clipboard-check text-lg"></i>
           </button>
           <button
             onclick="switchTab('import', event)"
@@ -863,15 +870,15 @@
             <div class="mb-6 flex justify-between items-center">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">
-                  Tous les Clients
+                  Tous les Prospects
                 </h3>
-                <p class="text-sm text-gray-500" id="leads-count">0 clients</p>
+                <p class="text-sm text-gray-500" id="leads-count">0 prospects</p>
               </div>
               <div class="flex items-center gap-3">
                 <button
                   onclick="exportClients('csv')"
                   class="px-3 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-                  title="Exporter les clients en CSV"
+                  title="Exporter les prospects en CSV"
                 >
                   <span class="material-symbols-outlined">download</span>
                   CSV
@@ -879,7 +886,7 @@
                 <button
                   onclick="exportClients('excel')"
                   class="px-3 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 font-medium"
-                  title="Exporter les clients en Excel"
+                  title="Exporter les prospects en Excel"
                 >
                   <span class="material-symbols-outlined">table</span>
                   Excel
@@ -909,7 +916,7 @@
                   class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition flex items-center gap-2 font-medium"
                 >
                   <span class="material-symbols-outlined">add</span>
-                  Nouveau Client
+                  Nouveau Prospect
                 </button>
               </div>
             </div>
@@ -1785,6 +1792,7 @@
               class="field-control"
             >
               <option value="AGENT">Agent</option>
+              <option value="VALIDATION">Service validation</option>
               <option value="SUPERVISOR">Superviseur</option>
               <option value="ADMIN">Admin de centre</option>
             </select>
@@ -1983,7 +1991,7 @@
           renderLeads(allLeads);
           renderImportAgentAssignments();
           document.getElementById("leads-count").textContent =
-            `${allLeads.length} clients`;
+            `${allLeads.length} prospects`;
         } catch (err) {
           console.error(err);
         }
@@ -2151,7 +2159,7 @@
         const tbody = document.getElementById("leads-tbody");
         if (leads.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">Aucun client</td></tr>';
+            '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">Aucun prospect actif</td></tr>';
           return;
         }
         tbody.innerHTML = leads
@@ -2707,7 +2715,7 @@
 
       function exportClients(format) {
         if (!allLeads.length) {
-          alert("Aucun client a exporter.");
+          alert("Aucun prospect a exporter.");
           return;
         }
         const headers = EXPORT_FIELDS.map(([label]) => label);
@@ -2872,7 +2880,7 @@
         }
         try {
           const result = await assignRandomLeads(userId, count);
-          alert(`${result.assigned} client(s) assignés au hasard.`);
+          alert(`${result.assigned} prospect(s) assignes au hasard.`);
           await loadLeads();
           renderUsers(allUsers);
           updateDashboard();
@@ -3021,7 +3029,7 @@
 
         if (!agents.length) {
           list.innerHTML =
-            '<p class="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">Créez au moins un agent avant d’assigner les clients importés.</p>';
+            '<p class="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">Creez au moins un agent avant d’assigner les prospects importes.</p>';
         } else {
           list.innerHTML = agents
             .map(
@@ -3075,7 +3083,7 @@
             assignedTotal += result.assigned;
           }
 
-          alert(`${assignedTotal} client(s) assigné(s).`);
+          alert(`${assignedTotal} prospect(s) assigne(s).`);
           await loadLeads();
           renderUsers(allUsers);
           updateDashboard();
@@ -3121,7 +3129,7 @@
           <td class="px-6 py-4 text-gray-600">${user.email}</td>
           <td class="px-6 py-4 text-gray-600">${escapeHtml(user.center_name || "-")}</td>
           <td class="px-6 py-4">
-            <span class="px-2 py-1 rounded-full text-xs font-semibold ${user.role === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800" : user.role === "ADMIN" ? "bg-red-100 text-red-800" : user.role === "SUPERVISOR" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}">${user.role}</span>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${user.role === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800" : user.role === "ADMIN" ? "bg-red-100 text-red-800" : user.role === "SUPERVISOR" ? "bg-amber-100 text-amber-800" : user.role === "VALIDATION" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"}">${user.role}</span>
           </td>
           <td class="px-6 py-4 text-gray-600">
             <div>${escapeHtml(user.sms_sender_number || user.phone_number || "-")}</div>
@@ -3199,9 +3207,9 @@
         const select = document.getElementById("user-role");
         if (currentUser?.role === "SUPER_ADMIN") {
           select.innerHTML =
-            '<option value="ADMIN">Admin de centre</option><option value="SUPERVISOR">Superviseur</option><option value="AGENT">Agent</option>';
+            '<option value="ADMIN">Admin de centre</option><option value="SUPERVISOR">Superviseur</option><option value="VALIDATION">Service validation</option><option value="AGENT">Agent</option>';
         } else {
-          select.innerHTML = '<option value="AGENT">Agent</option><option value="SUPERVISOR">Superviseur</option>';
+          select.innerHTML = '<option value="AGENT">Agent</option><option value="SUPERVISOR">Superviseur</option><option value="VALIDATION">Service validation</option>';
         }
         select.value = currentUser?.role === "SUPER_ADMIN" ? "ADMIN" : "AGENT";
       }
@@ -3426,7 +3434,7 @@
         const latest = allLeads.slice(0, 4);
         if (!latest.length) {
           tbody.innerHTML =
-            '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun client</td></tr>';
+            '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun prospect actif</td></tr>';
           return;
         }
         tbody.innerHTML = latest

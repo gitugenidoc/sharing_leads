@@ -45,6 +45,10 @@ const CLIENT_FIELDS = [
   "extra_data",
 ];
 
+const TERMINAL_CLIENT_STATUSES = ["SIGNED", "LOST", "CLOSED", "REFUSED"];
+const terminalStatusPlaceholders = (startIndex = 1) =>
+  TERMINAL_CLIENT_STATUSES.map((_, index) => `$${startIndex + index}`).join(", ");
+
 const FLEXIBLE_CLIENT_COLUMNS = [
   ["adresse2", "VARCHAR(500)"],
   ["civilite", "VARCHAR(50)"],
@@ -246,17 +250,31 @@ const releaseExpiredAssignments = async ({ silent = false } = {}) => {
 
 const getAllClients = async (offset = 0, limit = 100, centerId = null) => {
   await ensureFlexibleClientColumns();
-  const scope = withCenterFilter("SELECT * FROM clients", centerId, 3);
+  const params = [...TERMINAL_CLIENT_STATUSES, limit, offset];
+  const centerFilter = centerId ? ` AND center_id = $${params.length + 1}` : "";
+  if (centerId) params.push(centerId);
   const result = await pool.query(
-    `${scope.text} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-    [limit, offset, ...scope.params],
+    `SELECT * FROM clients
+     WHERE status NOT IN (${terminalStatusPlaceholders(1)})
+       ${centerFilter}
+     ORDER BY created_at DESC
+     LIMIT $${TERMINAL_CLIENT_STATUSES.length + 1}
+     OFFSET $${TERMINAL_CLIENT_STATUSES.length + 2}`,
+    params,
   );
   return result.rows;
 };
 
 const getClientsCount = async (centerId = null) => {
-  const scope = withCenterFilter("SELECT COUNT(*) FROM clients", centerId, 1);
-  const result = await pool.query(scope.text, scope.params);
+  const params = [...TERMINAL_CLIENT_STATUSES];
+  const centerFilter = centerId ? ` AND center_id = $${params.length + 1}` : "";
+  if (centerId) params.push(centerId);
+  const result = await pool.query(
+    `SELECT COUNT(*) FROM clients
+     WHERE status NOT IN (${terminalStatusPlaceholders(1)})
+       ${centerFilter}`,
+    params,
+  );
   return parseInt(result.rows[0].count, 10);
 };
 
@@ -265,12 +283,11 @@ const getUserClients = async (userId, offset = 0, limit = 100) => {
   const result = await pool.query(
     `SELECT * FROM clients
      WHERE (assigned_to = $1 AND (assignment_expires_at IS NULL OR assignment_expires_at >= NOW()))
-        OR closed_by = $1
+       AND status NOT IN (${terminalStatusPlaceholders(4)})
      ORDER BY
-       CASE WHEN assigned_to = $1 THEN 0 ELSE 1 END,
        COALESCE(last_action_at, updated_at, created_at) DESC
      LIMIT $2 OFFSET $3`,
-    [userId, limit, offset],
+    [userId, limit, offset, ...TERMINAL_CLIENT_STATUSES],
   );
   return result.rows;
 };
@@ -280,8 +297,46 @@ const getUserClientsCount = async (userId) => {
   const result = await pool.query(
     `SELECT COUNT(*) FROM clients
      WHERE (assigned_to = $1 AND (assignment_expires_at IS NULL OR assignment_expires_at >= NOW()))
-        OR closed_by = $1`,
-    [userId],
+       AND status NOT IN (${terminalStatusPlaceholders(2)})`,
+    [userId, ...TERMINAL_CLIENT_STATUSES],
+  );
+  return parseInt(result.rows[0].count, 10);
+};
+
+const getClosedClients = async (offset = 0, limit = 100, centerId = null) => {
+  await ensureFlexibleClientColumns();
+  const params = [...TERMINAL_CLIENT_STATUSES, limit, offset];
+  const centerFilter = centerId ? ` AND clients.center_id = $${params.length + 1}` : "";
+  if (centerId) params.push(centerId);
+  const result = await pool.query(
+    `SELECT
+       clients.*,
+       users.name AS agent_name,
+       users.email AS agent_email,
+       closed_user.name AS closed_by_name
+     FROM clients
+     LEFT JOIN users ON users.id = clients.assigned_to
+     LEFT JOIN users AS closed_user ON closed_user.id = clients.closed_by
+     WHERE clients.status IN (${terminalStatusPlaceholders(1)})
+       ${centerFilter}
+     ORDER BY clients.closed_at DESC NULLS LAST, clients.updated_at DESC
+     LIMIT $${TERMINAL_CLIENT_STATUSES.length + 1}
+     OFFSET $${TERMINAL_CLIENT_STATUSES.length + 2}`,
+    params,
+  );
+  return result.rows;
+};
+
+const getClosedClientsCount = async (centerId = null) => {
+  await ensureFlexibleClientColumns();
+  const params = [...TERMINAL_CLIENT_STATUSES];
+  const centerFilter = centerId ? ` AND center_id = $${params.length + 1}` : "";
+  if (centerId) params.push(centerId);
+  const result = await pool.query(
+    `SELECT COUNT(*) FROM clients
+     WHERE status IN (${terminalStatusPlaceholders(1)})
+       ${centerFilter}`,
+    params,
   );
   return parseInt(result.rows[0].count, 10);
 };
@@ -549,6 +604,8 @@ const searchClients = async (query, offset = 0, limit = 100, centerId = null) =>
     params.push(centerId);
     centerFilter = "AND center_id = $4";
   }
+  const statusFilter = `AND status NOT IN (${terminalStatusPlaceholders(params.length + 1)})`;
+  params.push(...TERMINAL_CLIENT_STATUSES);
 
   const result = await pool.query(
     `SELECT * FROM clients
@@ -564,6 +621,7 @@ const searchClients = async (query, offset = 0, limit = 100, centerId = null) =>
        OR profession ILIKE $1
      )
      ${centerFilter}
+     ${statusFilter}
      ORDER BY created_at DESC
      LIMIT $2 OFFSET $3`,
     params,
@@ -619,6 +677,8 @@ const bulkInsertClients = async (clients, centerId) => {
 module.exports = {
   getAllClients,
   getClientsCount,
+  getClosedClients,
+  getClosedClientsCount,
   getUserClients,
   getUserClientsCount,
   getReminderClients,

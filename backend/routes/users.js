@@ -21,7 +21,7 @@ const canManageUser = (actor, target) => {
   }
   if (actor.role === "ADMIN") {
     return (
-      ["AGENT", "SUPERVISOR"].includes(target.role) &&
+      ["AGENT", "SUPERVISOR", "VALIDATION"].includes(target.role) &&
       actor.center_id &&
       actor.center_id === target.center_id
     );
@@ -85,10 +85,10 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
     if (isSelfUpdate) {
       requestedRole = existingUser.role;
     }
-    if (req.user.role === "ADMIN" && !["AGENT", "SUPERVISOR"].includes(requestedRole)) {
+    if (req.user.role === "ADMIN" && !["AGENT", "SUPERVISOR", "VALIDATION"].includes(requestedRole)) {
       requestedRole = isSelfUpdate
         ? existingUser.role
-        : existingUser.role === "SUPERVISOR" ? "SUPERVISOR" : "AGENT";
+        : ["SUPERVISOR", "VALIDATION"].includes(existingUser.role) ? existingUser.role : "AGENT";
     }
     if (requestedRole === "SUPER_ADMIN" && req.user.id !== existingUser.id) {
       return res.status(403).json({ error: "Cannot promote users to super admin" });
