@@ -292,6 +292,180 @@
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+      /* Independent Premium WhatsApp Modal */
+      .whatsapp-chat-panel {
+        width: min(650px, 100%);
+        height: min(800px, 85vh);
+        overflow: hidden;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+        display: flex;
+        flex-direction: column;
+        animation: modalFadeIn 0.25s ease-out;
+      }
+      @keyframes modalFadeIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .whatsapp-chat-header {
+        background: linear-gradient(135deg, #005c4b, #008069);
+        padding: 0.95rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+      }
+      .whatsapp-chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+      .whatsapp-chat-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-size: 20px;
+      }
+      .whatsapp-chat-thread {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 1.25rem 1.5rem;
+        background-color: #efeae2;
+        background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+        background-repeat: repeat;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.15) transparent;
+      }
+      .whatsapp-chat-thread::-webkit-scrollbar {
+        width: 6px;
+      }
+      .whatsapp-chat-thread::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.15);
+        border-radius: 3px;
+      }
+      .whatsapp-chat-composer {
+        border-top: 1px solid #e9edef;
+        background: #f0f2f5;
+        padding: 0.85rem 1.25rem;
+      }
+      .whatsapp-chat-compose-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .whatsapp-chat-tool-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        color: #54656f;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.2s, color 0.2s;
+      }
+      .whatsapp-chat-tool-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #111b21;
+      }
+      #whatsapp-chat-outbound-message {
+        flex: 1;
+        border: none !important;
+        border-radius: 20px !important;
+        background: #fff !important;
+        padding: 0.6rem 1rem !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+        resize: none !important;
+        max-height: 100px;
+        min-height: 38px;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+        outline: none !important;
+      }
+      .whatsapp-chat-send-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background-color: #00a884;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 1.5px 3px rgba(0,0,0,0.15);
+        transition: background-color 0.2s, transform 0.1s;
+      }
+      .whatsapp-chat-send-btn:hover {
+        background-color: #008f72;
+        transform: scale(1.05);
+      }
+      .whatsapp-chat-send-btn:disabled {
+        background-color: #aebac1;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      /* Bubble message styles */
+      .wa-chat-bubble-row {
+        display: flex;
+        width: 100%;
+      }
+      .wa-chat-bubble-row.outbound {
+        justify-content: flex-end;
+      }
+      .wa-chat-bubble-row.inbound {
+        justify-content: flex-start;
+      }
+      .wa-chat-bubble {
+        max-width: 75%;
+        padding: 0.55rem 0.8rem;
+        border-radius: 10px;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        position: relative;
+      }
+      .wa-chat-bubble-row.outbound .wa-chat-bubble {
+        background-color: #d9fdd3;
+        border-top-right-radius: 2px;
+      }
+      .wa-chat-bubble-row.inbound .wa-chat-bubble {
+        background-color: #ffffff;
+        border-top-left-radius: 2px;
+      }
+      .wa-chat-bubble-body {
+        font-size: 13.5px;
+        color: #111b21;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .wa-chat-bubble-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        font-size: 10px;
+        color: #667781;
+        margin-top: 0.15rem;
+        align-self: flex-end;
+      }
     </style>
   </head>
   <body class="text-textMain antialiased">
@@ -413,6 +587,61 @@
           </div>
         </div>
         <div id="client-detail-body" class="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP CHAT MODAL -->
+    <div
+      id="whatsapp-chat-modal"
+      class="modal-backdrop"
+      style="display: none; z-index: 1000;"
+    >
+      <div class="whatsapp-chat-panel">
+        <div class="whatsapp-chat-header">
+          <div class="whatsapp-chat-header-info">
+            <div class="whatsapp-chat-avatar">
+              <i class="fa-brands fa-whatsapp"></i>
+            </div>
+            <div>
+              <div id="whatsapp-chat-recipient-name" class="font-bold text-white text-base">Nom Client</div>
+              <div id="whatsapp-chat-recipient-phone" class="text-xs text-green-100/90 font-medium">Numéro de téléphone</div>
+            </div>
+          </div>
+          <button type="button" onclick="closeWhatsappChatModal()" class="text-white/80 hover:text-white transition-colors" title="Fermer">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+        
+        <div id="whatsapp-chat-thread" class="whatsapp-chat-thread">
+          <!-- Les messages s'affichent ici -->
+        </div>
+
+        <div id="whatsapp-chat-composer" class="whatsapp-chat-composer">
+          <div class="whatsapp-chat-compose-row">
+            <label for="whatsapp-chat-media-file" class="whatsapp-chat-tool-btn" title="Joindre un fichier (Image, Vidéo, Document)">
+              <i class="fa-solid fa-paperclip"></i>
+            </label>
+            <input id="whatsapp-chat-media-file" type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" class="hidden" onchange="handleWhatsappChatFileSelected()" />
+            
+            <textarea id="whatsapp-chat-outbound-message" rows="1" class="field-control" placeholder="Écrivez un message WhatsApp..."></textarea>
+            
+            <button id="whatsapp-chat-send-btn" type="button" onclick="sendWhatsappChatMessage()" class="whatsapp-chat-send-btn">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+          
+          <div id="whatsapp-chat-file-preview" class="hidden flex items-center justify-between bg-white/80 border border-gray-200 rounded-lg p-2 mt-2">
+            <div class="flex items-center gap-2 text-sm text-gray-700 truncate">
+              <i class="fa-solid fa-file text-primary"></i>
+              <span id="whatsapp-chat-file-name" class="truncate font-medium">fichier.png</span>
+            </div>
+            <button type="button" onclick="clearSelectedWhatsappChatFile()" class="text-gray-400 hover:text-red-500 transition-colors">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <div id="whatsapp-chat-send-status" class="text-xs text-gray-500 mt-2 text-center"></div>
+        </div>
       </div>
     </div>
 
@@ -827,10 +1056,8 @@
           (extraFields.length
             ? renderDetailFields(extraFields.map(([key, value]) => [key, key, value]), true, locked)
             : "") +
-          renderWhatsappSection(lead, locked) +
           `<section class="detail-section"><div class="detail-section-title"><span>Historique fiche</span><span id="history-count">0</span></div><div id="client-history-list" class="space-y-2 p-4 text-sm text-gray-600">Chargement...</div></section>`;
         renderClientHistory(lead.id);
-        renderClientMessages(lead.id, "WHATSAPP");
 
         const mailBtn = document.getElementById("client-detail-mail-btn");
         if (mailBtn) {
@@ -950,7 +1177,9 @@
         const count = document.getElementById("whatsapp-history-count");
         if (!list) return;
         try {
-          const messages = await getClientMessages(leadId, channel);
+          let messages = await getClientMessages(leadId, channel);
+          // Filtrer/Masquer les messages non configurés (statut PREPARED)
+          messages = messages.filter(item => item.status !== "PREPARED");
           if (count) count.textContent = messages.length;
           if (!messages.length) {
             list.innerHTML = `<div class="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">Aucun message WhatsApp enregistre.</div>`;
@@ -1038,7 +1267,8 @@
 
       function formatWhatsappStatus(status, errorText = "") {
         const normalized = String(status || "RECORDED").toUpperCase();
-        if (normalized === "PREPARED") return "Enregistre, API non configuree";
+        // if (normalized === "PREPARED") return "Enregistre, API non configuree";
+        if (normalized === "PREPARED") return "";
         if (normalized === "FAILED") return errorText ? `Echec: ${errorText}` : "Echec";
         if (normalized === "RECEIVED") return "Recu";
         if (normalized === "READ") return "Lu";
@@ -1211,7 +1441,11 @@
         actions.forEach(([buttonId, channel]) => {
           const button = document.getElementById(buttonId);
           if (!button) return;
-          button.disabled = !phone || locked;
+          if (channel === "WHATSAPP") {
+            button.disabled = !phone; // Permet de consulter l'historique même si la fiche est fermée
+          } else {
+            button.disabled = !phone || locked;
+          }
           button.onclick = () => openContactAction(lead.id, channel);
         });
       }
@@ -1219,12 +1453,12 @@
       async function openContactAction(leadId, channel) {
         const lead = allLeads.find((item) => item.id === leadId);
         if (!lead) return;
-        if (isClosedLead(lead)) {
-          alert("Cette fiche est fermee. Action interdite.");
+        if (channel === "WHATSAPP") {
+          openWhatsappChatModal(leadId);
           return;
         }
-        if (channel === "WHATSAPP") {
-          await sendInternalWhatsappMessage(leadId);
+        if (isClosedLead(lead)) {
+          alert("Cette fiche est fermee. Action interdite.");
           return;
         }
         const phone = normalizePhoneForAction(getPrimaryPhone(lead, ""));
@@ -1435,6 +1669,206 @@
           timeStyle: "short",
         });
       }
+
+      // --- Premium Independent WhatsApp Chat modal logic ---
+      let whatsappChatLeadId = null;
+
+      async function openWhatsappChatModal(leadId) {
+        const lead = allLeads.find((item) => item.id === leadId);
+        if (!lead) return;
+
+        whatsappChatLeadId = leadId;
+        
+        // Header info
+        document.getElementById("whatsapp-chat-recipient-name").textContent = 
+          `${lead.nom || ""} ${lead.prenom || ""}`.trim() || "Fiche client";
+        
+        const phone = normalizePhoneForAction(getPrimaryPhone(lead, ""));
+        document.getElementById("whatsapp-chat-recipient-phone").textContent = 
+          phone ? `WhatsApp: ${phone}` : "Aucun numéro";
+        
+        // Reset inputs
+        const msgInput = document.getElementById("whatsapp-chat-outbound-message");
+        if (msgInput) {
+          msgInput.value = getContactMessage(lead || {});
+          msgInput.style.height = "auto";
+        }
+        
+        const fileInput = document.getElementById("whatsapp-chat-media-file");
+        if (fileInput) fileInput.value = "";
+        
+        clearSelectedWhatsappChatFile();
+        
+        const statusDiv = document.getElementById("whatsapp-chat-send-status");
+        if (statusDiv) statusDiv.textContent = "";
+
+        // Check if lead is closed
+        const locked = isClosedLead(lead);
+        const composer = document.getElementById("whatsapp-chat-composer");
+        if (composer) {
+          if (locked) {
+            composer.style.display = "none";
+          } else {
+            composer.style.display = "block";
+          }
+        }
+
+        // Show Modal
+        document.getElementById("whatsapp-chat-modal").style.display = "flex";
+        
+        // Load messages
+        await renderWhatsappChatMessages(leadId);
+      }
+
+      function closeWhatsappChatModal() {
+        document.getElementById("whatsapp-chat-modal").style.display = "none";
+        whatsappChatLeadId = null;
+      }
+
+      function handleWhatsappChatFileSelected() {
+        const fileInput = document.getElementById("whatsapp-chat-media-file");
+        const filePreview = document.getElementById("whatsapp-chat-file-preview");
+        const fileNameSpan = document.getElementById("whatsapp-chat-file-name");
+        
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          fileNameSpan.textContent = file.name;
+          filePreview.classList.remove("hidden");
+        } else {
+          clearSelectedWhatsappChatFile();
+        }
+      }
+
+      function clearSelectedWhatsappChatFile() {
+        const fileInput = document.getElementById("whatsapp-chat-media-file");
+        const filePreview = document.getElementById("whatsapp-chat-file-preview");
+        if (fileInput) fileInput.value = "";
+        if (filePreview) filePreview.classList.add("hidden");
+      }
+
+      async function renderWhatsappChatMessages(leadId) {
+        const thread = document.getElementById("whatsapp-chat-thread");
+        if (!thread) return;
+        
+        try {
+          thread.innerHTML = `<div class="text-center py-8 text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-xl"></i> Chargement...</div>`;
+          
+          let messages = await getClientMessages(leadId, "WHATSAPP");
+          
+          // Filtrer/Masquer les messages non configurés (statut PREPARED)
+          messages = messages.filter(item => item.status !== "PREPARED");
+          
+          if (!messages.length) {
+            thread.innerHTML = `<div class="rounded-lg border border-dashed border-gray-300 bg-white/60 backdrop-blur-sm p-6 text-center text-sm text-gray-600 my-auto font-medium">Aucun message WhatsApp réel échangé.</div>`;
+            return;
+          }
+          
+          thread.innerHTML = messages
+            .slice(0, 100)
+            .reverse()
+            .map((item) => {
+              const isInbound = item.direction === "INBOUND";
+              return `
+                <div class="wa-chat-bubble-row ${isInbound ? "inbound" : "outbound"}">
+                  <div class="wa-chat-bubble">
+                    ${renderWhatsappMediaAttachment(item)}
+                    ${getWhatsappMessageBody(item) ? `<div class="wa-chat-bubble-body">${escapeHtml(getWhatsappMessageBody(item))}</div>` : ""}
+                    <div class="wa-chat-bubble-meta">
+                      <span>${formatTimeOnly(item.created_at)}</span>
+                      ${!isInbound ? `<i class="fa-solid ${getWhatsappStatusIcon(item.status)} text-xs" style="margin-left: 2px;" aria-hidden="true"></i>` : ""}
+                    </div>
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+            
+          // Hydrate actual files/images/videos
+          await hydrateWhatsappMedia();
+          
+          // Scroll to bottom
+          thread.scrollTop = thread.scrollHeight;
+        } catch (err) {
+          thread.innerHTML = `<div class="text-center py-8 text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> Historique indisponible.</div>`;
+        }
+      }
+
+      function formatTimeOnly(value) {
+        if (!value) return "";
+        return new Date(value).toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      async function sendWhatsappChatMessage() {
+        if (!whatsappChatLeadId) return;
+        const lead = allLeads.find((item) => item.id === whatsappChatLeadId);
+        if (isClosedLead(lead)) {
+          alert("Cette fiche est fermée. Ajout de message interdit.");
+          return;
+        }
+        
+        const input = document.getElementById("whatsapp-chat-outbound-message");
+        const fileInput = document.getElementById("whatsapp-chat-media-file");
+        const button = document.getElementById("whatsapp-chat-send-btn");
+        const status = document.getElementById("whatsapp-chat-send-status");
+        
+        const phone = normalizePhoneForAction(getPrimaryPhone(lead || {}, ""));
+        if (!phone) {
+          alert("Ce client n'a pas de téléphone renseigné.");
+          return;
+        }
+        
+        const body = input?.value.trim() || "";
+        const file = fileInput?.files?.[0] || null;
+        if (!body && !file) return;
+        
+        try {
+          if (button) button.disabled = true;
+          if (status) status.textContent = "Envoi en cours...";
+          
+          const result = await sendWhatsappMessage(whatsappChatLeadId, { body, phone, file });
+          
+          if (input) {
+            input.value = "";
+            input.style.height = "auto";
+          }
+          clearSelectedWhatsappChatFile();
+          
+          await loadLeads();
+          await renderWhatsappChatMessages(whatsappChatLeadId);
+          
+          if (status) {
+            status.textContent =
+              result.provider_status === "PREPARED"
+                ? "Message enregistré en local."
+                : result.provider_status === "FAILED"
+                  ? "Échec d'envoi."
+                  : "Message envoyé via WhatsApp Cloud API.";
+            setTimeout(() => {
+              if (status.textContent === "Message enregistré en local." || status.textContent === "Échec d'envoi." || status.textContent === "Message envoyé via WhatsApp Cloud API.") {
+                status.textContent = "";
+              }
+            }, 3000);
+          }
+        } catch (err) {
+          alert(err.formattedMessage || err.message);
+        } finally {
+          if (button) button.disabled = false;
+        }
+      }
+
+      // Add auto-grow behavior to outbound message textarea in chat
+      document.addEventListener("DOMContentLoaded", () => {
+        const textarea = document.getElementById("whatsapp-chat-outbound-message");
+        if (textarea) {
+          textarea.addEventListener("input", function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+          });
+        }
+      });
     </script>
   </body>
 </html>
