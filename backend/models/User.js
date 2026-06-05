@@ -167,6 +167,20 @@ const deleteUser = async (id) => {
   await query("DELETE FROM users WHERE id = $1", [id]);
 };
 
+const updateUserPassword = async (id, passwordHash) => {
+  const result = await query(
+    `UPDATE users
+     SET password = $1, updated_at = NOW()
+     WHERE id = $2
+     RETURNING id`,
+    [passwordHash, id],
+  );
+  if (!result.rows[0]) {
+    return null;
+  }
+  return getUserById(result.rows[0].id);
+};
+
 module.exports = {
   query,
   getAllUsers,
@@ -176,5 +190,6 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
+  updateUserPassword,
   deleteUser,
 };

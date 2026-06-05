@@ -2872,7 +2872,9 @@
         const passwordInput = document.getElementById("user-password");
         passwordInput.value = "";
         passwordInput.required = false;
-        passwordInput.parentElement.style.display = "none";
+        passwordInput.parentElement.style.display = "block";
+        document.getElementById("user-password-label").textContent =
+          "Nouveau mot de passe";
         document.getElementById("user-center-id").value =
           user.center_id || currentUser?.center_id || "";
         renderUserRoleOptions();
@@ -2935,6 +2937,7 @@
               data.phoneNumber,
               data.smsSenderNumber,
               data.whatsappBusinessNumber,
+              data.password,
             );
           } else {
             await register(

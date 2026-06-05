@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Log = require("../models/Log");
 const {
@@ -91,6 +92,7 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       email: requestedEmail,
       name: req.body.name,
       role: requestedRole,
+      password: req.body.password || undefined,
     });
     if (!validation.isValid) {
       return res
@@ -121,7 +123,7 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
       return res.status(400).json({ error: "Center is required" });
     }
 
-    const user = await User.updateUser(req.params.id, {
+    let user = await User.updateUser(req.params.id, {
       email: requestedEmail,
       name: req.body.name,
       role: requestedRole,
@@ -139,13 +141,20 @@ router.put("/:id", verifyToken, isAdmin, async (req, res) => {
         existingUser.whatsapp_business_number ||
         "",
     });
+
+    const requestedPassword = String(req.body.password || "").trim();
+    if (requestedPassword) {
+      const passwordHash = await bcrypt.hash(requestedPassword, 10);
+      user = await User.updateUserPassword(req.params.id, passwordHash);
+    }
+
     await Log.createAuditLog({
       userId: req.user.id,
-      action: "UPDATE",
+      action: requestedPassword ? "UPDATE_PASSWORD" : "UPDATE",
       entityType: "user",
       entityId: user.id,
       oldValue: existingUser,
-      newValue: user,
+      newValue: requestedPassword ? { ...user, password_changed: true } : user,
     });
 
     res.json(user);

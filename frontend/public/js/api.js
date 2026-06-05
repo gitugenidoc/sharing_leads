@@ -208,6 +208,7 @@ const updateUser = async (
   phoneNumber = "",
   smsSenderNumber = "",
   whatsappBusinessNumber = "",
+  password = "",
 ) => {
   const data = await apiCall("PUT", `/users/${id}`, {
     email,
@@ -218,6 +219,7 @@ const updateUser = async (
     phoneNumber,
     smsSenderNumber,
     whatsappBusinessNumber,
+    password,
   });
   return data;
 };
