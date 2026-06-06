@@ -1288,6 +1288,7 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       client: updatedClient,
       communication,
       sms_status: smsResult?.status || null,
+      sms_error: smsResult?.errorText || smsResult?.rawPayload?.message || smsResult?.rawPayload?.error || null,
       whatsapp_status: whatsappResult?.status || null,
     });
   } catch (err) {

@@ -1664,24 +1664,29 @@
         }
 
         const message = getContactMessage(lead);
-        let url = `tel:${phone}`;
-        if (channel === "SMS") {
-          url = `sms:${phone}?body=${encodeURIComponent(message)}`;
-        }
 
         try {
           const contactResult = await logClientContact(lead.id, channel, phone, channel === "CALL" ? "" : message);
           await loadLeads();
           renderClientHistory(lead.id);
-          if (channel === "SMS" && contactResult.sms_status && contactResult.sms_status !== "PREPARED") {
-            alert(contactResult.sms_status === "FAILED" ? "SMS non envoye par le provider." : "SMS envoye par le provider.");
+          if (channel === "SMS") {
+            const status = contactResult.sms_status || "PREPARED";
+            if (status === "FAILED") {
+              alert(contactResult.sms_error || "SMS non envoye par Twilio.");
+            } else if (status === "PREPARED") {
+              alert("SMS prepare mais non envoye. Verifie SMS_SEND_MODE=provider, Twilio et le numero expediteur.");
+            } else {
+              alert("SMS envoye via Twilio.");
+            }
             return;
           }
         } catch (err) {
           console.error(err);
+          alert(err.formattedMessage || err.message || "Action SMS impossible.");
+          return;
         }
 
-        window.location.href = url;
+        window.location.href = `tel:${phone}`;
       }
 
       let mailTemplates = [];
