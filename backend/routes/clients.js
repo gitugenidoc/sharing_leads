@@ -1212,7 +1212,11 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
     let whatsappResult = null;
     const actor = await User.getUserById(req.user.id);
     const senderNumber =
-      actor?.sms_sender_number || actor?.phone_number || req.user.sms_sender_number || "";
+      actor?.sms_sender_number ||
+      actor?.phone_number ||
+      req.user.sms_sender_number ||
+      process.env.TWILIO_FROM_NUMBER ||
+      "";
     const whatsappSenderNumber = getWhatsappSenderNumber(actor, req.user);
 
     if (channel === "SMS") {
@@ -1409,6 +1413,56 @@ router.put("/:id/assign", verifyToken, isAdmin, async (req, res) => {
       newValue: { assigned_to: userId },
     });
     res.json(client);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ── Validation workflow ──────────────────────────────────────────────────────
+router.put("/:id/validate", verifyToken, isValidationViewer, async (req, res) => {
+  try {
+    const { action, reason } = req.body;
+    if (!["VALIDATE", "REJECT"].includes(action)) {
+      return res.status(400).json({ error: "action doit etre VALIDATE ou REJECT" });
+    }
+    if (action === "REJECT" && !reason) {
+      return res.status(400).json({ error: "Une raison de rejet est obligatoire" });
+    }
+
+    const existing = await Client.getClientById(req.params.id);
+    if (!existing) return res.status(404).json({ error: "Client non trouve" });
+
+    if (req.user.role === "VALIDATION" && !isSameCenter(req.user, existing)) {
+      return res.status(403).json({ error: "Acces refuse" });
+    }
+    if (!isTerminalClient(existing)) {
+      return res.status(400).json({ error: "Seules les fiches fermees peuvent etre validees" });
+    }
+
+    const validationStatus = action === "VALIDATE" ? "VALIDATED" : "REJECTED";
+    const historyAction = action === "VALIDATE" ? "VALIDATION_APPROVED" : "VALIDATION_REJECTED";
+    const note = action === "VALIDATE"
+      ? `Dossier valide par ${req.user.name}`
+      : `Dossier rejete par ${req.user.name} — Raison : ${reason}`;
+
+    const updated = await Client.updateClient(existing.id, {
+      validation_status: validationStatus,
+      validation_reason: action === "REJECT" ? reason : null,
+      validated_by: req.user.id,
+      validated_at: new Date(),
+    });
+
+    await Client.addClientHistory({
+      clientId: existing.id,
+      userId: req.user.id,
+      action: historyAction,
+      oldValue: { validation_status: existing.validation_status || "PENDING" },
+      newValue: { validation_status: validationStatus, validation_reason: reason || null },
+      note,
+    });
+
+    res.json(updated);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

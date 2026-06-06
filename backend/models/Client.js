@@ -43,6 +43,10 @@ const CLIENT_FIELDS = [
   "closed_at",
   "center_id",
   "extra_data",
+  "validation_status",
+  "validation_reason",
+  "validated_by",
+  "validated_at",
 ];
 
 const TERMINAL_CLIENT_STATUSES = ["SIGNED", "LOST", "CLOSED", "REFUSED"];
@@ -79,6 +83,10 @@ const FLEXIBLE_CLIENT_COLUMNS = [
   ["closed_by", "INTEGER REFERENCES users(id) ON DELETE SET NULL"],
   ["closed_at", "TIMESTAMP"],
   ["extra_data", "JSONB DEFAULT '{}'::jsonb"],
+  ["validation_status", "VARCHAR(20) DEFAULT 'PENDING'"],
+  ["validation_reason", "TEXT"],
+  ["validated_by", "INTEGER REFERENCES users(id) ON DELETE SET NULL"],
+  ["validated_at", "TIMESTAMP"],
 ];
 
 let schemaReady = false;

@@ -444,6 +444,11 @@ const getMailHistory = async (clientId = null) => {
   return data;
 };
 
+const validateClientDossier = async (id, action, reason = "") => {
+  const data = await apiCall("PUT", `/clients/${id}/validate`, { action, reason });
+  return data;
+};
+
 const getCenterAnalytics = async (filters = {}) => {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
@@ -513,4 +518,5 @@ Object.assign(window, {
   getMailHistory,
   getCenterAnalytics,
   getAgentAnalytics,
+  validateClientDossier,
 });

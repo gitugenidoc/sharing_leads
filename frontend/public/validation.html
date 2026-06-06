@@ -17,474 +17,210 @@
               textMain: "#1e293b",
               textMuted: "#64748b",
             },
-            fontFamily: {
-              sans: ["Inter", "system-ui", "sans-serif"],
-            },
+            fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
           },
         },
       };
     </script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="css/coveo-chatbot.css?v=20260606" rel="stylesheet" />
     <style>
-      * {
-        font-family: "Inter", system-ui, sans-serif;
+      * { font-family: "Inter", system-ui, sans-serif; }
+      body { background-color: #f3f4f6; padding: 2rem; }
+      .dashboard-container { background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06); display: flex; height: calc(100vh - 4rem); max-width: 1600px; margin: 0 auto; border: 1px solid #e5e7eb; }
+      .sidebar { width: 64px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+      .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: #fafafa; }
+      .topbar { height: 64px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between; background: white; }
+      .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+      .card { background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,.05); }
+      .sidebar-link { color: #64748b; transition: color 0.2s ease; }
+      .sidebar-link:hover, .sidebar-link.active { color: #d62d5a; }
+      .sidebar-link.active { border-right: 2px solid #d62d5a; }
+      .mini-bar { width: 8px; border-radius: 2px; background-color: #f1f5f9; margin: 0 2px; display: inline-block; vertical-align: bottom; }
+      .mini-bar.active { background-color: #e2e8f0; }
+      /* Modals */
+      .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,.45); padding: 1rem; }
+      .modal-panel { width: min(1000px, 100%); max-height: min(88vh, 900px); overflow: hidden; display: flex; flex-direction: column; border-radius: 14px; border: 1px solid #e5e7eb; background: white; box-shadow: 0 24px 70px rgba(15,23,42,.24); }
+      .modal-panel-sm { width: min(480px, 100%); max-height: min(70vh, 600px); }
+      .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid #eef0f2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+      .modal-kicker { color: #d62d5a; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+      .modal-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1.25rem; }
+      .action-row { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
+      /* Buttons */
+      .btn-primary, .btn-secondary, .btn-danger, .btn-success {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: .4rem; min-height: 36px; border-radius: 8px; padding: .5rem .8rem;
+        font-size: 13px; font-weight: 650; transition: .18s ease;
       }
-      body {
-        background-color: #f3f4f6;
-        padding: 2rem;
-      }
-      .dashboard-container {
-        background-color: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow:
-          0 4px 6px -1px rgba(0, 0, 0, 0.1),
-          0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        display: flex;
-        height: calc(100vh - 4rem);
-        max-width: 1600px;
-        margin: 0 auto;
-        border: 1px solid #e5e7eb;
-      }
-      .sidebar {
-        width: 64px;
-        border-right: 1px solid #e5e7eb;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 1rem 0;
-      }
-      .main-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        background-color: #fafafa;
-      }
-      .topbar {
-        height: 64px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        padding: 0 1.5rem;
-        justify-content: space-between;
-        background: white;
-      }
-      .content-area {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1.5rem;
-      }
-      .card {
-        background: white;
-        border: 1px solid #f1f5f9;
-        border-radius: 12px;
-        padding: 1.25rem;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      }
-      .sidebar-link {
-        color: #64748b;
-        transition: color 0.2s ease;
-      }
-      .sidebar-link:hover,
-      .sidebar-link.active {
-        color: #d62d5a;
-      }
-      .sidebar-link.active {
-        border-right: 2px solid #d62d5a;
-      }
-      .stat-card {
-        background: white;
-        border: 1px solid #f1f5f9;
-        border-radius: 12px;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      }
-      .mini-bar {
-        width: 8px;
-        border-radius: 2px;
-        background-color: #f1f5f9;
-        margin: 0 2px;
-        display: inline-block;
-        vertical-align: bottom;
-      }
-      .mini-bar.active {
-        background-color: #e2e8f0;
-      }
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 50;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        background: rgba(15, 23, 42, 0.45);
-        padding: 1rem;
-      }
-      .modal-panel {
-        width: min(1080px, 100%);
-        max-height: min(88vh, 900px);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
-        background: white;
-        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
-      }
-      .modal-panel-md {
-        width: min(760px, 100%);
-      }
-      .modal-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid #eef0f2;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-      }
-      .modal-kicker {
-        color: #d62d5a;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .modal-body {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        padding: 1.25rem;
-      }
-      .action-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: flex-end;
-      }
-      .btn-primary,
-      .btn-secondary,
-      .btn-danger {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-        min-height: 36px;
-        border-radius: 8px;
-        padding: 0.5rem 0.8rem;
-        font-size: 13px;
-        font-weight: 650;
-        transition: 0.18s ease;
-      }
-      .btn-primary {
-        background: #d62d5a;
-        color: white;
-        border: 1px solid #d62d5a;
-      }
-      .btn-primary:hover {
-        filter: brightness(0.96);
-      }
-      .btn-secondary {
-        background: white;
-        color: #334155;
-        border: 1px solid #e5e7eb;
-      }
-      .btn-secondary:hover {
-        background: #f8fafc;
-      }
-      .btn-danger {
-        background: #fff1f2;
-        color: #be123c;
-        border: 1px solid #fecdd3;
-      }
-      .detail-section {
-        border: 1px solid #eef0f2;
-        border-radius: 12px;
-        background: #fff;
-        overflow: hidden;
-      }
-      .detail-section + .detail-section {
-        margin-top: 1rem;
-      }
-      .detail-section-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid #f1f5f9;
-        background: #fbfcfd;
-        padding: 0.75rem 1rem;
-        font-size: 13px;
-        font-weight: 700;
-        color: #1e293b;
-      }
-      .field-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.75rem;
-        padding: 1rem;
-      }
-      .field-card {
-        min-width: 0;
-        border: 1px solid #eef0f2;
-        border-radius: 10px;
-        background: #fafafa;
-        padding: 0.75rem;
-      }
-      .field-label {
-        display: block;
-        margin-bottom: 0.4rem;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .field-control {
-        width: 100%;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background: white;
-        padding: 0.55rem 0.7rem;
-        color: #1e293b;
-        font-size: 13px;
-        outline: none;
-      }
-      .field-control:focus {
-        border-color: #d62d5a;
-        box-shadow: 0 0 0 3px rgba(214, 45, 90, 0.1);
-      }
-      .field-control.textarea {
-        min-height: 92px;
-        resize: vertical;
-        line-height: 1.45;
-      }
-      .field-card-wide {
-        grid-column: span 2 / span 2;
-      }
-      .field-card-full {
-        grid-column: 1 / -1;
-      }
-      .status-pill {
-        border-radius: 999px;
-        padding: 0.25rem 0.6rem;
-        font-size: 0.72rem;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-      }
-      @media (max-width: 980px) {
-        .field-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-      @media (max-width: 640px) {
-        body {
-          padding: 0.75rem;
-        }
-        .field-grid {
-          grid-template-columns: 1fr;
-        }
-        .field-card-wide {
-          grid-column: auto;
-        }
-      }
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-      }
+      .btn-primary { background: #d62d5a; color: white; border: 1px solid #d62d5a; }
+      .btn-primary:hover { filter: brightness(.96); }
+      .btn-secondary { background: white; color: #334155; border: 1px solid #e5e7eb; }
+      .btn-secondary:hover { background: #f8fafc; }
+      .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+      .btn-danger:hover { background: #ffe4e6; }
+      .btn-success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+      .btn-success:hover { background: #dcfce7; }
+      /* Detail sections */
+      .detail-section { border: 1px solid #eef0f2; border-radius: 12px; background: #fff; overflow: hidden; }
+      .detail-section + .detail-section { margin-top: 1rem; }
+      .detail-section-title { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; background: #fbfcfd; padding: .75rem 1rem; font-size: 13px; font-weight: 700; color: #1e293b; }
+      .field-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .75rem; padding: 1rem; }
+      .field-card { min-width: 0; border: 1px solid #eef0f2; border-radius: 10px; background: #fafafa; padding: .75rem; }
+      .field-label { display: block; margin-bottom: .4rem; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+      .field-control { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; background: white; padding: .55rem .7rem; color: #1e293b; font-size: 13px; outline: none; }
+      .field-control:focus { border-color: #d62d5a; box-shadow: 0 0 0 3px rgba(214,45,90,.10); }
+      .field-control.textarea { min-height: 80px; resize: vertical; line-height: 1.45; }
+      .field-card-full { grid-column: 1 / -1; }
+      /* Status pills */
+      .status-pill { border-radius: 999px; padding: .25rem .6rem; font-size: .72rem; font-weight: 700; display: inline-flex; align-items: center; gap: .3rem; }
+      /* Validation status badge */
+      .vs-pending  { background: #fef9c3; color: #854d0e; }
+      .vs-validated{ background: #f0fdf4; color: #15803d; }
+      .vs-rejected { background: #fff1f2; color: #be123c; }
+      /* Reject modal reasons */
+      .reason-option { display: flex; align-items: center; gap: .65rem; padding: .7rem .85rem; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: .15s; font-size: 13px; }
+      .reason-option:hover { background: #f8fafc; border-color: #cbd5e1; }
+      .reason-option.selected { border-color: #d62d5a; background: #fff1f4; color: #be123c; }
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+      @media (max-width: 980px) { .field-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+      @media (max-width: 640px) { body { padding: .75rem; } .field-grid { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body class="text-textMain antialiased">
     <div class="dashboard-container">
-      <!-- BEGIN: Sidebar -->
+
+      <!-- ── Sidebar ── -->
       <nav class="sidebar bg-white">
-        <!-- Logo Area -->
-        <div
-          class="mb-8 w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white text-xl"
-        >
+        <div class="mb-8 w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white text-xl">
           <i class="fa-solid fa-envelope-open-text"></i>
         </div>
-        <!-- Main Nav -->
         <div class="flex flex-col gap-6 w-full items-center flex-1">
-          <button
-            class="sidebar-link active text-textMuted hover:text-primary transition-colors w-full text-center py-1"
-            title="Validation"
-          >
+          <button class="sidebar-link active w-full text-center py-1" title="Validation">
             <i class="fa-solid fa-clipboard-check text-lg"></i>
           </button>
         </div>
-        <!-- Bottom Nav -->
         <div class="flex flex-col gap-6 w-full items-center mt-auto">
-          <button
-            onclick="handleLogout()"
-            class="text-textMuted hover:text-primary transition-colors"
-            title="Deconnexion"
-          >
+          <button onclick="handleLogout()" class="sidebar-link w-full text-center py-1" title="Deconnexion">
             <i class="fa-solid fa-rocket text-lg"></i>
           </button>
         </div>
       </nav>
-      <!-- END: Sidebar -->
 
-      <!-- BEGIN: Main Content Area -->
+      <!-- ── Main Content ── -->
       <div class="main-content">
-        <!-- BEGIN: Topbar -->
+
+        <!-- Topbar -->
         <header class="topbar">
-          <!-- Left: Title -->
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wide text-primary">Service gestion</p>
-            <h1 class="text-base font-semibold text-textMain">Fiches fermees a controler</h1>
+          <div class="relative w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input id="search-input" oninput="renderList()" type="text"
+              class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              placeholder="Nom, telephone, agent..." />
           </div>
-          <!-- Right: Filters + Actions -->
           <div class="flex items-center gap-3">
-            <div class="relative">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-              <input
-                id="search-input"
-                oninput="renderValidationList()"
-                class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary w-64"
-                placeholder="Nom, telephone, agent..."
-                type="text"
-              />
-            </div>
-            <select
-              id="status-filter"
-              onchange="renderValidationList()"
-              class="border border-gray-200 rounded-lg text-sm py-2 px-3 bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-            >
+            <select id="status-filter" onchange="renderList()"
+              class="border border-gray-200 rounded-lg text-sm py-2 px-3 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
               <option value="">Tous statuts</option>
               <option value="SIGNED">Signe</option>
               <option value="REFUSED">Refus</option>
               <option value="LOST">Perdu</option>
               <option value="CLOSED">Ferme</option>
             </select>
-            <button
-              onclick="loadClosedLeads()"
-              class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-opacity-90 transition"
-              title="Actualiser"
-            >
+            <select id="vs-filter" onchange="renderList()"
+              class="border border-gray-200 rounded-lg text-sm py-2 px-3 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+              <option value="">Toutes validations</option>
+              <option value="PENDING">En attente</option>
+              <option value="VALIDATED">Valide</option>
+              <option value="REJECTED">Rejete</option>
+            </select>
+            <button onclick="loadLeads()" class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:opacity-90 transition" title="Actualiser">
               <i class="fa-solid fa-rotate-right text-sm"></i>
             </button>
-            <div
-              class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 flex items-center justify-center text-xs font-semibold text-textMain"
-            >
+            <div class="w-8 h-8 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs font-semibold text-textMain">
               <span id="user-avatar">V</span>
             </div>
+            <button onclick="handleLogout()" class="w-8 h-8 rounded-lg bg-white border border-gray-200 text-primary flex items-center justify-center hover:bg-gray-50 transition" title="Deconnexion">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
           </div>
         </header>
-        <!-- END: Topbar -->
 
-        <!-- BEGIN: Content -->
+        <!-- Content -->
         <main class="content-area">
-          <!-- Error box -->
           <div id="error-box" class="mb-4 hidden rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-700"></div>
 
           <!-- KPI Cards -->
           <div class="grid grid-cols-4 gap-4 mb-4">
             <div class="card flex flex-col justify-between">
               <div class="flex justify-between items-start mb-2">
-                <h3 class="text-sm font-medium text-textMain">Total validation</h3>
-                <i class="fa-solid fa-folder-closed text-gray-400 cursor-pointer"></i>
+                <h3 class="text-sm font-medium text-textMain">Total dossiers</h3>
+                <i class="fa-solid fa-folder-closed text-gray-400"></i>
               </div>
               <div class="flex justify-between items-end mb-4">
                 <div>
                   <div class="text-3xl font-semibold text-textMain" id="kpi-total">0</div>
-                  <div class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-trend-up"></i> fiches sorties
-                  </div>
+                  <div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> fiches fermees</div>
                 </div>
-                <div class="flex items-end h-8">
-                  <div class="mini-bar h-4"></div>
-                  <div class="mini-bar h-6 active"></div>
-                  <div class="mini-bar h-8 active"></div>
-                  <div class="mini-bar h-5 active"></div>
-                </div>
+                <div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-6 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-5 active"></div></div>
               </div>
+              <button onclick="document.getElementById('vs-filter').value='';renderList()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">Voir tous</button>
             </div>
             <div class="card flex flex-col justify-between">
               <div class="flex justify-between items-start mb-2">
-                <h3 class="text-sm font-medium text-textMain">Signes</h3>
-                <i class="fa-solid fa-circle-check text-gray-400 cursor-pointer"></i>
+                <h3 class="text-sm font-medium text-textMain">En attente</h3>
+                <i class="fa-regular fa-clock text-yellow-500"></i>
               </div>
               <div class="flex justify-between items-end mb-4">
                 <div>
-                  <div class="text-3xl font-semibold text-textMain" id="kpi-signed">0</div>
-                  <div id="kpi-signed-rate" class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-trend-up"></i> 0% des fermes
-                  </div>
+                  <div class="text-3xl font-semibold text-textMain" id="kpi-pending">0</div>
+                  <div class="text-xs text-yellow-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-hourglass-half"></i> a traiter</div>
                 </div>
-                <div class="flex items-end h-8">
-                  <div class="mini-bar h-3"></div>
-                  <div class="mini-bar h-5 active"></div>
-                  <div class="mini-bar h-8 active"></div>
-                  <div class="mini-bar h-4 active"></div>
-                </div>
+                <div class="flex items-end h-8"><div class="mini-bar h-3"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-4 active"></div></div>
               </div>
+              <button onclick="document.getElementById('vs-filter').value='PENDING';renderList()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">Voir</button>
             </div>
             <div class="card flex flex-col justify-between">
               <div class="flex justify-between items-start mb-2">
-                <h3 class="text-sm font-medium text-textMain">Refus / Perdus</h3>
-                <i class="fa-solid fa-ban text-gray-400 cursor-pointer"></i>
+                <h3 class="text-sm font-medium text-textMain">Valides</h3>
+                <i class="fa-solid fa-circle-check text-green-500"></i>
               </div>
               <div class="flex justify-between items-end mb-4">
                 <div>
-                  <div class="text-3xl font-semibold text-textMain" id="kpi-lost">0</div>
-                  <div class="text-xs text-red-500 mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-xmark"></i> REFUSED + LOST
-                  </div>
+                  <div class="text-3xl font-semibold text-textMain" id="kpi-validated">0</div>
+                  <div class="text-xs text-green-600 mt-1 flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> dossiers conformes</div>
                 </div>
-                <div class="flex items-end h-8">
-                  <div class="mini-bar h-5"></div>
-                  <div class="mini-bar h-7 active"></div>
-                  <div class="mini-bar h-4 active"></div>
-                  <div class="mini-bar h-6 active"></div>
-                </div>
+                <div class="flex items-end h-8"><div class="mini-bar h-5"></div><div class="mini-bar h-7 active"></div><div class="mini-bar h-4 active"></div><div class="mini-bar h-6 active"></div></div>
               </div>
+              <button onclick="document.getElementById('vs-filter').value='VALIDATED';renderList()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">Voir</button>
             </div>
             <div class="card flex flex-col justify-between">
               <div class="flex justify-between items-start mb-2">
-                <h3 class="text-sm font-medium text-textMain">Prix signe</h3>
-                <i class="fa-solid fa-euro-sign text-gray-400 cursor-pointer"></i>
+                <h3 class="text-sm font-medium text-textMain">Rejetes</h3>
+                <i class="fa-solid fa-ban text-red-500"></i>
               </div>
               <div class="flex justify-between items-end mb-4">
                 <div>
-                  <div class="text-3xl font-semibold text-textMain" id="kpi-price">0 EUR</div>
-                  <div class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-trend-up"></i> fiches signees
-                  </div>
+                  <div class="text-3xl font-semibold text-textMain" id="kpi-rejected">0</div>
+                  <div class="text-xs text-red-500 mt-1 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> non conformes</div>
                 </div>
-                <div class="flex items-end h-8">
-                  <div class="mini-bar h-4"></div>
-                  <div class="mini-bar h-5 active"></div>
-                  <div class="mini-bar h-8 active"></div>
-                  <div class="mini-bar h-6 active"></div>
-                </div>
+                <div class="flex items-end h-8"><div class="mini-bar h-4"></div><div class="mini-bar h-5 active"></div><div class="mini-bar h-8 active"></div><div class="mini-bar h-6 active"></div></div>
               </div>
+              <button onclick="document.getElementById('vs-filter').value='REJECTED';renderList()" class="w-full py-1.5 border border-gray-200 rounded-md text-sm font-medium text-textMain hover:bg-gray-50 transition">Voir</button>
             </div>
           </div>
-          <!-- END: KPI Cards -->
 
           <!-- Table -->
           <div class="card">
             <div class="flex justify-between items-center mb-4">
               <div>
-                <h3 class="text-base font-semibold text-textMain">Liste validation</h3>
+                <h3 class="text-base font-semibold text-textMain">Dossiers a valider</h3>
                 <p id="list-count" class="text-xs text-textMuted mt-0.5">Chargement...</p>
               </div>
-              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Acces service validation</span>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Service gestion validation</span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-sm text-left">
@@ -494,164 +230,191 @@
                     <th class="px-4 py-3 font-medium">Contact</th>
                     <th class="px-4 py-3 font-medium">Statut</th>
                     <th class="px-4 py-3 font-medium">Ferme par</th>
-                    <th class="px-4 py-3 font-medium">Date fermeture</th>
+                    <th class="px-4 py-3 font-medium">Date</th>
                     <th class="px-4 py-3 font-medium">Prix</th>
+                    <th class="px-4 py-3 font-medium">Validation</th>
                     <th class="px-4 py-3 font-medium text-right rounded-tr-lg">Action</th>
                   </tr>
                 </thead>
                 <tbody id="validation-tbody" class="divide-y divide-gray-100">
-                  <tr>
-                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">Chargement...</td>
-                  </tr>
+                  <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Chargement...</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <!-- END: Table -->
         </main>
-        <!-- END: Content -->
       </div>
-      <!-- END: Main Content Area -->
     </div>
 
-    <!-- BEGIN: Detail Modal -->
+    <!-- ── Modal : Fiche détail ── -->
     <div id="detail-modal" class="modal-backdrop">
-      <div class="modal-panel modal-panel-md">
-        <!-- Modal Header -->
+      <div class="modal-panel">
         <div class="modal-header">
           <div>
             <div class="modal-kicker">Fiche validation</div>
             <h2 id="detail-title" class="mt-1 text-base font-semibold text-gray-900">Fiche</h2>
             <p id="detail-subtitle" class="mt-0.5 text-sm text-textMuted"></p>
           </div>
-          <button class="btn-secondary" onclick="closeDetails()">
+          <button class="btn-secondary" onclick="closeDetail()">
             <i class="fa-solid fa-xmark"></i> Fermer
           </button>
         </div>
-        <!-- Modal Body -->
         <div id="detail-body" class="modal-body"></div>
-        <!-- Modal Footer -->
+        <div class="modal-header justify-end">
+          <div class="action-row" id="detail-actions"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Modal : Raison de rejet ── -->
+    <div id="reject-modal" class="modal-backdrop" style="z-index:60">
+      <div class="modal-panel modal-panel-sm">
+        <div class="modal-header">
+          <div>
+            <div class="modal-kicker" style="color:#be123c">Rejeter le dossier</div>
+            <h2 class="mt-1 text-base font-semibold text-gray-900">Motif de rejet</h2>
+            <p class="mt-0.5 text-sm text-textMuted">Selectionnez une raison ou saisissez un motif libre</p>
+          </div>
+          <button class="btn-secondary" onclick="closeRejectModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="reasons-list" class="flex flex-col gap-2 mb-4">
+            <div class="reason-option" data-reason="Document manquant" onclick="selectReason(this)">
+              <i class="fa-regular fa-file text-red-400"></i> Document manquant
+            </div>
+            <div class="reason-option" data-reason="Informations incorrectes" onclick="selectReason(this)">
+              <i class="fa-solid fa-triangle-exclamation text-orange-400"></i> Informations incorrectes
+            </div>
+            <div class="reason-option" data-reason="Prix non conforme" onclick="selectReason(this)">
+              <i class="fa-solid fa-euro-sign text-yellow-500"></i> Prix non conforme
+            </div>
+            <div class="reason-option" data-reason="Fraude suspectee" onclick="selectReason(this)">
+              <i class="fa-solid fa-shield-halved text-red-500"></i> Fraude suspectee
+            </div>
+            <div class="reason-option" data-reason="Contrat annule par le client" onclick="selectReason(this)">
+              <i class="fa-solid fa-user-xmark text-gray-500"></i> Contrat annule par le client
+            </div>
+            <div class="reason-option" data-reason="Doublon detecte" onclick="selectReason(this)">
+              <i class="fa-solid fa-copy text-blue-400"></i> Doublon detecte
+            </div>
+          </div>
+          <label class="field-label">Motif libre (optionnel)</label>
+          <textarea id="reject-reason-free" class="field-control textarea" rows="3" placeholder="Precisions supplementaires..."></textarea>
+        </div>
         <div class="modal-header justify-end">
           <div class="action-row">
-            <button class="btn-secondary" onclick="saveValidationNotes()">
-              <i class="fa-regular fa-floppy-disk"></i> Enregistrer notes
-            </button>
-            <button class="btn-primary" onclick="reopenSelectedLead()">
-              <i class="fa-solid fa-rotate-left"></i> Remettre en prospection
+            <button class="btn-secondary" onclick="closeRejectModal()">Annuler</button>
+            <button class="btn-danger" onclick="confirmReject()">
+              <i class="fa-solid fa-ban"></i> Confirmer le rejet
             </button>
           </div>
         </div>
       </div>
     </div>
-    <!-- END: Detail Modal -->
 
     <script src="js/api.js?v=validation-20260606"></script>
+    <script src="js/coveo-chatbot.js?v=20260606"></script>
     <script>
-      const STATUS_LABELS = {
-        SIGNED: "Signe",
-        REFUSED: "Refus",
-        LOST: "Perdu",
-        CLOSED: "Ferme",
-        TO_CALL: "A appeler",
-      };
-      const STATUS_CLASSES = {
-        SIGNED: "bg-green-100 text-green-800",
-        REFUSED: "bg-red-100 text-red-800",
-        LOST: "bg-red-100 text-red-800",
-        CLOSED: "bg-gray-100 text-gray-700",
-      };
-      let closedLeads = [];
-      let selectedLead = null;
+      /* ─── Config ─── */
+      const STATUS_LABELS = { SIGNED:"Signe", REFUSED:"Refus", LOST:"Perdu", CLOSED:"Ferme", TO_CALL:"A appeler" };
+      const STATUS_CLASSES = { SIGNED:"bg-green-100 text-green-800", REFUSED:"bg-red-100 text-red-800", LOST:"bg-red-100 text-red-800", CLOSED:"bg-gray-100 text-gray-700" };
+      const VS_LABELS = { PENDING:"En attente", VALIDATED:"Valide", REJECTED:"Rejete" };
+      const VS_CLASSES = { PENDING:"vs-pending", VALIDATED:"vs-validated", REJECTED:"vs-rejected" };
+      const VS_ICONS  = { PENDING:"fa-hourglass-half text-yellow-500", VALIDATED:"fa-circle-check text-green-500", REJECTED:"fa-ban text-red-500" };
+      const REJECT_REASONS = [
+        "Document manquant","Informations incorrectes","Prix non conforme",
+        "Fraude suspectee","Contrat annule par le client","Doublon detecte",
+      ];
 
+      let allLeads = [];
+      let selectedLead = null;
+      let selectedReason = "";
+
+      /* ─── Init ─── */
       window.addEventListener("load", async () => {
         const user = getUser();
-        if (!user || !["VALIDATION", "ADMIN", "SUPER_ADMIN"].includes(user.role)) {
+        if (!user || !["VALIDATION","ADMIN","SUPER_ADMIN"].includes(user.role)) {
           window.location.href = "/index.html";
           return;
         }
-        // Set avatar initials
-        if (user.name) {
-          document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
-        }
-        await loadClosedLeads();
+        if (user.name) document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
+        await loadLeads();
       });
 
-      async function loadClosedLeads() {
-        const errorBox = document.getElementById("error-box");
-        errorBox.classList.add("hidden");
+      async function loadLeads() {
+        document.getElementById("error-box").classList.add("hidden");
         try {
           const data = await getClosedLeads(0, 999999);
-          closedLeads = data.clients || [];
-          renderDashboard();
-          renderValidationList();
+          allLeads = data.clients || [];
+          renderKPIs();
+          renderList();
         } catch (err) {
-          errorBox.textContent = err.formattedMessage || err.message;
-          errorBox.classList.remove("hidden");
+          showError(err.formattedMessage || err.message);
         }
       }
 
-      function renderDashboard() {
-        const total = closedLeads.length;
-        const signed = closedLeads.filter((l) => l.status === "SIGNED").length;
-        const lost = closedLeads.filter((l) => ["REFUSED", "LOST"].includes(l.status)).length;
-        const signedPrice = closedLeads
-          .filter((l) => l.status === "SIGNED")
-          .reduce((sum, l) => sum + Number(l.prix_mutuelle || 0), 0);
-
-        setText("kpi-total", total);
-        setText("kpi-signed", signed);
-        setText("kpi-lost", lost);
-        setText("kpi-price", formatCurrency(signedPrice));
-
-        const rateEl = document.getElementById("kpi-signed-rate");
-        const rate = total ? Math.round((signed / total) * 100) : 0;
-        rateEl.innerHTML = `<i class="fa-solid fa-arrow-trend-up"></i> ${rate}% des fermes`;
+      /* ─── KPIs ─── */
+      function renderKPIs() {
+        const total     = allLeads.length;
+        const pending   = allLeads.filter(l => !l.validation_status || l.validation_status === "PENDING").length;
+        const validated = allLeads.filter(l => l.validation_status === "VALIDATED").length;
+        const rejected  = allLeads.filter(l => l.validation_status === "REJECTED").length;
+        setText("kpi-total",     total);
+        setText("kpi-pending",   pending);
+        setText("kpi-validated", validated);
+        setText("kpi-rejected",  rejected);
       }
 
-      function renderValidationList() {
-        const query = document.getElementById("search-input").value.trim().toLowerCase();
+      /* ─── Table ─── */
+      function renderList() {
+        const query  = document.getElementById("search-input").value.trim().toLowerCase();
         const status = document.getElementById("status-filter").value;
-        const rows = closedLeads.filter((lead) => {
-          const haystack = [
-            lead.nom, lead.prenom, lead.email, lead.tel_gsm,
-            lead.tel_fixe, lead.tel_professionnel, lead.agent_name,
-            lead.closed_by_name, lead.nom_mutuelle,
-          ].join(" ").toLowerCase();
-          return (!status || lead.status === status) && (!query || haystack.includes(query));
+        const vs     = document.getElementById("vs-filter").value;
+
+        const rows = allLeads.filter(l => {
+          const vsNorm = l.validation_status || "PENDING";
+          const hay = [l.nom,l.prenom,l.email,l.tel_gsm,l.tel_fixe,l.agent_name,l.closed_by_name,l.nom_mutuelle].join(" ").toLowerCase();
+          return (!status || l.status === status)
+              && (!vs     || vsNorm === vs)
+              && (!query  || hay.includes(query));
         });
 
-        const count = rows.length;
-        setText("list-count", `${count} fiche${count > 1 ? "s" : ""} affichee${count > 1 ? "s" : ""}`);
+        const n = rows.length;
+        setText("list-count", `${n} fiche${n>1?"s":""} affichee${n>1?"s":""}`);
 
         const tbody = document.getElementById("validation-tbody");
         if (!rows.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Aucune fiche fermee a valider.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Aucune fiche.</td></tr>';
           return;
         }
-        tbody.innerHTML = rows.map((lead) => {
-          const pillClass = STATUS_CLASSES[lead.status] || "bg-gray-100 text-gray-700";
-          const label = STATUS_LABELS[lead.status] || lead.status || "-";
+
+        tbody.innerHTML = rows.map(l => {
+          const vsNorm  = l.validation_status || "PENDING";
+          const vsClass = VS_CLASSES[vsNorm] || "vs-pending";
+          const vsIcon  = VS_ICONS[vsNorm]   || "fa-hourglass-half text-yellow-500";
+          const vsLabel = VS_LABELS[vsNorm]  || "En attente";
           return `
             <tr class="hover:bg-gray-50 transition-colors">
               <td class="px-4 py-3">
-                <div class="font-semibold text-textMain">${escapeHtml(`${lead.nom || ""} ${lead.prenom || ""}`.trim() || "-")}</div>
-                <div class="text-xs text-textMuted">${escapeHtml(lead.nom_mutuelle || "")}</div>
+                <div class="font-semibold text-textMain">${esc(`${l.nom||""} ${l.prenom||""}`.trim()||"-")}</div>
+                <div class="text-xs text-textMuted">${esc(l.nom_mutuelle||"")}</div>
               </td>
-              <td class="px-4 py-3 text-textMuted">${escapeHtml(getPrimaryPhone(lead) || lead.email || "-")}</td>
+              <td class="px-4 py-3 text-textMuted">${esc(phone(l)||l.email||"-")}</td>
+              <td class="px-4 py-3"><span class="status-pill ${STATUS_CLASSES[l.status]||"bg-gray-100 text-gray-700"}">${STATUS_LABELS[l.status]||l.status||"-"}</span></td>
               <td class="px-4 py-3">
-                <span class="status-pill ${pillClass}">${label}</span>
+                <div class="font-medium text-textMain">${esc(l.closed_by_name||l.agent_name||"-")}</div>
+                <div class="text-xs text-textMuted">${esc(l.agent_email||"")}</div>
               </td>
+              <td class="px-4 py-3 text-textMuted">${fmtDate(l.closed_at||l.updated_at)}</td>
+              <td class="px-4 py-3 font-medium">${fmtCur(l.prix_mutuelle)}</td>
               <td class="px-4 py-3">
-                <div class="font-medium text-textMain">${escapeHtml(lead.closed_by_name || lead.agent_name || "Non renseigne")}</div>
-                <div class="text-xs text-textMuted">${escapeHtml(lead.agent_email || "")}</div>
+                <span class="status-pill ${vsClass}">
+                  <i class="fa-solid ${vsIcon} text-xs"></i> ${vsLabel}
+                </span>
               </td>
-              <td class="px-4 py-3 text-textMuted">${formatDateTime(lead.closed_at || lead.updated_at)}</td>
-              <td class="px-4 py-3 font-medium text-textMain">${formatCurrency(lead.prix_mutuelle)}</td>
               <td class="px-4 py-3 text-right">
-                <button
-                  onclick="showDetails(${lead.id})"
-                  class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-1 ml-auto transition-colors"
-                >
+                <button onclick="openDetail(${l.id})"
+                  class="border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-1 ml-auto transition-colors">
                   Ouvrir <i class="fa-regular fa-eye"></i>
                 </button>
               </td>
@@ -659,151 +422,185 @@
         }).join("");
       }
 
-      function showDetails(leadId) {
-        const lead = closedLeads.find((item) => item.id === leadId);
-        if (!lead) return;
-        selectedLead = lead;
-        document.getElementById("detail-title").textContent =
-          `${lead.nom || ""} ${lead.prenom || ""}`.trim() || "Fiche";
+      /* ─── Modal : Fiche ─── */
+      function openDetail(id) {
+        const l = allLeads.find(x => x.id === id);
+        if (!l) return;
+        selectedLead = l;
+        const vsNorm  = l.validation_status || "PENDING";
+        const vsClass = VS_CLASSES[vsNorm] || "vs-pending";
+        const vsLabel = VS_LABELS[vsNorm]  || "En attente";
+
+        document.getElementById("detail-title").textContent = `${l.nom||""} ${l.prenom||""}`.trim() || "Fiche";
         document.getElementById("detail-subtitle").textContent =
-          `${STATUS_LABELS[lead.status] || lead.status || "-"} — fermee le ${formatDateTime(lead.closed_at || lead.updated_at)}`;
+          `${STATUS_LABELS[l.status]||l.status||"-"} — ferme le ${fmtDate(l.closed_at||l.updated_at)}`;
 
         document.getElementById("detail-body").innerHTML = `
           <div class="detail-section">
-            <div class="detail-section-title">
-              <span><i class="fa-regular fa-user mr-2 text-primary"></i>Informations prospect</span>
-            </div>
+            <div class="detail-section-title"><span><i class="fa-regular fa-user mr-2 text-primary"></i>Informations prospect</span></div>
             <div class="field-grid">
-              ${fieldCard("Nom", lead.nom)}
-              ${fieldCard("Prenom", lead.prenom)}
-              ${fieldCard("Email", lead.email)}
-              ${fieldCard("Telephone", getPrimaryPhone(lead))}
-              ${fieldCard("Ville", lead.ville)}
-              ${fieldCard("Code postal", lead.code_postal)}
+              ${fc("Nom",        l.nom)}
+              ${fc("Prenom",     l.prenom)}
+              ${fc("Email",      l.email)}
+              ${fc("Telephone",  phone(l))}
+              ${fc("Ville",      l.ville)}
+              ${fc("Code postal",l.code_postal)}
+            </div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-section-title"><span><i class="fa-solid fa-file-contract mr-2 text-primary"></i>Contrat &amp; fermeture</span></div>
+            <div class="field-grid">
+              ${fc("Mutuelle",      l.nom_mutuelle)}
+              ${fc("Prix",          fmtCur(l.prix_mutuelle))}
+              ${fc("Statut",        STATUS_LABELS[l.status]||l.status||"-")}
+              ${fc("Ferme par",     l.closed_by_name||l.agent_name||"-")}
+              ${fc("Date fermeture",fmtDate(l.closed_at||l.updated_at))}
             </div>
           </div>
           <div class="detail-section">
             <div class="detail-section-title">
-              <span><i class="fa-solid fa-file-contract mr-2 text-primary"></i>Contrat &amp; fermeture</span>
+              <span><i class="fa-solid fa-shield-halved mr-2 text-primary"></i>Statut validation</span>
+              <span class="status-pill ${vsClass} text-xs">${vsLabel}</span>
             </div>
-            <div class="field-grid">
-              ${fieldCard("Mutuelle", lead.nom_mutuelle)}
-              ${fieldCard("Prix mutuelle", formatCurrency(lead.prix_mutuelle))}
-              ${fieldCard("Statut", STATUS_LABELS[lead.status] || lead.status || "-")}
-              ${fieldCard("Ferme par", lead.closed_by_name || lead.agent_name || "-")}
-              ${fieldCard("Date fermeture", formatDateTime(lead.closed_at || lead.updated_at))}
-            </div>
-          </div>
-          <div class="detail-section">
-            <div class="detail-section-title">
-              <span><i class="fa-regular fa-note-sticky mr-2 text-primary"></i>Notes validation</span>
-            </div>
-            <div style="padding:1rem;">
-              <textarea
-                id="detail-notes"
-                rows="5"
-                class="field-control textarea"
-                placeholder="Ajouter des notes de validation..."
-              >${escapeHtml(lead.notes || "")}</textarea>
+            <div style="padding:1rem;" class="flex flex-col gap-3">
+              ${vsNorm === "REJECTED" && l.validation_reason ? `
+                <div class="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <i class="fa-solid fa-triangle-exclamation mr-2"></i><strong>Raison de rejet :</strong> ${esc(l.validation_reason)}
+                </div>` : ""}
+              ${l.validated_at ? `<p class="text-xs text-textMuted">Traite le ${fmtDate(l.validated_at)}</p>` : ""}
+              <label class="field-label mt-2">Notes de validation</label>
+              <textarea id="detail-notes" rows="4" class="field-control textarea" placeholder="Notes...">${esc(l.notes||"")}</textarea>
             </div>
           </div>`;
+
+        // Action buttons depend on current validation_status
+        const actions = document.getElementById("detail-actions");
+        actions.innerHTML = `
+          <button class="btn-secondary" onclick="saveNotes()"><i class="fa-regular fa-floppy-disk"></i> Sauvegarder notes</button>
+          ${vsNorm !== "VALIDATED" ? `<button class="btn-success" onclick="validateDossier()"><i class="fa-solid fa-circle-check"></i> Valider</button>` : ""}
+          ${vsNorm !== "REJECTED"  ? `<button class="btn-danger"  onclick="openRejectModal()"><i class="fa-solid fa-ban"></i> Rejeter</button>` : ""}
+          ${vsNorm !== "PENDING"   ? `<button class="btn-secondary" onclick="resetValidation()"><i class="fa-solid fa-rotate-left"></i> Remettre en attente</button>` : ""}
+        `;
 
         document.getElementById("detail-modal").style.display = "flex";
       }
 
-      function fieldCard(label, value) {
-        return `
-          <div class="field-card">
-            <span class="field-label">${escapeHtml(label)}</span>
-            <div class="text-sm font-medium text-textMain">${escapeHtml(value || "-")}</div>
-          </div>`;
+      function closeDetail() {
+        document.getElementById("detail-modal").style.display = "none";
+        selectedLead = null;
       }
 
-      async function saveValidationNotes() {
+      /* ─── Actions validation ─── */
+      async function validateDossier() {
+        if (!selectedLead) return;
+        try {
+          const updated = await validateClientDossier(selectedLead.id, "VALIDATE");
+          upsertLead(updated);
+          openDetail(selectedLead.id); // refresh modal
+          renderKPIs();
+          renderList();
+        } catch (err) { showError(err.formattedMessage || err.message); }
+      }
+
+      function openRejectModal() {
+        selectedReason = "";
+        document.querySelectorAll(".reason-option").forEach(el => el.classList.remove("selected"));
+        document.getElementById("reject-reason-free").value = "";
+        document.getElementById("reject-modal").style.display = "flex";
+      }
+
+      function closeRejectModal() {
+        document.getElementById("reject-modal").style.display = "none";
+      }
+
+      function selectReason(el) {
+        document.querySelectorAll(".reason-option").forEach(x => x.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedReason = el.dataset.reason;
+      }
+
+      async function confirmReject() {
+        if (!selectedLead) return;
+        const freeText = document.getElementById("reject-reason-free").value.trim();
+        const reason   = freeText ? (selectedReason ? `${selectedReason} — ${freeText}` : freeText) : selectedReason;
+        if (!reason) { alert("Veuillez selectionner ou saisir une raison de rejet."); return; }
+        try {
+          const updated = await validateClientDossier(selectedLead.id, "REJECT", reason);
+          upsertLead(updated);
+          closeRejectModal();
+          openDetail(selectedLead.id); // refresh modal
+          renderKPIs();
+          renderList();
+        } catch (err) { showError(err.formattedMessage || err.message); }
+      }
+
+      async function resetValidation() {
+        if (!selectedLead) return;
+        if (!confirm("Remettre ce dossier en attente de validation ?")) return;
+        try {
+          // Use updateLead to reset validation fields
+          const updated = await updateLead(selectedLead.id, {
+            validation_status: "PENDING",
+            validation_reason: null,
+            validated_by: null,
+            validated_at: null,
+          });
+          upsertLead(updated);
+          openDetail(selectedLead.id);
+          renderKPIs();
+          renderList();
+        } catch (err) { showError(err.formattedMessage || err.message); }
+      }
+
+      async function saveNotes() {
         if (!selectedLead) return;
         try {
           const updated = await updateLead(selectedLead.id, {
             notes: document.getElementById("detail-notes").value,
           });
-          upsertClosedLead(updated);
+          upsertLead(updated);
           selectedLead = updated;
-          renderDashboard();
-          renderValidationList();
-          alert("Notes enregistrees.");
-        } catch (err) {
-          alert(err.formattedMessage || err.message);
-        }
+          alert("Notes sauvegardees.");
+        } catch (err) { showError(err.formattedMessage || err.message); }
       }
 
-      async function reopenSelectedLead() {
-        if (!selectedLead) return;
-        if (!confirm("Remettre cette fiche dans la liste des prospects actifs ?")) return;
-        try {
-          await updateLead(selectedLead.id, {
-            status: "TO_CALL",
-            notes: document.getElementById("detail-notes")?.value || selectedLead.notes || "",
-          });
-          closedLeads = closedLeads.filter((l) => l.id !== selectedLead.id);
-          closeDetails();
-          renderDashboard();
-          renderValidationList();
-        } catch (err) {
-          alert(err.formattedMessage || err.message);
-        }
+      /* ─── Utils ─── */
+      function upsertLead(lead) {
+        const i = allLeads.findIndex(x => x.id === lead.id);
+        if (i >= 0) allLeads[i] = { ...allLeads[i], ...lead };
+        else allLeads.unshift(lead);
+        if (selectedLead && selectedLead.id === lead.id) selectedLead = allLeads[i >= 0 ? i : 0];
       }
 
-      function upsertClosedLead(lead) {
-        const index = closedLeads.findIndex((item) => item.id === lead.id);
-        if (["SIGNED", "LOST", "CLOSED", "REFUSED"].includes(lead.status)) {
-          if (index >= 0) closedLeads[index] = { ...closedLeads[index], ...lead };
-          else closedLeads.unshift(lead);
-        } else if (index >= 0) {
-          closedLeads.splice(index, 1);
-        }
+      function phone(l) { return l.tel_gsm || l.tel_professionnel || l.tel_fixe || ""; }
+
+      function fmtDate(v) {
+        if (!v) return "-";
+        return new Date(v).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
       }
 
-      function closeDetails() {
-        document.getElementById("detail-modal").style.display = "none";
-        selectedLead = null;
+      function fmtCur(v) { return `${Number(v||0).toLocaleString("fr-FR", {maximumFractionDigits:2})} EUR`; }
+
+      function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
+      function showError(msg) {
+        const b = document.getElementById("error-box");
+        b.textContent = msg;
+        b.classList.remove("hidden");
       }
 
-      function getPrimaryPhone(lead) {
-        return lead.tel_gsm || lead.tel_professionnel || lead.tel_fixe || "";
+      function esc(v) {
+        return String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
       }
 
-      function formatCurrency(value) {
-        return `${Number(value || 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} EUR`;
+      function fc(label, value) {
+        return `<div class="field-card">
+          <span class="field-label">${esc(label)}</span>
+          <div class="text-sm font-medium text-textMain">${esc(value||"-")}</div>
+        </div>`;
       }
 
-      function formatDateTime(value) {
-        if (!value) return "-";
-        return new Date(value).toLocaleString("fr-FR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      }
-
-      function setText(id, value) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value;
-      }
-
-      function escapeHtml(value) {
-        return String(value || "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
-
-      function handleLogout() {
-        logout();
-        window.location.href = "/index.html";
-      }
+      function handleLogout() { logout(); window.location.href = "/index.html"; }
     </script>
   </body>
 </html>
