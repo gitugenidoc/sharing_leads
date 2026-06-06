@@ -1556,10 +1556,6 @@
               />
             </div>
             <div class="field-card">
-              <label class="field-label">Nom mutuelle *</label
-              ><input type="text" id="lead-mutuelle" class="field-control" />
-            </div>
-            <div class="field-card">
               <label class="field-label">Prix mutuelle *</label
               ><input
                 type="number"
@@ -2259,7 +2255,6 @@
             "deja_mutuelle",
             lead.deja_mutuelle || lead.nom_mutuelle,
           ],
-          ["Nom mutuelle", "nom_mutuelle", lead.nom_mutuelle],
           ["Prix mutuelle", "prix_mutuelle", lead.prix_mutuelle],
           ["Statut", "status", lead.status],
           ["Rappel prevu", "reminder_at", lead.reminder_at],
@@ -2519,7 +2514,7 @@
           Nom: lead.nom || "",
           Prenom: lead.prenom || "",
           Ville: lead.ville || "",
-          Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "Non renseignee",
+          Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "",
           PrixMutuelle: lead.prix_mutuelle
             ? Number(lead.prix_mutuelle).toFixed(2) + " EUR"
             : "Non renseigne",
@@ -2916,7 +2911,7 @@
           adresse: document.getElementById("lead-adresse").value,
           ville: document.getElementById("lead-ville").value,
           code_postal: document.getElementById("lead-code-postal").value,
-          nom_mutuelle: document.getElementById("lead-mutuelle").value,
+          nom_mutuelle: "",
           prix_mutuelle:
             parseFloat(document.getElementById("lead-prix").value) || 0,
           status: "NEW",

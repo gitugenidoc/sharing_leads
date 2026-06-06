@@ -164,7 +164,7 @@ const calculateClientScore = (clientData) => {
     toText(clientData.email),
     toText(clientData.tel_gsm) || toText(clientData.tel_fixe),
     toText(clientData.ville) && toText(clientData.code_postal),
-    toText(clientData.nom_mutuelle) && clientData.nom_mutuelle !== "Non renseignee",
+    toText(clientData.nom_mutuelle),
     parseFloat(clientData.prix_mutuelle) > 0,
     toText(clientData.status) && clientData.status !== "NEW",
     toText(clientData.notes) || toText(clientData.besoins_specifiques),
@@ -180,7 +180,7 @@ const calculateClientScore = (clientData) => {
 
 const normalizeClientData = (clientData) => ({
   ...clientData,
-  nom_mutuelle: clientData.nom_mutuelle || "Non renseignee",
+  nom_mutuelle: clientData.nom_mutuelle || "",
   prix_mutuelle:
     clientData.prix_mutuelle === undefined ||
     clientData.prix_mutuelle === null ||

@@ -450,7 +450,6 @@
           <div class="detail-section">
             <div class="detail-section-title"><span><i class="fa-solid fa-file-contract mr-2 text-primary"></i>Contrat &amp; fermeture</span></div>
             <div class="field-grid">
-              ${fc("Mutuelle",      l.nom_mutuelle)}
               ${fc("Prix",          fmtCur(l.prix_mutuelle))}
               ${fc("Statut",        STATUS_LABELS[l.status]||l.status||"-")}
               ${fc("Ferme par",     l.closed_by_name||l.agent_name||"-")}

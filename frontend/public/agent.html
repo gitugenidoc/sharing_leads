@@ -1221,7 +1221,6 @@
           ["Besoins specifiques", "besoins_specifiques", lead.besoins_specifiques],
           ["Date assurance", "assurance_date", lead.assurance_date],
           ["Mutuelle actuelle", "deja_mutuelle", lead.deja_mutuelle || lead.nom_mutuelle],
-          ["Nom mutuelle", "nom_mutuelle", lead.nom_mutuelle],
           ["Prix mutuelle", "prix_mutuelle", lead.prix_mutuelle],
           ["Statut", "status", lead.status],
           ["Rappel prevu", "reminder_at", lead.reminder_at],
@@ -1711,7 +1710,7 @@
           Nom: lead.nom || "",
           Prenom: lead.prenom || "",
           Ville: lead.ville || "",
-          Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "Non renseignee",
+          Mutuelle: lead.deja_mutuelle || lead.nom_mutuelle || "",
           PrixMutuelle: lead.prix_mutuelle ? Number(lead.prix_mutuelle).toFixed(2) + " EUR" : "Non renseigne",
           Besoins: lead.besoins_specifiques || "Aucun besoin particulier specifie",
         };
