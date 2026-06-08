@@ -9,7 +9,7 @@ const ensureCommunicationMessageSchema = async (db = pool) => {
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
       user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-      channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WHATSAPP')),
+      channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WHATSAPP', 'CALL')),
       direction VARCHAR(20) NOT NULL CHECK (direction IN ('OUTBOUND', 'INBOUND')),
       status VARCHAR(30) NOT NULL DEFAULT 'RECORDED',
       message_type VARCHAR(30) NOT NULL DEFAULT 'text',
@@ -31,6 +31,14 @@ const ensureCommunicationMessageSchema = async (db = pool) => {
     )
   `);
   await db.query("ALTER TABLE communication_messages ALTER COLUMN client_id DROP NOT NULL");
+  await db.query(
+    "ALTER TABLE communication_messages DROP CONSTRAINT IF EXISTS communication_messages_channel_check",
+  );
+  await db.query(`
+    ALTER TABLE communication_messages
+    ADD CONSTRAINT communication_messages_channel_check
+    CHECK (channel IN ('SMS', 'WHATSAPP', 'CALL'))
+  `);
   await db.query("ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(30) NOT NULL DEFAULT 'text'");
   await db.query("ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_id VARCHAR(255)");
   await db.query("ALTER TABLE communication_messages ADD COLUMN IF NOT EXISTS media_mime_type VARCHAR(255)");
@@ -83,7 +91,7 @@ const createMessage = async ({
   await ensureCommunicationMessageSchema();
   const normalizedChannel = normalizeChannel(channel);
   const normalizedDirection = normalizeDirection(direction);
-  if (!["SMS", "WHATSAPP"].includes(normalizedChannel)) {
+  if (!["SMS", "WHATSAPP", "CALL"].includes(normalizedChannel)) {
     throw new Error("Invalid message channel");
   }
   if (!["OUTBOUND", "INBOUND"].includes(normalizedDirection)) {

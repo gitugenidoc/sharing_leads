@@ -27,6 +27,7 @@ const logsRoutes = require("./routes/logs");
 const mailRoutes = require("./routes/mail");
 const analyticsRoutes = require("./routes/analytics");
 const whatsappRoutes = require("./routes/whatsapp");
+const snaptelRoutes = require("./routes/snaptel");
 const cronRoutes = require("./routes/cron");
 const { router: chatbotRoutes } = require("./routes/chatbot");
 const { releaseExpiredAssignments } = require("./models/Client");
@@ -97,6 +98,7 @@ app.use("/api/logs", logsRoutes);
 app.use("/api/mail", mailRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
+app.use("/api/snaptel", snaptelRoutes);
 app.use("/api/cron", cronRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 
