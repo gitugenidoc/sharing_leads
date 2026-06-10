@@ -28,6 +28,8 @@ const mailRoutes = require("./routes/mail");
 const analyticsRoutes = require("./routes/analytics");
 const whatsappRoutes = require("./routes/whatsapp");
 const snaptelRoutes = require("./routes/snaptel");
+const webhooksRoutes = require("./routes/webhooks");
+const integrationsRoutes = require("./routes/integrations");
 const cronRoutes = require("./routes/cron");
 const { router: chatbotRoutes } = require("./routes/chatbot");
 const { releaseExpiredAssignments } = require("./models/Client");
@@ -99,6 +101,8 @@ app.use("/api/mail", mailRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/snaptel", snaptelRoutes);
+app.use("/api/webhooks", webhooksRoutes);
+app.use("/api/integrations", integrationsRoutes);
 app.use("/api/cron", cronRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 

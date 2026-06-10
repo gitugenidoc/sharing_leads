@@ -1,16 +1,71 @@
 const express = require("express");
-const Client = require("../models/Client");
-const CommunicationMessage = require("../models/CommunicationMessage");
+const {
+  processSnaptelCallEvent,
+  parseCallPayload,
+  normalizeDirection,
+  normalizeEventType,
+} = require("../services/snaptelWebhookService");
+const { timingSafeEqual } = require("../utils/secretCrypto");
 
 const router = express.Router();
 
 const toText = (value) =>
   value === undefined || value === null ? "" : String(value).trim();
 
-const toFiniteNumber = (value) => {
-  if (value === undefined || value === null || value === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+const uniqueTexts = (values = []) => {
+  const seen = new Set();
+  const result = [];
+  for (const value of values) {
+    const text = toText(value);
+    if (!text) continue;
+    const key = text.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(text);
+  }
+  return result;
+};
+
+const isSecretAuthorized = (req) => {
+  const expected = toText(process.env.SNAPTEL_WEBHOOK_SECRET);
+  if (!expected) return true;
+  const authorization = toText(req.headers.authorization);
+  const bearer = authorization.toLowerCase().startsWith("bearer ")
+    ? authorization.slice(7).trim()
+    : "";
+  const candidates = uniqueTexts([
+    req.headers["x-snaptel-secret"],
+    req.headers["x-webhook-secret"],
+    req.query.secret,
+    req.query.token,
+    req.body?.secret,
+    req.body?.token,
+    bearer,
+  ]);
+  return candidates.some((value) => timingSafeEqual(value, expected));
+};
+
+const extractWebhookSecret = (req) => {
+  const authorization = toText(req.headers.authorization);
+  const bearer = authorization.toLowerCase().startsWith("bearer ")
+    ? authorization.slice(7).trim()
+    : "";
+  return (
+    toText(req.headers["x-snaptel-secret"]) ||
+    toText(req.headers["x-webhook-secret"]) ||
+    toText(req.query.secret) ||
+    toText(req.body?.secret) ||
+    bearer
+  );
+};
+
+const normalizeStatus = (value, fallback = "RECEIVED") => {
+  const text = toText(value);
+  if (!text) return fallback;
+  return text
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .replace(/[\s.-]+/g, "_")
+    .toUpperCase();
 };
 
 const getNestedValue = (payload, path) => {
@@ -29,142 +84,18 @@ const getFirstText = (payload, paths = []) => {
   return "";
 };
 
-const getFirstNumber = (payload, paths = []) => {
-  for (const path of paths) {
-    const value = toFiniteNumber(getNestedValue(payload, path));
-    if (value !== null) return value;
-  }
-  return null;
-};
-
-const uniqueTexts = (values = []) => {
-  const seen = new Set();
-  const result = [];
-  for (const value of values) {
-    const text = toText(value);
-    if (!text) continue;
-    const key = text.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(text);
-  }
-  return result;
-};
-
-const normalizeStatus = (value, fallback = "RECEIVED") => {
-  const text = toText(value);
-  if (!text) return fallback;
-  return text
-    .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/[\s.-]+/g, "_")
-    .toUpperCase();
-};
-
-const normalizeDirection = (value, fallback = "INBOUND") => {
-  const text = toText(value).toLowerCase();
-  if (!text) return fallback;
-  if (["outbound", "out", "agent", "callee", "to_client"].includes(text)) {
-    return "OUTBOUND";
-  }
-  if (["inbound", "in", "customer", "caller", "from_client"].includes(text)) {
-    return "INBOUND";
-  }
-  return fallback;
-};
-
-const inferDirectionFromEvent = (event) => {
-  const text = toText(event).toLowerCase();
-  if (text.includes("outbound")) return "OUTBOUND";
-  if (text.includes("inbound")) return "INBOUND";
-  return "INBOUND";
-};
-
-const isSecretAuthorized = (req) => {
-  const expected = toText(process.env.SNAPTEL_WEBHOOK_SECRET);
-  if (!expected) return true;
-  const authorization = toText(req.headers.authorization);
-  const bearer = authorization.toLowerCase().startsWith("bearer ")
-    ? authorization.slice(7).trim()
-    : "";
-  const candidates = [
-    req.headers["x-snaptel-secret"],
-    req.headers["x-webhook-secret"],
-    req.query.secret,
-    req.query.token,
-    req.body?.secret,
-    req.body?.token,
-    bearer,
-  ];
-  return uniqueTexts(candidates).some((value) => value === expected);
-};
-
-const extractPhoneCandidates = (payload) =>
-  uniqueTexts([
-    getFirstText(payload, ["phone", "customer.phone", "lead.phone", "contact.phone"]),
-    getFirstText(payload, ["call.from", "from", "caller", "caller_number", "callerNumber"]),
-    getFirstText(payload, ["call.to", "to", "callee", "callee_number", "calleeNumber"]),
-    getFirstText(payload, ["agent.phone", "agent.number", "destination.phone"]),
-  ]);
-
 const normalizeSnaptelPayload = (payload = {}) => {
-  const event =
-    getFirstText(payload, [
-      "event",
-      "type",
-      "status",
-      "call.event",
-      "call.status",
-      "data.event",
-      "data.status",
-    ]) || "call.received";
-  const direction = normalizeDirection(
-    getFirstText(payload, ["direction", "call.direction", "data.direction"]),
-    inferDirectionFromEvent(event),
-  );
-  const fromNumber = getFirstText(payload, [
-    "call.from",
-    "from",
-    "caller",
-    "caller_number",
-    "callerNumber",
-    "customer.phone",
-    "lead.phone",
-    "contact.phone",
-  ]);
-  const toNumber = getFirstText(payload, [
-    "call.to",
-    "to",
-    "callee",
-    "callee_number",
-    "calleeNumber",
-    "agent.phone",
-    "agent.number",
-    "destination.phone",
-  ]);
-  const callId = getFirstText(payload, [
-    "call.id",
-    "callId",
-    "call_id",
-    "id",
-    "data.callId",
-    "data.call_id",
-  ]);
+  const parsed = parseCallPayload(payload);
   const campaignId = getFirstText(payload, [
     "campaign.id",
     "campaignId",
     "campaign_id",
     "data.campaignId",
-    "data.campaign_id",
   ]);
   const campaignName = getFirstText(payload, [
     "campaign.name",
     "campaignName",
     "data.campaignName",
-  ]);
-  const transcript = getFirstText(payload, [
-    "transcript",
-    "call.transcript",
-    "data.transcript",
   ]);
   const summary = getFirstText(payload, [
     "summary",
@@ -172,52 +103,35 @@ const normalizeSnaptelPayload = (payload = {}) => {
     "data.summary",
     "analysis.summary",
   ]);
-  const recordingUrl = getFirstText(payload, [
-    "recordingUrl",
-    "recording_url",
-    "call.recordingUrl",
-    "call.recording_url",
-    "data.recordingUrl",
-    "data.recording_url",
+  const transcript = getFirstText(payload, [
+    "transcript",
+    "call.transcript",
+    "data.transcript",
   ]);
-  const durationSeconds = getFirstNumber(payload, [
-    "duration",
-    "durationSeconds",
-    "duration_seconds",
-    "call.duration",
-    "call.durationSeconds",
-    "call.duration_seconds",
-    "data.duration",
-  ]);
-  const phoneCandidates = extractPhoneCandidates(payload);
-  const status = normalizeStatus(
-    getFirstText(payload, ["status", "call.status", "data.status"]) || event,
-  );
-
   const summaryParts = [
-    normalizeStatus(event),
+    normalizeStatus(parsed.eventType),
     campaignName ? `campaign=${campaignName}` : "",
-    fromNumber ? `from=${fromNumber}` : "",
-    toNumber ? `to=${toNumber}` : "",
-    durationSeconds !== null ? `duration=${durationSeconds}s` : "",
+    parsed.callerNumber ? `from=${parsed.callerNumber}` : "",
+    parsed.calleeNumber ? `to=${parsed.calleeNumber}` : "",
+    parsed.durationSeconds !== null ? `duration=${parsed.durationSeconds}s` : "",
     summary,
     transcript,
   ].filter(Boolean);
 
   return {
-    event,
-    status,
-    direction,
-    fromNumber,
-    toNumber,
-    callId,
+    event: parsed.eventType,
+    status: normalizeStatus(parsed.callStatus, parsed.eventType.toUpperCase()),
+    direction: parsed.direction,
+    fromNumber: parsed.callerNumber,
+    toNumber: parsed.calleeNumber,
+    callId: parsed.callId,
     campaignId,
     campaignName,
     transcript,
     summary,
-    recordingUrl,
-    durationSeconds,
-    phoneCandidates,
+    recordingUrl: parsed.recordingUrl,
+    durationSeconds: parsed.durationSeconds,
+    phoneCandidates: uniqueTexts([parsed.callerNumber, parsed.calleeNumber]),
     note: summaryParts.join(" | ").slice(0, 1500),
   };
 };
@@ -231,75 +145,31 @@ router.get("/webhook", (req, res) => {
     ok: true,
     provider: "snaptel",
     webhook: "/api/snaptel/webhook",
+    new_webhook: "/api/webhooks/snaptel/call-event",
     timestamp: new Date().toISOString(),
   });
 });
 
 router.post("/webhook", async (req, res) => {
   if (!isSecretAuthorized(req)) {
-    return res.status(403).json({ error: "Unauthorized webhook request" });
+    return res.status(401).json({ error: "Unauthorized webhook request" });
   }
 
   try {
-    const normalized = normalizeSnaptelPayload(req.body || {});
-    let matchedClient = null;
-
-    for (const phone of normalized.phoneCandidates) {
-      matchedClient = await Client.findClientByPhone(phone);
-      if (matchedClient) break;
-    }
-
-    const message = await CommunicationMessage.createMessage({
-      clientId: matchedClient?.id || null,
-      userId: null,
-      channel: "CALL",
-      direction: normalized.direction,
-      status: normalized.status,
-      messageType: "call",
-      fromNumber: normalized.fromNumber || "",
-      toNumber: normalized.toNumber || "",
-      body: normalized.note || normalized.status,
-      provider: "snaptel",
-      providerMessageId: normalized.callId || "",
-      rawPayload: {
-        normalized,
-        payload: req.body || {},
-      },
+    const result = await processSnaptelCallEvent({
+      payload: req.body || {},
+      providedSecret: extractWebhookSecret(req),
+      legacyMode: true,
     });
-
-    if (matchedClient) {
-      const updatedClient = await Client.updateClient(matchedClient.id, {
-        last_contacted_at: new Date(),
-        last_action_at: new Date(),
-      });
-      await Client.addClientHistory({
-        clientId: matchedClient.id,
-        userId: null,
-        action: "SNAPTEL_CALL_EVENT",
-        oldValue: { last_contacted_at: matchedClient.last_contacted_at },
-        newValue: {
-          event: normalized.event,
-          status: normalized.status,
-          call_id: normalized.callId || null,
-          campaign_id: normalized.campaignId || null,
-          campaign_name: normalized.campaignName || null,
-          direction: normalized.direction,
-          provider_message_id: message.provider_message_id || null,
-          recording_url: normalized.recordingUrl || null,
-          duration_seconds: normalized.durationSeconds,
-          last_contacted_at: updatedClient.last_contacted_at,
-        },
-        note: normalized.note || normalized.status,
-      });
-    }
-
-    return res.status(200).json({
-      ok: true,
-      event: normalized.event,
-      status: normalized.status,
-      matched_client_id: matchedClient?.id || null,
-      provider_message_id: message.provider_message_id || null,
+    const body = result.body || {};
+    return res.status(result.status).json({
+      ok: body.ok !== false,
+      event: body.event_type || parseCallPayload(req.body).eventType,
+      status: body.match_status || "RECEIVED",
+      matched_client_id: body.matched_client_id || null,
+      provider_message_id: body.phone_call_id || body.provider_message_id || null,
       received_at: new Date().toISOString(),
+      ...(body.error ? { error: body.error } : {}),
     });
   } catch (err) {
     console.error("[Snaptel Webhook]", err);

@@ -39,7 +39,7 @@ test("normalizeSnaptelPayload extracts campaign, call ids and phones", () => {
     summary: "Rappel confirme",
   });
 
-  assert.equal(payload.status, "CALL_COMPLETED");
+  assert.equal(payload.status, "ENDED");
   assert.equal(payload.direction, "OUTBOUND");
   assert.equal(payload.callId, "call_42");
   assert.equal(payload.campaignId, "cmp_42");
@@ -48,7 +48,7 @@ test("normalizeSnaptelPayload extracts campaign, call ids and phones", () => {
   assert.equal(payload.toNumber, "+212600000002");
   assert.equal(payload.durationSeconds, 92);
   assert.deepEqual(payload.phoneCandidates, ["+212600000001", "+212600000002"]);
-  assert.match(payload.note, /CALL_COMPLETED/);
+  assert.match(payload.note, /ended/i);
 });
 
 test("isSecretAuthorized accepts configured header and bearer token", () => {

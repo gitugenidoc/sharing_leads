@@ -637,21 +637,36 @@ const searchClients = async (query, offset = 0, limit = 100, centerId = null) =>
   return result.rows;
 };
 
-const findClientByPhone = async (phone) => {
+const findClientByPhone = async (phone, centerId = null) => {
+  const matches = await findClientsByPhone(phone, centerId);
+  return matches[0] || null;
+};
+
+const findClientsByPhone = async (phone, centerId = null) => {
   await ensureFlexibleClientColumns();
   const variants = getPhoneVariants(phone);
-  if (!variants.length) return null;
+  if (!variants.length) return [];
+  const params = [variants];
+  let centerFilter = "";
+  if (centerId) {
+    params.push(centerId);
+    centerFilter = `AND clients.center_id = $${params.length}`;
+  }
   const result = await pool.query(
     `SELECT *
      FROM clients
-     WHERE regexp_replace(COALESCE(tel_gsm, ''), '[^0-9]', '', 'g') = ANY($1)
-        OR regexp_replace(COALESCE(tel_fixe, ''), '[^0-9]', '', 'g') = ANY($1)
-        OR regexp_replace(COALESCE(tel_professionnel, ''), '[^0-9]', '', 'g') = ANY($1)
+     WHERE (
+       regexp_replace(COALESCE(tel_gsm, ''), '[^0-9]', '', 'g') = ANY($1)
+       OR regexp_replace(COALESCE(tel_fixe, ''), '[^0-9]', '', 'g') = ANY($1)
+       OR regexp_replace(COALESCE(tel_professionnel, ''), '[^0-9]', '', 'g') = ANY($1)
+       OR regexp_replace(COALESCE(extra_data->>'whatsapp', ''), '[^0-9]', '', 'g') = ANY($1)
+     )
+     ${centerFilter}
      ORDER BY COALESCE(last_action_at, updated_at, created_at) DESC
-     LIMIT 1`,
-    [variants],
+     LIMIT 10`,
+    params,
   );
-  return result.rows[0] || null;
+  return result.rows;
 };
 
 const bulkInsertClients = async (clients, centerId) => {
@@ -698,6 +713,7 @@ module.exports = {
   assignRandomClients,
   searchClients,
   findClientByPhone,
+  findClientsByPhone,
   bulkInsertClients,
   findPotentialDuplicates,
   addClientHistory,

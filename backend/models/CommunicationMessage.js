@@ -190,9 +190,54 @@ const getClientMessages = async (clientId, channel = null, limit = 100) => {
   return result.rows;
 };
 
+const getRecentCallEventsForUser = async (user, { since = null, limit = 20 } = {}) => {
+  await ensureCommunicationMessageSchema();
+  const boundedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
+  const params = [];
+  const filters = [
+    "communication_messages.channel = 'CALL'",
+    "communication_messages.client_id IS NOT NULL",
+  ];
+
+  if (user?.role === "AGENT") {
+    params.push(user.id);
+    filters.push(`clients.assigned_to = $${params.length}`);
+    filters.push("(clients.assignment_expires_at IS NULL OR clients.assignment_expires_at >= NOW())");
+    filters.push("clients.status NOT IN ('SIGNED', 'LOST', 'CLOSED', 'REFUSED')");
+  } else if (["ADMIN", "SUPERVISOR", "VALIDATION"].includes(user?.role)) {
+    params.push(user.center_id || -1);
+    filters.push(`clients.center_id = $${params.length}`);
+  }
+
+  if (since) {
+    params.push(since);
+    filters.push(`communication_messages.created_at > $${params.length}`);
+  }
+
+  params.push(boundedLimit);
+
+  const result = await pool.query(
+    `SELECT
+       communication_messages.*,
+       clients.nom AS client_nom,
+       clients.prenom AS client_prenom,
+       clients.status AS client_status,
+       clients.assigned_to AS client_assigned_to
+     FROM communication_messages
+     INNER JOIN clients ON clients.id = communication_messages.client_id
+     WHERE ${filters.join(" AND ")}
+     ORDER BY communication_messages.created_at DESC
+     LIMIT $${params.length}`,
+    params,
+  );
+
+  return result.rows;
+};
+
 module.exports = {
   ensureCommunicationMessageSchema,
   createMessage,
   updateProviderStatus,
   getClientMessages,
+  getRecentCallEventsForUser,
 };

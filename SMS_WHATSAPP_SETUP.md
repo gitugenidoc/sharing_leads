@@ -60,15 +60,13 @@ GET /api/whatsapp/media/:mediaId
 
 Cette route est protegee par le token utilisateur de l'application.
 
-## Envoi SMS reel avec Twilio
+## Envoi SMS reel
 
 Variables a configurer:
 
 ```env
 SMS_SEND_MODE=provider
-SMS_PROVIDER=twilio
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
+SMS_PROVIDER=votre_provider_sms
 ```
 
 Ensuite, dans l'admin:
@@ -77,13 +75,13 @@ Ensuite, dans l'admin:
 2. Renseigner ce numero dans "Numero SMS sortant" pour chaque agent.
 3. Tester avec un seul agent avant d'activer tous les comptes.
 
-Le backend appelle l'API Twilio Messages sans package supplementaire. Si le provider echoue, l'action est enregistree avec le statut `FAILED` dans `communication_messages`.
+Par defaut, ce depot n'envoie plus les SMS via un provider integre. Si vous activez `SMS_SEND_MODE=provider`, branchez un provider SMS dedie avant mise en production. Sinon, laissez les SMS en mode manuel / prepare.
 
 ## Acheter un numero +33 par agent
 
 Parcours recommande:
 
-1. Choisir un provider qui vend des numeros francais et expose une API: Twilio, Vonage, Ringover, Aircall, Bird, etc.
+1. Choisir un provider qui vend des numeros francais et expose une API: Vonage, Ringover, Aircall, Bird, etc.
 2. Verifier avant achat que le numero +33 supporte les usages necessaires: SMS sortant, SMS entrant, voix, WhatsApp Business si besoin.
 3. Acheter un numero par agent ou par equipe selon la logique commerciale.
 4. Mettre le numero dans la fiche utilisateur admin.

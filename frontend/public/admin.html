@@ -1479,6 +1479,126 @@
 
                 </div>
               </div>
+
+              <section class="mt-8 rounded-xl border border-gray-100 bg-white p-5">
+                <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h4 class="font-semibold text-gray-900">Integrations &gt; Snaptel</h4>
+                    <p class="text-sm text-gray-500">Telephonie Snaptel, webhook, mapping agents et tests.</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="loadSnaptelIntegration()" class="btn-secondary text-sm">Actualiser</button>
+                    <button type="button" onclick="saveSnaptelIntegrationSettings()" class="btn-primary text-sm">Enregistrer</button>
+                  </div>
+                </div>
+
+                <div id="snaptel-status-banner" class="mb-4 hidden rounded-lg border px-4 py-3 text-sm"></div>
+                <div id="snaptel-secret-once" class="mb-4 hidden rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"></div>
+
+                <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                  <div class="space-y-4">
+                    <div class="rounded-lg border border-gray-100 p-4">
+                      <h5 class="mb-3 font-semibold text-gray-900">Configuration generale</h5>
+                      <div class="space-y-3 text-sm">
+                        <label class="flex items-center justify-between gap-3">
+                          <span>Activer l'integration Snaptel</span>
+                          <input id="snaptel-enabled" type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary" />
+                        </label>
+                        <div>
+                          <label class="field-label">Nom de l'integration</label>
+                          <input id="snaptel-name" class="field-control" value="Snaptel" />
+                        </div>
+                        <div>
+                          <label class="field-label">SDA / DID Snaptel</label>
+                          <input id="snaptel-sda" class="field-control" placeholder="332510" />
+                        </div>
+                        <div>
+                          <label class="field-label">Domaine SIP</label>
+                          <input id="snaptel-sip-domain" class="field-control" placeholder="68.183.12.18" />
+                        </div>
+                        <div>
+                          <label class="field-label">URL webhook</label>
+                          <div class="flex gap-2">
+                            <input id="snaptel-webhook-url" class="field-control bg-gray-50" readonly />
+                            <button type="button" onclick="copySnaptelWebhookUrl()" class="btn-secondary whitespace-nowrap">Copier</button>
+                          </div>
+                        </div>
+                        <div>
+                          <label class="field-label">Secret webhook</label>
+                          <div class="flex gap-2">
+                            <input id="snaptel-webhook-secret" class="field-control bg-gray-50" value="********" readonly />
+                            <button type="button" onclick="regenerateSnaptelSecret()" class="btn-secondary whitespace-nowrap">Regenerer</button>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500">Header: X-Snaptel-Secret. Affiche une seule fois apres regeneration.</p>
+                        </div>
+                        <div>
+                          <label class="field-label">Dernier evenement recu</label>
+                          <input id="snaptel-last-event" class="field-control bg-gray-50" readonly />
+                        </div>
+                        <div>
+                          <label class="field-label">Statut integration</label>
+                          <input id="snaptel-status" class="field-control bg-gray-50" readonly />
+                        </div>
+                        <div>
+                          <label class="field-label">Notes internes</label>
+                          <textarea id="snaptel-config-notes" class="field-control min-h-[80px]"></textarea>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-100 p-4">
+                      <h5 class="mb-3 font-semibold text-gray-900">Informations Snaptel</h5>
+                      <dl class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                        <dt>Provider</dt><dd class="font-medium text-gray-900">Snaptel</dd>
+                        <dt>Transport SIP</dt><dd id="snaptel-info-transport">UDP</dd>
+                        <dt>Port SIP</dt><dd id="snaptel-info-port">5060</dd>
+                        <dt>SIP Server</dt><dd id="snaptel-info-server">68.183.12.18</dd>
+                      </dl>
+                      <div class="mt-3 grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="field-label">Transport</label>
+                          <input id="snaptel-sip-transport" class="field-control" value="UDP" />
+                        </div>
+                        <div>
+                          <label class="field-label">Port SIP</label>
+                          <input id="snaptel-sip-port" type="number" class="field-control" value="5060" />
+                        </div>
+                        <div class="col-span-2">
+                          <label class="field-label">SIP Server</label>
+                          <input id="snaptel-sip-server" class="field-control" placeholder="68.183.12.18" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="space-y-4">
+                    <div class="rounded-lg border border-gray-100 p-4">
+                      <h5 class="mb-3 font-semibold text-gray-900">Mapping agents Snaptel</h5>
+                      <div id="snaptel-agent-mappings" class="space-y-2 text-sm text-gray-500">Chargement...</div>
+                      <button type="button" onclick="saveSnaptelAgentMappingsFromUi()" class="mt-3 btn-secondary text-sm">Enregistrer mappings</button>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-100 p-4">
+                      <h5 class="mb-3 font-semibold text-gray-900">Mode test</h5>
+                      <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="runSnaptelTest('incoming_known')" class="btn-secondary text-sm">Simuler appel entrant</button>
+                        <button type="button" onclick="runSnaptelTest('unrecognized')" class="btn-secondary text-sm">Simuler appel non reconnu</button>
+                      </div>
+                      <pre id="snaptel-test-result" class="mt-3 max-h-40 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700"></pre>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-100 p-4">
+                      <h5 class="mb-3 font-semibold text-gray-900">Appels non reconnus</h5>
+                      <div id="snaptel-unrecognized-list" class="space-y-2 text-sm"></div>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-100 p-4">
+                      <h5 class="mb-3 font-semibold text-gray-900">Logs webhook</h5>
+                      <div id="snaptel-webhook-logs" class="max-h-56 overflow-auto text-xs"></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
         </main>
         <!-- END: Dashboard Content -->
@@ -2084,8 +2204,196 @@
           document.getElementById("settings-center").value =
             settingsCurrentUser.center_name || currentUser.center_name || (settingsCurrentUser.center_id ? `Centre #${settingsCurrentUser.center_id}` : "Global");
           if (status) status.textContent = "";
+          if (["ADMIN", "SUPER_ADMIN"].includes(settingsCurrentUser.role || currentUser.role)) {
+            await loadSnaptelIntegration();
+          }
         } catch (err) {
           if (status) status.textContent = err.formattedMessage || err.message;
+        }
+      }
+
+      let snaptelIntegrationData = null;
+
+      async function loadSnaptelIntegration() {
+        try {
+          const data = await getSnaptelIntegration();
+          snaptelIntegrationData = data;
+          const integration = data.integration || {};
+          document.getElementById("snaptel-enabled").checked = Boolean(integration.enabled);
+          document.getElementById("snaptel-name").value = integration.name || "Snaptel";
+          document.getElementById("snaptel-sda").value = integration.sda_did || "";
+          document.getElementById("snaptel-sip-domain").value = integration.sip_domain || "";
+          document.getElementById("snaptel-sip-server").value = integration.sip_server || "";
+          document.getElementById("snaptel-sip-transport").value = integration.sip_transport || "UDP";
+          document.getElementById("snaptel-sip-port").value = integration.sip_port || 5060;
+          document.getElementById("snaptel-config-notes").value = integration.config_notes || "";
+          document.getElementById("snaptel-webhook-url").value = integration.webhook_url || "";
+          document.getElementById("snaptel-webhook-secret").value = integration.has_webhook_secret ? "********" : "Non genere";
+          document.getElementById("snaptel-last-event").value = integration.last_event_at
+            ? new Date(integration.last_event_at).toLocaleString("fr-FR")
+            : "Aucun";
+          document.getElementById("snaptel-status").value = integration.status || "NOT_CONFIGURED";
+          document.getElementById("snaptel-info-transport").textContent = integration.sip_transport || "UDP";
+          document.getElementById("snaptel-info-port").textContent = integration.sip_port || 5060;
+          document.getElementById("snaptel-info-server").textContent = integration.sip_server || "68.183.12.18";
+          renderSnaptelAgentMappings(data.agent_mappings || []);
+          renderSnaptelWebhookLogs(data.webhook_logs || []);
+          renderSnaptelUnrecognized(data.unrecognized_calls || []);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function renderSnaptelAgentMappings(mappings) {
+        const container = document.getElementById("snaptel-agent-mappings");
+        if (!container) return;
+        const users = allUsers || [];
+        if (!users.length) {
+          container.innerHTML = "<div>Chargez les utilisateurs pour configurer le mapping.</div>";
+          return;
+        }
+        const mappingByUser = new Map(mappings.map((m) => [m.user_id, m]));
+        container.innerHTML = users
+          .filter((u) => u.role === "AGENT" || u.role === "ADMIN")
+          .map((user) => {
+            const mapping = mappingByUser.get(user.id) || {};
+            return `
+              <div class="rounded-lg border border-gray-100 p-3" data-snaptel-user="${user.id}">
+                <div class="font-medium text-gray-900">${escapeHtml(user.name)}</div>
+                <div class="text-xs text-gray-500">${escapeHtml(user.email)}</div>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                  <input class="field-control snaptel-ext" placeholder="Extension" value="${escapeHtml(mapping.snaptel_extension || "")}" />
+                  <input class="field-control snaptel-agent-id" placeholder="Agent ID" value="${escapeHtml(mapping.snaptel_agent_id || "")}" />
+                  <input class="field-control snaptel-sda-line col-span-2" placeholder="Ligne / SDA" value="${escapeHtml(mapping.sda_line || "")}" />
+                  <label class="col-span-2 flex items-center gap-2 text-xs">
+                    <input type="checkbox" class="snaptel-active rounded" ${mapping.active !== false ? "checked" : ""} />
+                    Actif
+                  </label>
+                </div>
+              </div>`;
+          })
+          .join("");
+      }
+
+      function renderSnaptelWebhookLogs(logs) {
+        const container = document.getElementById("snaptel-webhook-logs");
+        if (!container) return;
+        if (!logs.length) {
+          container.innerHTML = "<div class='text-gray-500'>Aucun log.</div>";
+          return;
+        }
+        container.innerHTML = logs
+          .map(
+            (log) => `
+            <div class="border-b border-gray-100 py-2">
+              <div class="font-medium">${escapeHtml(log.status)} - ${escapeHtml(log.event_type || "")}</div>
+              <div class="text-gray-500">${new Date(log.created_at).toLocaleString("fr-FR")} | call_id=${escapeHtml(log.call_id || "-")}</div>
+              ${log.error_text ? `<div class="text-red-600">${escapeHtml(log.error_text)}</div>` : ""}
+            </div>`,
+          )
+          .join("");
+      }
+
+      function renderSnaptelUnrecognized(calls) {
+        const container = document.getElementById("snaptel-unrecognized-list");
+        if (!container) return;
+        if (!calls.length) {
+          container.innerHTML = "<div class='text-gray-500'>Aucun appel non reconnu.</div>";
+          return;
+        }
+        container.innerHTML = calls
+          .map(
+            (call) => `
+            <div class="rounded-lg border border-gray-100 p-3">
+              <div class="font-medium">${escapeHtml(call.caller_number || call.normalized_caller_number || "?")}</div>
+              <div class="text-xs text-gray-500">${new Date(call.created_at).toLocaleString("fr-FR")} - ${escapeHtml(call.call_status || call.event_type || "")}</div>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button type="button" class="btn-secondary text-xs" onclick="snaptelCreateLeadFromCall(${call.id}, '${escapeHtml(call.caller_number || "")}')">Creer lead</button>
+                <button type="button" class="btn-secondary text-xs" onclick="snaptelLinkCallPrompt(${call.id})">Rattacher</button>
+                <button type="button" class="btn-secondary text-xs" onclick="snaptelIgnoreCall(${call.id})">Ignorer</button>
+              </div>
+            </div>`,
+          )
+          .join("");
+      }
+
+      async function saveSnaptelIntegrationSettings() {
+        await saveSnaptelIntegration({
+          enabled: document.getElementById("snaptel-enabled").checked,
+          name: document.getElementById("snaptel-name").value,
+          sda_did: document.getElementById("snaptel-sda").value,
+          sip_domain: document.getElementById("snaptel-sip-domain").value,
+          sip_server: document.getElementById("snaptel-sip-server").value,
+          sip_transport: document.getElementById("snaptel-sip-transport").value,
+          sip_port: parseInt(document.getElementById("snaptel-sip-port").value, 10) || 5060,
+          config_notes: document.getElementById("snaptel-config-notes").value,
+        });
+        await loadSnaptelIntegration();
+      }
+
+      async function copySnaptelWebhookUrl() {
+        const url = document.getElementById("snaptel-webhook-url")?.value || "";
+        if (!url) return;
+        await navigator.clipboard.writeText(url);
+        alert("URL webhook copiee.");
+      }
+
+      async function regenerateSnaptelSecret() {
+        const result = await regenerateSnaptelWebhookSecret();
+        const box = document.getElementById("snaptel-secret-once");
+        if (box && result.webhook_secret) {
+          box.classList.remove("hidden");
+          box.textContent = `Secret webhook (copiez maintenant, il ne sera plus affiche): ${result.webhook_secret}`;
+        }
+        await loadSnaptelIntegration();
+      }
+
+      async function saveSnaptelAgentMappingsFromUi() {
+        const cards = document.querySelectorAll("[data-snaptel-user]");
+        const mappings = Array.from(cards).map((card) => ({
+          user_id: parseInt(card.getAttribute("data-snaptel-user"), 10),
+          snaptel_extension: card.querySelector(".snaptel-ext")?.value || "",
+          snaptel_agent_id: card.querySelector(".snaptel-agent-id")?.value || "",
+          sda_line: card.querySelector(".snaptel-sda-line")?.value || "",
+          active: card.querySelector(".snaptel-active")?.checked !== false,
+        }));
+        await saveSnaptelAgentMappings(mappings);
+        await loadSnaptelIntegration();
+      }
+
+      async function runSnaptelTest(scenario) {
+        const result = await simulateSnaptelCall(scenario);
+        const pre = document.getElementById("snaptel-test-result");
+        if (pre) pre.textContent = JSON.stringify(result, null, 2);
+        await loadSnaptelIntegration();
+      }
+
+      async function snaptelLinkCallPrompt(callId) {
+        const clientId = prompt("ID client a rattacher:");
+        if (!clientId) return;
+        await linkSnaptelCall(callId, parseInt(clientId, 10));
+        await loadSnaptelIntegration();
+      }
+
+      async function snaptelIgnoreCall(callId) {
+        await ignoreSnaptelCall(callId);
+        await loadSnaptelIntegration();
+      }
+
+      async function snaptelCreateLeadFromCall(callId, phone) {
+        const nom = prompt("Nom du nouveau prospect:", "Inconnu");
+        if (!nom) return;
+        const prenom = prompt("Prenom:", "");
+        const created = await createLead({
+          nom,
+          prenom: prenom || "",
+          tel_gsm: phone || "",
+          status: "NEW",
+        });
+        if (created?.id) {
+          await linkSnaptelCall(callId, created.id);
+          await loadSnaptelIntegration();
+          await loadLeads();
         }
       }
 

@@ -5,6 +5,7 @@ const CommunicationMessage = require("../models/CommunicationMessage");
 const User = require("../models/User");
 const Log = require("../models/Log");
 const { sendSms } = require("../services/smsProvider");
+const snaptelProvider = require("../services/snaptelProvider");
 const whatsappProvider = require("../services/whatsappProvider");
 const {
   verifyToken,
@@ -889,6 +890,27 @@ router.get("/closed", verifyToken, isValidationViewer, async (req, res) => {
   }
 });
 
+router.get("/call-events/recent", verifyToken, async (req, res) => {
+  try {
+    const sinceRaw = String(req.query.since || "").trim();
+    const since = sinceRaw ? new Date(sinceRaw) : null;
+    if (sinceRaw && Number.isNaN(since?.getTime())) {
+      return res.status(400).json({ error: "Invalid since timestamp" });
+    }
+
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+    const events = await CommunicationMessage.getRecentCallEventsForUser(req.user, {
+      since,
+      limit,
+    });
+
+    return res.json({ events });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const client = await Client.getClientById(req.params.id);
@@ -1208,6 +1230,7 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
     });
 
     let communication = null;
+    let callResult = null;
     let smsResult = null;
     let whatsappResult = null;
     const actor = await User.getUserById(req.user.id);
@@ -1215,9 +1238,39 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       actor?.sms_sender_number ||
       actor?.phone_number ||
       req.user.sms_sender_number ||
-      process.env.TWILIO_FROM_NUMBER ||
       "";
     const whatsappSenderNumber = getWhatsappSenderNumber(actor, req.user);
+
+    if (channel === "CALL") {
+      if (snaptelProvider.isConfigured()) {
+        try {
+          callResult = await snaptelProvider.triggerCampaignCall({
+            client: updatedClient,
+            actor,
+            user: req.user,
+            toNumber: phone,
+            message,
+          });
+        } catch (callErr) {
+          callResult = {
+            status: "FAILED",
+            provider: "snaptel_campaign",
+            providerMessageId: "",
+            errorText: callErr.message,
+            rawPayload: callErr.providerResponse || { error: callErr.message },
+            configured: true,
+          };
+        }
+      } else {
+        callResult = {
+          status: "MANUAL",
+          provider: "tel",
+          providerMessageId: "",
+          rawPayload: {},
+          configured: false,
+        };
+      }
+    }
 
     if (channel === "SMS") {
       try {
@@ -1262,24 +1315,33 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       }
     }
 
-    if (["SMS", "WHATSAPP"].includes(channel)) {
+    if (["CALL", "SMS", "WHATSAPP"].includes(channel)) {
       communication = await CommunicationMessage.createMessage({
         clientId: updatedClient.id,
         userId: req.user.id,
         channel,
         direction: "OUTBOUND",
-        status: smsResult?.status || whatsappResult?.status || "PREPARED",
-        messageType: "text",
-        fromNumber: channel === "WHATSAPP" ? whatsappSenderNumber : senderNumber,
+        status: callResult?.status || smsResult?.status || whatsappResult?.status || "PREPARED",
+        messageType: channel === "CALL" ? "call" : "text",
+        fromNumber:
+          channel === "WHATSAPP"
+            ? whatsappSenderNumber
+            : actor?.phone_number || senderNumber,
         toNumber: phone,
-        body: message,
+        body: channel === "CALL" ? (message || "Call requested from ShareLeads") : message,
         provider:
+          callResult?.provider ||
           smsResult?.provider ||
           whatsappResult?.provider ||
-          (channel === "SMS" ? process.env.SMS_PROVIDER || "manual" : "meta_unconfigured"),
-        providerMessageId: smsResult?.providerMessageId || whatsappResult?.providerMessageId || "",
-        errorText: smsResult?.errorText || whatsappResult?.errorText || "",
-        rawPayload: smsResult?.rawPayload || whatsappResult?.rawPayload || {},
+          (channel === "SMS"
+            ? process.env.SMS_PROVIDER || "manual"
+            : channel === "WHATSAPP"
+              ? "meta_unconfigured"
+              : "tel"),
+        providerMessageId:
+          callResult?.providerMessageId || smsResult?.providerMessageId || whatsappResult?.providerMessageId || "",
+        errorText: callResult?.errorText || smsResult?.errorText || whatsappResult?.errorText || "",
+        rawPayload: callResult?.rawPayload || smsResult?.rawPayload || whatsappResult?.rawPayload || {},
       });
     }
 
@@ -1287,6 +1349,15 @@ router.post("/:id/contact", verifyToken, async (req, res) => {
       message: "Contact action logged",
       client: updatedClient,
       communication,
+      call_status: callResult?.status || null,
+      call_error: callResult?.errorText || null,
+      call_provider: callResult?.provider || null,
+      call_configured:
+        callResult?.configured === false ? false : channel === "CALL" ? snaptelProvider.isConfigured() : null,
+      call_dispatched:
+        channel === "CALL"
+          ? Boolean(callResult?.provider === "snaptel_campaign" && callResult?.status !== "FAILED")
+          : null,
       sms_status: smsResult?.status || null,
       sms_error: smsResult?.errorText || smsResult?.rawPayload?.message || smsResult?.rawPayload?.error || null,
       whatsapp_status: whatsappResult?.status || null,

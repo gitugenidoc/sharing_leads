@@ -84,6 +84,38 @@
         font-size: 13px;
         font-weight: 650;
       }
+      .call-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        z-index: 90;
+        width: min(380px, 100vw);
+        height: 100vh;
+        transform: translateX(110%);
+        transition: transform .25s ease;
+        border-left: 1px solid #e5e7eb;
+        background: #fff;
+        box-shadow: -12px 0 40px rgba(15, 23, 42, .12);
+        display: flex;
+        flex-direction: column;
+      }
+      .call-panel.open { transform: translateX(0); }
+      .call-toast {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 5.5rem;
+        z-index: 95;
+        display: none;
+        max-width: 360px;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #1e3a8a;
+        padding: .85rem 1rem;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, .16);
+        font-size: 13px;
+        cursor: pointer;
+      }
       .mini-bar { width: 8px; border-radius: 2px; background-color: #f1f5f9; margin: 0 2px; display: inline-block; vertical-align: bottom; }
       .mini-bar.active { background-color: #e2e8f0; }
       .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background-color: #e2e8f0; position: relative; cursor: pointer; }
@@ -598,6 +630,53 @@
     </div>
 
     <div id="reminder-toast" class="reminder-toast"></div>
+    <div id="call-toast" class="call-toast" onclick="openActiveCallPanel()"></div>
+    <aside id="call-panel" class="call-panel" aria-live="polite">
+      <div class="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wide text-primary">Appel en cours</div>
+          <div id="call-panel-title" class="text-lg font-bold text-gray-900">-</div>
+        </div>
+        <button type="button" onclick="closeCallPanel()" class="text-gray-400 hover:text-gray-700">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+        <div id="call-panel-meta" class="rounded-lg bg-gray-50 p-3 text-gray-600"></div>
+        <div id="call-panel-details" class="space-y-2"></div>
+        <label class="block text-xs text-gray-500">
+          <input id="call-auto-open" type="checkbox" class="rounded border-gray-300 text-primary" onchange="saveCallUiSettings()" />
+          Ouverture automatique de la fiche
+        </label>
+        <textarea id="call-panel-notes" class="w-full rounded-lg border border-gray-200 p-2 text-sm" rows="3" placeholder="Note d'appel..."></textarea>
+      </div>
+      <div class="border-t border-gray-100 p-4 flex flex-col gap-2">
+        <button type="button" id="call-panel-open-lead" class="btn-primary w-full">Ouvrir la fiche complete</button>
+        <button type="button" onclick="saveCallPanelNotes()" class="btn-secondary w-full">Ajouter une note</button>
+        <button type="button" onclick="createCallFollowupTask()" class="btn-secondary w-full">Creer une tache de relance</button>
+      </div>
+    </aside>
+    <div id="call-match-modal" class="modal-backdrop" style="display:none">
+      <div class="modal-panel modal-panel-sm">
+        <div class="modal-header">
+          <h3 class="text-lg font-bold text-gray-900">Choisir la fiche</h3>
+        </div>
+        <div id="call-match-list" class="p-4 space-y-2 max-h-[60vh] overflow-y-auto"></div>
+      </div>
+    </div>
+    <div id="call-unknown-modal" class="modal-backdrop" style="display:none">
+      <div class="modal-panel modal-panel-sm">
+        <div class="modal-header">
+          <h3 class="text-lg font-bold text-gray-900">Appel non reconnu</h3>
+        </div>
+        <div class="p-4 space-y-3 text-sm">
+          <p id="call-unknown-phone" class="text-gray-600"></p>
+          <button type="button" class="btn-primary w-full" onclick="createLeadFromUnknownCall()">Creer un nouveau lead</button>
+          <button type="button" class="btn-secondary w-full" onclick="linkUnknownCallPrompt()">Rattacher a un lead existant</button>
+          <button type="button" class="btn-secondary w-full" onclick="closeUnknownCallModal()">Ignorer</button>
+        </div>
+      </div>
+    </div>
 
     <div
       id="client-detail-modal"
@@ -781,6 +860,10 @@
       let allLeads = [];
       let sortAscending = true;
       let reminderPollTimer = null;
+      let callEventPollTimer = null;
+      let lastCallEventCheckAt = null;
+      let seenCallEventIds = new Set();
+      let seenCallProviderIds = new Set();
       let reminderKnownDueIds = new Set();
       let reminderPollingReady = false;
       const DEFAULT_CONTACT_MESSAGE =
@@ -884,6 +967,9 @@
           .toUpperCase();
         loadLeads();
         initReminderPolling();
+        initCallEventPolling();
+        initSnaptelCallStream();
+        loadCallUiSettings();
       });
 
       async function loadLeads() {
@@ -924,6 +1010,314 @@
           notifyNewDueReminders(data.reminders || []);
         } catch (err) {
           console.error(err);
+        }
+      }
+
+      let activeCallEvent = null;
+      let callEventSource = null;
+
+      function getCallUiSettings() {
+        try {
+          return JSON.parse(localStorage.getItem("agentCallSettings") || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function saveCallUiSettings() {
+        const settings = getCallUiSettings();
+        settings.autoOpenLead = document.getElementById("call-auto-open")?.checked === true;
+        localStorage.setItem("agentCallSettings", JSON.stringify(settings));
+      }
+
+      function loadCallUiSettings() {
+        const settings = getCallUiSettings();
+        const input = document.getElementById("call-auto-open");
+        if (input) input.checked = settings.autoOpenLead === true;
+      }
+
+      function initCallEventPolling() {
+        lastCallEventCheckAt = new Date().toISOString();
+        if (callEventPollTimer) clearInterval(callEventPollTimer);
+        callEventPollTimer = setInterval(refreshCallEventNotifications, 30000);
+      }
+
+      function initSnaptelCallStream() {
+        if (callEventSource) {
+          callEventSource.close();
+          callEventSource = null;
+        }
+        try {
+          callEventSource = new EventSource(getSnaptelCallEventStreamUrl());
+          callEventSource.onmessage = (event) => {
+            try {
+              const payload = JSON.parse(event.data);
+              if (payload.type === "call_event") {
+                handleSnaptelRealtimeCall(payload);
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          };
+          callEventSource.onerror = () => {
+            if (callEventSource) {
+              callEventSource.close();
+              callEventSource = null;
+            }
+            setTimeout(initSnaptelCallStream, 5000);
+          };
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      async function handleSnaptelRealtimeCall(event) {
+        if (event.is_test) return;
+        activeCallEvent = event;
+
+        if (event.match_status === "MULTIPLE" && Array.isArray(event.match_candidates)) {
+          showCallMatchModal(event);
+          return;
+        }
+
+        if (event.is_unrecognized || event.match_status === "UNMATCHED") {
+          showUnknownCallModal(event);
+          return;
+        }
+
+        if (event.client?.id) {
+          await presentMatchedCall(event);
+        } else if (event.alert === "call_without_agent_mapping") {
+          showCallToast("Appel recu sans agent associe au mapping Snaptel.");
+        }
+      }
+
+      async function presentMatchedCall(event) {
+        const client = event.client;
+        const fullName = `${client.prenom || ""} ${client.nom || ""}`.trim() || "Prospect";
+        const directionLabel =
+          String(event.direction || "").toUpperCase() === "INBOUND"
+            ? "Appel entrant"
+            : "Appel sortant";
+        showCallToast(`${directionLabel} de ${fullName}`);
+        renderCallPanel(event);
+        openCallPanel();
+
+        if (getCallUiSettings().autoOpenLead) {
+          await openLeadFromCallEvent({
+            client_id: client.id,
+            direction: event.direction,
+            from_number: event.caller_number,
+            to_number: event.callee_number,
+          });
+        }
+      }
+
+      function showCallToast(message) {
+        const toast = document.getElementById("call-toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.style.display = "block";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 12000);
+      }
+
+      function renderCallPanel(event) {
+        const client = event.client || {};
+        const title = document.getElementById("call-panel-title");
+        const meta = document.getElementById("call-panel-meta");
+        const details = document.getElementById("call-panel-details");
+        const openBtn = document.getElementById("call-panel-open-lead");
+        const fullName = `${client.prenom || ""} ${client.nom || ""}`.trim() || "Prospect";
+        if (title) title.textContent = fullName;
+        if (meta) {
+          meta.innerHTML = `
+            <div><strong>Telephone:</strong> ${escapeHtml(event.caller_number || event.callee_number || "-")}</div>
+            <div><strong>Statut:</strong> ${escapeHtml(event.event_type || "")}</div>
+            <div><strong>Duree:</strong> ${event.duration_seconds ? `${event.duration_seconds}s` : "-"}</div>`;
+        }
+        if (details) {
+          details.innerHTML = `
+            <div><span class="text-gray-500">Entreprise / mutuelle:</span> ${escapeHtml(client.nom_mutuelle || "-")}</div>
+            <div><span class="text-gray-500">Pipeline:</span> ${escapeHtml(client.status || "-")}</div>
+            <div><span class="text-gray-500">Score:</span> ${escapeHtml(client.nlp_label || "")} ${client.nlp_score || 0}%</div>
+            <div><span class="text-gray-500">Prochaine relance:</span> ${client.reminder_at ? formatDate(client.reminder_at) : "-"}</div>
+            <div><span class="text-gray-500">Notes:</span> ${escapeHtml(client.notes || "-")}</div>
+            ${event.recording_url ? `<a class="text-primary underline" href="${escapeHtml(event.recording_url)}" target="_blank" rel="noopener">Ecouter l'enregistrement</a>` : ""}`;
+        }
+        if (openBtn) {
+          openBtn.onclick = () => {
+            if (client.id) openLeadFromCallEvent({ client_id: client.id, direction: event.direction });
+          };
+        }
+        const notes = document.getElementById("call-panel-notes");
+        if (notes) notes.value = "";
+      }
+
+      function openCallPanel() {
+        document.getElementById("call-panel")?.classList.add("open");
+      }
+
+      function closeCallPanel() {
+        document.getElementById("call-panel")?.classList.remove("open");
+      }
+
+      function openActiveCallPanel() {
+        if (activeCallEvent) {
+          renderCallPanel(activeCallEvent);
+          openCallPanel();
+        }
+      }
+
+      async function saveCallPanelNotes() {
+        if (!activeCallEvent?.phone_call_id) return;
+        const notes = document.getElementById("call-panel-notes")?.value || "";
+        if (!notes.trim()) return;
+        await saveSnaptelCallNotes(activeCallEvent.phone_call_id, notes);
+        if (activeCallEvent.client?.id) {
+          await renderClientHistory(activeCallEvent.client.id);
+        }
+        alert("Note enregistree.");
+      }
+
+      async function createCallFollowupTask() {
+        if (!activeCallEvent?.client?.id) {
+          alert("Aucune fiche liee a cet appel.");
+          return;
+        }
+        const reminderAt = prompt("Date/heure de relance (YYYY-MM-DDTHH:mm):");
+        if (!reminderAt) return;
+        await updateLead(activeCallEvent.client.id, {
+          reminder_at: reminderAt,
+          reminder_priority: "HIGH",
+        });
+        alert("Relance planifiee.");
+      }
+
+      function showCallMatchModal(event) {
+        const modal = document.getElementById("call-match-modal");
+        const list = document.getElementById("call-match-list");
+        if (!modal || !list) return;
+        activeCallEvent = event;
+        list.innerHTML = (event.match_candidates || [])
+          .map(
+            (item) => `
+            <button type="button" class="w-full rounded-lg border border-gray-200 p-3 text-left hover:bg-gray-50"
+              onclick="resolveCallMatch(${event.phone_call_id}, ${item.id})">
+              <div class="font-semibold">${escapeHtml(item.name)}</div>
+              <div class="text-xs text-gray-500">${escapeHtml(item.phone || "")} - ${escapeHtml(item.status || "")}</div>
+            </button>`,
+          )
+          .join("");
+        modal.style.display = "flex";
+      }
+
+      async function resolveCallMatch(phoneCallId, clientId) {
+        await resolveSnaptelCallMatch(phoneCallId, clientId);
+        document.getElementById("call-match-modal").style.display = "none";
+        await loadLeads();
+        showClientDetails(clientId);
+      }
+
+      function showUnknownCallModal(event) {
+        const modal = document.getElementById("call-unknown-modal");
+        const phone = document.getElementById("call-unknown-phone");
+        activeCallEvent = event;
+        if (phone) {
+          phone.textContent = `Numero: ${event.caller_number || event.callee_number || "inconnu"}`;
+        }
+        if (modal) modal.style.display = "flex";
+        showCallToast("Appel non reconnu");
+        openCallPanel();
+        renderCallPanel({ ...event, client: {} });
+      }
+
+      function closeUnknownCallModal() {
+        document.getElementById("call-unknown-modal").style.display = "none";
+      }
+
+      async function createLeadFromUnknownCall() {
+        if (!activeCallEvent) return;
+        const phone = activeCallEvent.caller_number || activeCallEvent.callee_number || "";
+        const nom = prompt("Nom du prospect:", "Inconnu");
+        if (!nom) return;
+        const created = await createLead({
+          nom,
+          prenom: "",
+          tel_gsm: phone,
+          status: "NEW",
+        });
+        if (created?.id && activeCallEvent.phone_call_id) {
+          await linkSnaptelCall(activeCallEvent.phone_call_id, created.id);
+          closeUnknownCallModal();
+          await loadLeads();
+          await presentMatchedCall({ ...activeCallEvent, client: created, is_unrecognized: false });
+        }
+      }
+
+      async function linkUnknownCallPrompt() {
+        const clientId = prompt("ID du lead a rattacher:");
+        if (!clientId || !activeCallEvent?.phone_call_id) return;
+        await linkSnaptelCall(activeCallEvent.phone_call_id, parseInt(clientId, 10));
+        closeUnknownCallModal();
+        await loadLeads();
+        showClientDetails(parseInt(clientId, 10));
+      }
+
+      async function refreshCallEventNotifications() {
+        const since = lastCallEventCheckAt || new Date().toISOString();
+        lastCallEventCheckAt = new Date().toISOString();
+        try {
+          const events = await getRecentCallEvents(since, 10);
+          await handleRecentCallEvents(events || []);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      async function handleRecentCallEvents(events = []) {
+        const freshEvents = events
+          .slice()
+          .reverse()
+          .filter((event) => {
+            const providerMessageId = event?.provider_message_id || "";
+            if (providerMessageId && seenCallProviderIds.has(providerMessageId)) return false;
+            if (!event?.id || seenCallEventIds.has(event.id)) return false;
+            seenCallEventIds.add(event.id);
+            if (providerMessageId) seenCallProviderIds.add(providerMessageId);
+            return true;
+          });
+        if (!freshEvents.length) return;
+
+        const latestEvent = freshEvents[freshEvents.length - 1];
+        await openLeadFromCallEvent(latestEvent);
+      }
+
+      async function openLeadFromCallEvent(event) {
+        const leadId = Number(event?.client_id || event?.clientId || 0);
+        if (!leadId) return;
+
+        if (!allLeads.some((item) => item.id === leadId)) {
+          await loadLeads();
+        }
+
+        const lead = allLeads.find((item) => item.id === leadId);
+        if (!lead) return;
+
+        showClientDetails(leadId);
+        renderClientHistory(leadId);
+
+        const directionLabel =
+          String(event.direction || "").toUpperCase() === "INBOUND"
+            ? "Appel entrant"
+            : "Appel telephonique";
+        const phone = event.from_number || event.to_number || "";
+        const fullName = `${lead.prenom || ""} ${lead.nom || ""}`.trim() || "Prospect";
+        const statusMessage = document.getElementById("status-message");
+        if (statusMessage) {
+          statusMessage.textContent =
+            `${directionLabel} detecte pour ${fullName}${phone ? ` (${phone})` : ""}`;
         }
       }
 
@@ -1668,14 +2062,26 @@
           const contactResult = await logClientContact(lead.id, channel, phone, channel === "CALL" ? "" : message);
           await loadLeads();
           renderClientHistory(lead.id);
+          if (channel === "CALL") {
+            if (contactResult.call_provider === "snaptel_campaign") {
+              if (contactResult.call_status === "FAILED") {
+                alert(contactResult.call_error || "Envoi de l'appel vers Snaptel impossible.");
+              } else {
+                alert("Demande d'appel envoyee a Snaptel / Infinivox.");
+              }
+              return;
+            }
+            window.location.href = `tel:${phone}`;
+            return;
+          }
           if (channel === "SMS") {
             const status = contactResult.sms_status || "PREPARED";
             if (status === "FAILED") {
-              alert(contactResult.sms_error || "SMS non envoye par Twilio.");
+              alert(contactResult.sms_error || "SMS non envoye.");
             } else if (status === "PREPARED") {
-              alert("SMS prepare mais non envoye. Verifie SMS_SEND_MODE=provider, Twilio et le numero expediteur.");
+              alert("SMS prepare mais non envoye. Verifie SMS_SEND_MODE=provider, le provider SMS et le numero expediteur.");
             } else {
-              alert("SMS envoye via Twilio.");
+              alert("SMS envoye.");
             }
             return;
           }
@@ -1684,8 +2090,6 @@
           alert(err.formattedMessage || err.message || "Action SMS impossible.");
           return;
         }
-
-        window.location.href = `tel:${phone}`;
       }
 
       let mailTemplates = [];

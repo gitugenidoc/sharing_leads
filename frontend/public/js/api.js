@@ -311,6 +311,61 @@ const getClientReminders = async () => {
   return data;
 };
 
+const getRecentCallEvents = async (since = "", limit = 10) => {
+  const params = new URLSearchParams();
+  if (since) params.set("since", since);
+  if (limit) params.set("limit", String(limit));
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  const data = await apiCall("GET", `/clients/call-events/recent${suffix}`);
+  return data.events || [];
+};
+
+const getSnaptelIntegration = async (centerId = null) => {
+  const suffix = centerId ? `?center_id=${centerId}` : "";
+  return apiCall("GET", `/integrations/snaptel${suffix}`);
+};
+
+const saveSnaptelIntegration = async (payload) =>
+  apiCall("PUT", "/integrations/snaptel", payload);
+
+const regenerateSnaptelWebhookSecret = async (centerId = null) =>
+  apiCall("POST", "/integrations/snaptel/regenerate-secret", {
+    center_id: centerId,
+  });
+
+const saveSnaptelAgentMappings = async (mappings, centerId = null) =>
+  apiCall("PUT", "/integrations/snaptel/agent-mappings", {
+    mappings,
+    center_id: centerId,
+  });
+
+const simulateSnaptelCall = async (scenario, options = {}) =>
+  apiCall("POST", "/integrations/snaptel/test/simulate", {
+    scenario,
+    ...options,
+  });
+
+const linkSnaptelCall = async (callId, clientId) =>
+  apiCall("POST", `/integrations/snaptel/calls/${callId}/link`, {
+    client_id: clientId,
+  });
+
+const resolveSnaptelCallMatch = async (callId, clientId) =>
+  apiCall("POST", `/integrations/snaptel/calls/${callId}/resolve-match`, {
+    client_id: clientId,
+  });
+
+const ignoreSnaptelCall = async (callId) =>
+  apiCall("POST", `/integrations/snaptel/calls/${callId}/ignore`);
+
+const saveSnaptelCallNotes = async (callId, notes) =>
+  apiCall("POST", `/integrations/snaptel/calls/${callId}/notes`, { notes });
+
+const getSnaptelCallEventStreamUrl = () => {
+  const token = getToken();
+  return `${API_BASE_URL}/integrations/snaptel/call-events/stream?token=${encodeURIComponent(token || "")}`;
+};
+
 const sendWhatsappMessage = async (id, { body = "", phone = "", file = null } = {}) => {
   const formData = new FormData();
   if (body) formData.append("body", body);
@@ -506,6 +561,17 @@ Object.assign(window, {
   getClientMessages,
   createClientMessage,
   getClientReminders,
+  getRecentCallEvents,
+  getSnaptelIntegration,
+  saveSnaptelIntegration,
+  regenerateSnaptelWebhookSecret,
+  saveSnaptelAgentMappings,
+  simulateSnaptelCall,
+  linkSnaptelCall,
+  resolveSnaptelCallMatch,
+  ignoreSnaptelCall,
+  saveSnaptelCallNotes,
+  getSnaptelCallEventStreamUrl,
   sendWhatsappMessage,
   getClientStatuses,
   searchLeads,
