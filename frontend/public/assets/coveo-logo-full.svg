@@ -1,0 +1,10 @@
+<svg viewBox="0 0 620 160" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(10,10) scale(0.7)">
+    <path d="M 153.6 55 A 70 70 0 1 0 153.6 145" fill="none" stroke="#0d3b66" stroke-width="24" stroke-linecap="round"/>
+    <path d="M 132.2 73 A 42 42 0 1 0 132.2 127" fill="none" stroke="#8dc63f" stroke-width="20" stroke-linecap="round"/>
+    <rect x="118" y="92" width="56" height="16" rx="2" fill="#0d3b66"/>
+  </g>
+  <text x="150" y="70" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#0d3b66">COVEO</text>
+  <text x="330" y="70" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#8dc63f">consulting</text>
+  <text x="150" y="98" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="16" fill="#8a97a3">L'innovation au service de votre force commerciale</text>
+</svg>

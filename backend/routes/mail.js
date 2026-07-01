@@ -55,22 +55,22 @@ const MAIL_TEMPLATES = [
   {
     "id": "relance_contact",
     "name": "Relance contact",
-    "subject": "Des nouvelles de votre demande de mutuelle - SecurAssure",
-    "body": "Bonjour [Civilite] [Nom],\n\nNous avons tente de vous joindre au sujet de votre demande de comparatif mutuelle.\n\nPouvez-vous nous indiquer vos disponibilites afin que nous puissions faire le point sur vos besoins et votre tarif actuel ([PrixMutuelle]) ?\n\nCordialement,\nL'equipe SecurAssure",
+    "subject": "Des nouvelles de votre demande de mutuelle - Coveo Consulting",
+    "body": "Bonjour [Civilite] [Nom],\n\nNous avons tente de vous joindre au sujet de votre demande de comparatif mutuelle.\n\nPouvez-vous nous indiquer vos disponibilites afin que nous puissions faire le point sur vos besoins et votre tarif actuel ([PrixMutuelle]) ?\n\nCordialement,\nL'equipe Coveo Consulting",
     "variables": ["Civilite", "Nom", "Prenom", "Ville", "Mutuelle", "PrixMutuelle", "Besoins"]
   },
   {
     "id": "proposition_devis",
     "name": "Proposition devis",
-    "subject": "Votre devis mutuelle personnalise - SecurAssure",
-    "body": "Bonjour [Civilite] [Nom],\n\nD'apres les informations de votre fiche, votre mutuelle actuelle est [Mutuelle] pour un tarif de [PrixMutuelle].\n\nNous pouvons vous proposer une comparaison personnalisee avec des garanties adaptees a vos besoins : [Besoins].\n\nUn conseiller peut vous rappeler rapidement pour finaliser le devis.\n\nCordialement,\nL'equipe SecurAssure",
+    "subject": "Votre devis mutuelle personnalise - Coveo Consulting",
+    "body": "Bonjour [Civilite] [Nom],\n\nD'apres les informations de votre fiche, votre mutuelle actuelle est [Mutuelle] pour un tarif de [PrixMutuelle].\n\nNous pouvons vous proposer une comparaison personnalisee avec des garanties adaptees a vos besoins : [Besoins].\n\nUn conseiller peut vous rappeler rapidement pour finaliser le devis.\n\nCordialement,\nL'equipe Coveo Consulting",
     "variables": ["Civilite", "Nom", "Prenom", "Ville", "Mutuelle", "PrixMutuelle", "Besoins"]
   },
   {
     "id": "confirmation_rdv",
     "name": "Confirmation rendez-vous",
-    "subject": "Confirmation de votre rendez-vous - SecurAssure",
-    "body": "Bonjour [Civilite] [Nom],\n\nNous vous confirmons votre rendez-vous avec un conseiller SecurAssure.\n\nNous vous recontacterons au numero indique dans votre fiche afin de valider les garanties et le budget mutuelle.\n\nCordialement,\nL'equipe SecurAssure",
+    "subject": "Confirmation de votre rendez-vous - Coveo Consulting",
+    "body": "Bonjour [Civilite] [Nom],\n\nNous vous confirmons votre rendez-vous avec un conseiller Coveo Consulting.\n\nNous vous recontacterons au numero indique dans votre fiche afin de valider les garanties et le budget mutuelle.\n\nCordialement,\nL'equipe Coveo Consulting",
     "variables": ["Civilite", "Nom", "Prenom", "Ville", "Mutuelle", "PrixMutuelle", "Besoins"]
   }
 ];
@@ -103,7 +103,7 @@ router.post("/send", verifyToken, async (req, res) => {
     }
     const transporter = await getTransporter();
     const mailOptions = {
-      from: process.env.SMTP_FROM || `"SecurAssure" <contact@jechangemamutuelle.online>`,
+      from: process.env.SMTP_FROM || `"Coveo Consulting" <contact@jechangemamutuelle.online>`,
       to: recipientEmail,
       subject: subject,
       text: body,

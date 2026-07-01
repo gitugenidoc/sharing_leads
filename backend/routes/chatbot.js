@@ -86,7 +86,7 @@ const getSourcesForMessage = (country, message = "") => {
 };
 
 const buildSystemPrompt = (country) => `
-Tu es Coveo Assistant, expert assurance pour SecurAssure.
+Tu es Coveo Assistant, expert assurance pour Coveo Consulting.
 Marche principal: France. Marche secondaire: Maroc.
 Pays applicable actuel: ${country === "MA" ? "Maroc" : "France"}.
 Domaines prioritaires: sante, mutuelle, Securite sociale, prevoyance, deces/obseques.
@@ -250,7 +250,7 @@ const callGemma = async ({ message, country, sources }) => {
 
   if (apiType === "openrouter") {
     headers["HTTP-Referer"] = process.env.OPENROUTER_SITE_URL || process.env.FRONTEND_URL || "http://localhost:5000";
-    headers["X-Title"] = process.env.OPENROUTER_APP_NAME || "SecurAssure Coveo Assistant";
+    headers["X-Title"] = process.env.OPENROUTER_APP_NAME || "Coveo Consulting Coveo Assistant";
   }
 
   const response = await fetch(endpoint, {

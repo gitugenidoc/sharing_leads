@@ -390,20 +390,20 @@ const MAIL_TEMPLATES = [
   {
     id: "relance",
     name: "Relance Client",
-    subject: "Des nouvelles de votre demande de mutuelle - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nNous avons tenté de vous joindre aujourd'hui au sujet de votre demande de comparatif de mutuelle.\n\nPourriez-vous nous indiquer vos disponibilités afin que nous puissions faire le point ensemble sur vos besoins ?\n\nCordialement,\nL'équipe SecurAssure",
+    subject: "Des nouvelles de votre demande de mutuelle - Coveo Consulting",
+    body: "Bonjour [Nom] [Prenom],\n\nNous avons tenté de vous joindre aujourd'hui au sujet de votre demande de comparatif de mutuelle.\n\nPourriez-vous nous indiquer vos disponibilités afin que nous puissions faire le point ensemble sur vos besoins ?\n\nCordialement,\nL'équipe Coveo Consulting",
   },
   {
     id: "offre_senior",
     name: "Offre Mutuelle Senior",
-    subject: "Des garanties renforcées pour votre mutuelle - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nDécouvrez nos nouvelles garanties spécifiquement conçues pour les seniors : prise en charge renforcée des frais d'optique, de dentaire et des médecines douces.\n\nNous sommes à votre disposition pour vous réaliser un devis gratuit et personnalisé.\n\nCordialement,\nL'équipe SecurAssure",
+    subject: "Des garanties renforcées pour votre mutuelle - Coveo Consulting",
+    body: "Bonjour [Nom] [Prenom],\n\nDécouvrez nos nouvelles garanties spécifiquement conçues pour les seniors : prise en charge renforcée des frais d'optique, de dentaire et des médecines douces.\n\nNous sommes à votre disposition pour vous réaliser un devis gratuit et personnalisé.\n\nCordialement,\nL'équipe Coveo Consulting",
   },
   {
     id: "confirm_rdv",
     name: "Confirmation de Rendez-vous",
-    subject: "Confirmation de votre rendez-vous - SecurAssure",
-    body: "Bonjour [Nom] [Prenom],\n\nNous vous confirmons votre rendez-vous avec un de nos conseillers SecurAssure.\n\nNous vous recontacterons au numéro fourni.\n\nCordialement,\nL'équipe SecurAssure",
+    subject: "Confirmation de votre rendez-vous - Coveo Consulting",
+    body: "Bonjour [Nom] [Prenom],\n\nNous vous confirmons votre rendez-vous avec un de nos conseillers Coveo Consulting.\n\nNous vous recontacterons au numéro fourni.\n\nCordialement,\nL'équipe Coveo Consulting",
   },
 ];
 
@@ -425,7 +425,7 @@ app.post("/api/mail/send", verifyToken, async (req, res) => {
     const mailOptions = {
       from:
         process.env.SMTP_FROM ||
-        `"SecurAssure" <contact@jechangemamutuelle.online>`,
+        `"Coveo Consulting" <contact@jechangemamutuelle.online>`,
       to: recipientEmail,
       subject: subject,
       text: body,
